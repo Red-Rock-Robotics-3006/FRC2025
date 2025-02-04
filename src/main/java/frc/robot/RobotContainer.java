@@ -22,6 +22,8 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+
 
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -46,21 +48,27 @@ public class RobotContainer {
 
     /* Path follower */
     private final AutoFactory autoFactory;
-    private final AutoRoutines autoRoutines;
-    private final AutoChooser autoChooser = new AutoChooser();
+    // private final AutoRoutines autoRoutines;
+    // private final AutoChooser autoChooser = new AutoChooser();
+
+    private SendableChooser<Command> m_chooser = new SendableChooser<>();
+
 
     public RobotContainer() {
         drivetrain.setSwerveRequest(this.driveFacingAngle);
 
         autoFactory = drivetrain.createAutoFactory();
-        autoRoutines = new AutoRoutines(autoFactory);
+        // autoRoutines = new AutoRoutines(autoFactory);
 
-        autoChooser.addRoutine("TestPath Auto", autoRoutines::simplePathAuto);
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        // autoChooser.addRoutine("TestPath Auto", autoRoutines::simplePathAuto);
+        // SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
     }
 
+    public void configureSelector(){
+        m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
+    }
     
     private void configureBindings() {
         drivetrain.setDefaultCommand(
@@ -142,6 +150,6 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         /* Run the routine selected from the auto chooser */
-        return autoChooser.selectedCommand();
+        return m_chooser.getSelected();
     }
 }

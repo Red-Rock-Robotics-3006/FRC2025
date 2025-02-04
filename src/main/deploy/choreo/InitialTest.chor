@@ -1,5 +1,5 @@
 {
- "name":"TestPath",
+ "name":"InitialTest",
  "version":1,
  "type":"Swerve",
  "variables":{
@@ -9,51 +9,51 @@
  "config":{
   "frontLeft":{
    "x":{
-    "exp":"9.5 in",
-    "val":0.2413
+    "exp":"11 in",
+    "val":0.2794
    },
    "y":{
-    "exp":"9.5 in",
-    "val":0.2413
+    "exp":"11 in",
+    "val":0.2794
    }
   },
   "backLeft":{
    "x":{
-    "exp":"-9.5 in",
-    "val":-0.2413
+    "exp":"-11 in",
+    "val":-0.2794
    },
    "y":{
-    "exp":"9.5 in",
-    "val":0.2413
+    "exp":"11 in",
+    "val":0.2794
    }
   },
   "mass":{
-   "exp":"90 lbs",
-   "val":40.8233133
+   "exp":"150 lbs",
+   "val":68.0388555
   },
   "inertia":{
-   "exp":"8 kg m ^ 2",
-   "val":8.0
+   "exp":"6 kg m ^ 2",
+   "val":6.0
   },
   "gearing":{
-   "exp":"5.36",
-   "val":5.36
+   "exp":"6.5",
+   "val":6.5
   },
   "radius":{
-   "exp":"1.97 in",
-   "val":0.050038
+   "exp":"2 in",
+   "val":0.0508
   },
   "vmax":{
-   "exp":"3000 RPM",
-   "val":314.1592653589793
+   "exp":"6000 RPM",
+   "val":628.3185307179587
   },
   "tmax":{
-   "exp":"0.25 N * m",
-   "val":0.25
+   "exp":"1.2 N * m",
+   "val":1.2
   },
   "cof":{
-   "exp":"0.6",
-   "val":0.6
+   "exp":"1.5",
+   "val":1.5
   },
   "bumper":{
    "front":{

@@ -456,8 +456,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public static CommandSwerveDrivetrain getInstance(){
         if (instance == null) 
-            instance = TunerConstants2.createDrivetrain();
-            // instance = TunerConstants.createDrivetrain();
+            // instance = TunerConstants2.createDrivetrain();
+            instance = TunerConstants.createDrivetrain();
         return instance;
     }
 
