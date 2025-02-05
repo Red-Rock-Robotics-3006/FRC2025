@@ -48,7 +48,7 @@ public class RobotContainer {
 
     /* Path follower */
     private final AutoFactory autoFactory;
-    // private final AutoRoutines autoRoutines;
+    private final AutoRoutines autoRoutines;
     // private final AutoChooser autoChooser = new AutoChooser();
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
@@ -58,16 +58,21 @@ public class RobotContainer {
         drivetrain.setSwerveRequest(this.driveFacingAngle);
 
         autoFactory = drivetrain.createAutoFactory();
-        // autoRoutines = new AutoRoutines(autoFactory);
+        autoRoutines = new AutoRoutines(autoFactory);
 
         // autoChooser.addRoutine("TestPath Auto", autoRoutines::simplePathAuto);
         // SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
+        configureSelector();
     }
 
     public void configureSelector(){
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
+
+        m_chooser.addOption("TEST AUTO 1", autoRoutines.testAuto1());
+        
+        SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
     
     private void configureBindings() {
