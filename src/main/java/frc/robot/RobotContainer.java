@@ -49,7 +49,7 @@ public class RobotContainer {
     /* Path follower */
     private final AutoFactory autoFactory;
     private final AutoRoutines autoRoutines;
-    // private final AutoChooser autoChooser = new AutoChooser();
+    private final AutoChooser autoChooser = new AutoChooser();
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
 
@@ -60,8 +60,8 @@ public class RobotContainer {
         autoFactory = drivetrain.createAutoFactory();
         autoRoutines = new AutoRoutines(autoFactory);
 
-        // autoChooser.addRoutine("TestPath Auto", autoRoutines::simplePathAuto);
-        // SmartDashboard.putData("Auto Chooser", autoChooser);
+        autoChooser.addRoutine("TestPath Auto", autoRoutines::testpath2Auto);
+        SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
         configureSelector();
@@ -155,6 +155,7 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         /* Run the routine selected from the auto chooser */
-        return m_chooser.getSelected();
+        // return m_chooser.getSelected();
+        return autoChooser.selectedCommand();
     }
 }
