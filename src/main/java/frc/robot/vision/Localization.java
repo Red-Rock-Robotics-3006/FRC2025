@@ -8,8 +8,8 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Utils3006.SmartDashboardNumber;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
+import redrocklib.logging.SmartDashboardNumber;
 
 public class Localization {
     public static final Pose2d redCliffPose = new Pose2d(4,0.25, new Rotation2d());
