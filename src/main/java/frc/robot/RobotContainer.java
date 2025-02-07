@@ -11,6 +11,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -22,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
+import redrocklib.logging.SmartDashboardNumber;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 
@@ -53,6 +55,10 @@ public class RobotContainer {
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
 
+    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 0);
+    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 0);
+    private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
+
 
     public RobotContainer() {
         drivetrain.setSwerveRequest(this.driveFacingAngle);
@@ -79,7 +85,12 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(
               () -> {
-                if (!drivetrain.getUseHeadingPID() || Math.abs(drivestick.getRightX()) > drivetrain.getTurnDeadBand()) {
+                if (drivetrain.isTargetingPosition()) {
+                    return driveFacingAngle.withVelocityX(drivetrain.getPositionPIDValueX() * MaxSpeed)
+                                            .withVelocityY(drivetrain.getPositionPIDValueY() * MaxSpeed)
+                                            .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
+                }
+                else if (!drivetrain.getUseHeadingPID() || Math.abs(drivestick.getRightX()) > drivetrain.getTurnDeadBand()) {
                   return drive.withVelocityX(-drivestick.getLeftY() * MaxSpeed)
                               .withVelocityY(-drivestick.getLeftX() * MaxSpeed)
                               .withRotationalRate(-drivestick.getRightX() * MaxAngularRate);
@@ -139,6 +150,21 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         drivestick.start().and(drivestick.back()).onTrue(drivetrain.resetHeadingCommand());
 
+        drivestick.rightBumper().onTrue(
+            new FunctionalCommand(
+                () -> {
+                    drivetrain.setTargetPose(this.constructTestTargetPose());
+                    drivetrain.enablePositionTargeting();
+                }, 
+                () -> {}, 
+                (interrupted) -> {
+                    drivetrain.disablePositionTargeting();
+                }, 
+                () -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose())
+        ).onFalse(
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+        );
+
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
@@ -157,5 +183,9 @@ public class RobotContainer {
         /* Run the routine selected from the auto chooser */
         // return m_chooser.getSelected();
         return autoChooser.selectedCommand();
+    }
+
+    private Pose2d constructTestTargetPose() {
+        return new Pose2d(targetPoseX.getNumber(), targetPoseY.getNumber(), Rotation2d.fromDegrees(targetPoseTheta.getNumber()));
     }
 }
