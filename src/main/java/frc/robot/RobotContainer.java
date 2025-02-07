@@ -28,6 +28,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
+    private static double progressiveDriveExponent = 1.4;
+    private static double progressiveTurnExponent = 1.7;
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -75,14 +77,14 @@ public class RobotContainer {
             drivetrain.applyRequest(
               () -> {
                 if (!drivetrain.getUseHeadingPID() || Math.abs(drivestick.getRightX()) > drivetrain.getTurnDeadBand()) {
-                  return drive.withVelocityX(-drivestick.getLeftY() * MaxSpeed)
-                              .withVelocityY(-drivestick.getLeftX() * MaxSpeed)
-                              .withRotationalRate(-drivestick.getRightX() * MaxAngularRate);
+                  return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
+                              .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                              .withRotationalRate(progressiveInput(-drivestick.getRightX(),progressiveTurnExponent) * MaxAngularRate);
                 }
                 else {
-                  return driveFacingAngle.withVelocityX(-drivestick.getLeftY() * MaxSpeed)
-                        .withVelocityY(-drivestick.getLeftX() * MaxSpeed)
-                        .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
+                  return driveFacingAngle.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
+                                         .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                                         .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
                   
                 }
               }
@@ -151,5 +153,14 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         /* Run the routine selected from the auto chooser */
         return m_chooser.getSelected();
+    }
+
+    /* Puts a progressive response curve on a normalized analog input
+       by raising input to exponent while preserving the sign 
+    */
+    public static double progressiveInput(double input, double exponent)
+    {
+        if(input == 0) return 0;
+        return Math.min(1,Math.max(-1,Math.abs(input)/input * Math.pow(Math.abs(input), exponent)));
     }
 }
