@@ -13,6 +13,7 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -20,10 +21,14 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableListener;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -41,6 +46,7 @@ import redrocklib.logging.SmartDashboardBoolean;
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
+@Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 8);
     private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 1.2);
@@ -81,14 +87,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /** Swerve request to apply during field-centric path following */
     private final SwerveRequest.ApplyFieldSpeeds m_pathApplyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
-    private final PIDController m_pathXController = new PIDController(10, 0, 0);
-    private final PIDController m_pathYController = new PIDController(10, 0, 0);
-    private final PIDController m_pathThetaController = new PIDController(7, 0, 1);
+    
 
     /* Swerve requests to apply during SysId characterization */
     private final SwerveRequest.SysIdSwerveTranslation m_translationCharacterization = new SwerveRequest.SysIdSwerveTranslation();
     private final SwerveRequest.SysIdSwerveSteerGains m_steerCharacterization = new SwerveRequest.SysIdSwerveSteerGains();
     private final SwerveRequest.SysIdSwerveRotation m_rotationCharacterization = new SwerveRequest.SysIdSwerveRotation();
+
+    @Logged
+    public Pose2d autoWantedPose2d;
+
+    @Logged
+    public Pose2d autoRealPose2d;
 
     private Pose2d targetPose2d = new Pose2d();
 
@@ -99,12 +109,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterY;
 
     private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 2);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.17);
-    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 20);
+    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 1);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 3);
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02);
 
+    private final PIDController m_pathXController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
+    private final PIDController m_pathYController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
+    private final PIDController m_pathThetaController = new PIDController(rotateP.getNumber(), rotateI.getNumber(), rotateD.getNumber());
+  
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
         new SysIdRoutine.Config(
@@ -258,6 +272,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         positionRateLimiterX = new SlewRateLimiter(200);
         positionRateLimiterY = new SlewRateLimiter(200);
+
+        m_pathXController.setTolerance(0.001);
+        m_pathYController.setTolerance(0.001);
+        m_pathThetaController.setTolerance(0.1);
     }
 
     /**
@@ -294,8 +312,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      * @param sample Sample along the path to follow
      */
     public void followPath(SwerveSample sample) {
+        autoWantedPose2d = sample.getPose();
+        autoRealPose2d = this.getState().Pose;
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
+        // m_pathThetaController.setI(rotateI.getNumber());
+        // if(m_pathThetaController.atSetpoint()) m_pathThetaController.reset();
+
+        // m_pathXController.setI(positionKi.getNumber());
+        // if(m_pathXController.atSetpoint()) m_pathXController.reset();
+
+        m_pathYController.setI(positionKi.getNumber());
+        if(m_pathYController.atSetpoint()) m_pathYController.reset();
+        
         var pose = getState().Pose;
 
         var targetSpeeds = sample.getChassisSpeeds();

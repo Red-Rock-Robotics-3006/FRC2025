@@ -9,10 +9,12 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.units.measure.MutVelocity;
+import edu.wpi.first.wpilibj.LEDPattern.GradientType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -28,7 +30,8 @@ public class Elevator extends SubsystemBase {
         L2,
         L1,
         GROUND,
-        SOURCE
+        SOURCE,
+        STOW
     }
 
     private static Map<Position, Double> POSITION_CONVERSIONS = Map.of(
@@ -37,7 +40,8 @@ public class Elevator extends SubsystemBase {
             Position.L2, 69.69,
             Position.L1, 69.69,
             Position.GROUND, 69.69,
-            Position.SOURCE, 69.69);
+            Position.SOURCE, 69.69,
+            Position.STOW, 0d);
 
     private final TalonFX m_elevatorLeft = new TalonFX(69, "*"); // update
     private final TalonFX m_elevatorRight = new TalonFX(69, "*"); // update
@@ -61,6 +65,8 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber elevatorKi = new SmartDashboardNumber("elevator/ki", 0);
     private SmartDashboardNumber elevatorKd = new SmartDashboardNumber("elevator/kd", 0);
 
+    private SmartDashboardNumber elevatorKg = new SmartDashboardNumber("elevator/kg", 0);
+
     private SmartDashboardNumber elevatorSpeed = new SmartDashboardNumber("elevator/elevator-speed", -3200); // to be
                                                                                                              // tuned
 
@@ -69,14 +75,14 @@ public class Elevator extends SubsystemBase {
 
         this.m_elevatorLeft.getConfigurator().apply(
                 new MotorOutputConfigs()
-                        .withInverted(InvertedValue.Clockwise_Positive)
+                        .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withPeakForwardDutyCycle(1d)
                         .withPeakReverseDutyCycle(-1d)
                         .withNeutralMode(NeutralModeValue.Brake));
 
         this.m_elevatorRight.getConfigurator().apply(
                 new MotorOutputConfigs()
-                        .withInverted(InvertedValue.Clockwise_Positive)
+                        .withInverted(InvertedValue.CounterClockwise_Positive)
                         .withPeakForwardDutyCycle(1d)
                         .withPeakReverseDutyCycle(-1d)
                         .withNeutralMode(NeutralModeValue.Brake));
