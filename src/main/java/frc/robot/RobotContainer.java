@@ -21,6 +21,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.subsystems.doohickey.Doohickey;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardNumber;
@@ -49,6 +50,7 @@ public class RobotContainer {
     private final CommandXboxController drivestick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
+    private final Doohickey doohickey = Doohickey.getInstance();
 
     /* Path follower */
     private final AutoFactory autoFactory;
@@ -117,7 +119,7 @@ public class RobotContainer {
                 () -> !drivetrain.isRotating() && Math.abs(drivestick.getRightX()) < drivetrain.getTurnDeadBand())
         );
 
-        drivestick.leftBumper().onTrue(
+        drivestick.y().onTrue(
             new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
         );
 
@@ -144,10 +146,10 @@ public class RobotContainer {
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        drivestick.back().and(drivestick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        drivestick.back().and(drivestick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        drivestick.start().and(drivestick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        drivestick.start().and(drivestick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        // drivestick.back().and(drivestick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        // drivestick.back().and(drivestick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        // drivestick.start().and(drivestick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // drivestick.start().and(drivestick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
         drivestick.start().and(drivestick.back()).onTrue(drivetrain.resetHeadingCommand());
@@ -168,6 +170,18 @@ public class RobotContainer {
         );
 
         drivetrain.registerTelemetry(logger::telemeterize);
+    }
+
+    public void configureMech() {
+        drivestick.leftBumper().onTrue(
+            doohickey.intakeCommand()
+        );
+
+        drivestick.rightBumper().onTrue(
+            doohickey.startOuttakeCommand()
+        ).onFalse(
+            doohickey.stopCommand()
+        );
     }
 
     public void loop(){
