@@ -86,8 +86,13 @@ public class RobotContainer {
         
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
-    
+
     private void configureBindings() {
+        configureDriveBindings();
+        configureMechBindings();
+    }
+    
+    private void configureDriveBindings() {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(
               () -> {
@@ -174,7 +179,7 @@ public class RobotContainer {
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public void configureMech() {
+    public void configureMechBindings() {
         drivestick.leftBumper().onTrue(
             Commands.sequence(
                 elevator.setSourceCommand(),
