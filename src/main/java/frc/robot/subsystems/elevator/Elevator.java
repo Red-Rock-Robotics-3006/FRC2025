@@ -17,6 +17,7 @@ import edu.wpi.first.units.measure.MutVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import redrocklib.logging.SmartDashboardNumber;
 
@@ -184,9 +185,29 @@ public class Elevator extends SubsystemBase {
         this.setPosition(this.target.getNumber());
     }
 
-    // public Command setL4Command() {
-    //     return new InstantCommand(() -> this.)
-    // }
+    public Command setL4Command() {
+        return new InstantCommand(() -> this.setElevatorPosition(Position.L4), this);
+    }
+
+    public Command setL3Command() {
+        return new InstantCommand(() -> this.setElevatorPosition(Position.L3), this);
+    }
+
+    public Command setL2Command() {
+        return new InstantCommand(() -> this.setElevatorPosition(Position.L2), this);
+    }
+
+    public Command setL1Command() {
+        return new InstantCommand(() -> this.setElevatorPosition(Position.L1), this);
+    }
+
+    public Command setSourceCommand() {
+        return new InstantCommand(() -> this.setElevatorPosition(Position.SOURCE), this);
+    }
+
+    public Command setGroundCommand() {
+        return new InstantCommand(() -> this.setElevatorPosition(Position.GROUND), this);
+    }
 
     public static Elevator getInstance() {
         if (instance == null)

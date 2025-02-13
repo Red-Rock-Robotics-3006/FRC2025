@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.doohickey.Doohickey;
+import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardNumber;
@@ -51,6 +52,7 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Doohickey doohickey = Doohickey.getInstance();
+    private final Elevator elevator = Elevator.getInstance();
 
     /* Path follower */
     private final AutoFactory autoFactory;
@@ -123,21 +125,21 @@ public class RobotContainer {
             new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
         );
 
-        drivestick.povLeft().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
-        );
+        // drivestick.povLeft().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
+        // );
 
-        drivestick.povUp().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(0), drivetrain)
-        );
+        // drivestick.povUp().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(0), drivetrain)
+        // );
 
-        drivestick.povRight().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(-90), drivetrain)
-        );
+        // drivestick.povRight().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(-90), drivetrain)
+        // );
 
-        drivestick.povDown().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
-        );
+        // drivestick.povDown().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
+        // );
 
         // drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
         // drivestick.b().whileTrue(drivetrain.applyRequest(() ->
@@ -174,13 +176,39 @@ public class RobotContainer {
 
     public void configureMech() {
         drivestick.leftBumper().onTrue(
-            doohickey.intakeCommand()
+            Commands.sequence(
+                elevator.setSourceCommand(),
+                doohickey.intakeCommand()
+            )
         );
 
         drivestick.rightBumper().onTrue(
             doohickey.startOuttakeCommand()
         ).onFalse(
-            doohickey.stopCommand()
+            Commands.sequence(
+                doohickey.stopCommand(),
+                elevator.setGroundCommand()
+            )
+        );
+
+        drivestick.a().onTrue(
+            elevator.setL1Command()
+        );
+
+        drivestick.x().onTrue(
+            elevator.setL2Command()
+        );
+
+        drivestick.y().onTrue(
+            elevator.setL3Command()
+        );
+
+        drivestick.b().onTrue(
+            elevator.setL4Command()
+        );
+
+        drivestick.povDown().onTrue(
+            elevator.setGroundCommand()
         );
     }
 
