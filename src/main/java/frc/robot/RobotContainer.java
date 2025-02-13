@@ -139,10 +139,10 @@ public class RobotContainer {
             new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
         );
 
-        drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        drivestick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-drivestick.getLeftY(), -drivestick.getLeftX()))
-        ));
+        // drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        // drivestick.b().whileTrue(drivetrain.applyRequest(() ->
+        //     point.withModuleDirection(new Rotation2d(-drivestick.getLeftY(), -drivestick.getLeftX()))
+        // ));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
@@ -154,7 +154,7 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         drivestick.start().and(drivestick.back()).onTrue(drivetrain.resetHeadingCommand());
 
-        drivestick.rightBumper().onTrue(
+        drivestick.back().onTrue(
             new FunctionalCommand(
                 () -> {
                     drivetrain.setTargetPose(this.constructTestTargetPose());

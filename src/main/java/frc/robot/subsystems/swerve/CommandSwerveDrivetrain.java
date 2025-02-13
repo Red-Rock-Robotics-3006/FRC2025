@@ -119,6 +119,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final PIDController m_pathYController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
     private final PIDController m_pathThetaController = new PIDController(rotateP.getNumber(), rotateI.getNumber(), rotateD.getNumber());
   
+    private DriverStation.Alliance alliance = Alliance.Blue;
+    
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
         new SysIdRoutine.Config(
@@ -394,11 +396,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          */
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                    allianceColor == Alliance.Red
-                        ? kRedAlliancePerspectiveRotation
-                        : kBlueAlliancePerspectiveRotation
-                );
+                // setOperatorPerspectiveForward(
+                //     allianceColor == Alliance.Red
+                //         ? kRedAlliancePerspectiveRotation
+                //         : kBlueAlliancePerspectiveRotation
+                // );
+                this.setAllianceColor(allianceColor);
                 m_hasAppliedOperatorPerspective = true;
             });
         }
@@ -449,6 +452,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
     }
 
+    private void setAllianceColor(DriverStation.Alliance alliance) {
+        this.alliance = alliance;
+    }
+
     private boolean poseEstimateIsValid(LimelightHelpers.PoseEstimate e) {
         return e.avgTagDist < kRejectionDistance.getNumber() && Math.abs(this.getRotationRateDegrees()) < kRejectionRotationRate.getNumber();
     }
@@ -494,8 +501,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public double getTargetHeadingDegrees(){
-        if (this.isTargetingPosition()) return targetPose2d.getRotation().getDegrees();
-        return this.targetHeadingDegrees;
+        // double offset = (this.alliance == Alliance.Red) ? 180 : 0;
+        double offset = 0;
+        if (this.isTargetingPosition()) return targetPose2d.getRotation().getDegrees() + offset;
+        return this.targetHeadingDegrees + offset;
     }
 
     public boolean isRotating(){

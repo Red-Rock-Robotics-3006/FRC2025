@@ -32,13 +32,13 @@ public class Elevator extends SubsystemBase {
         SOURCE
     }
 
-    private static Map<Position, Double> POSITION_CONVERSIONS = Map.of(
-            Position.L4, 69.69,
-            Position.L3, 69.69,
-            Position.L2, 69.69,
-            Position.L1, 69.69,
-            Position.GROUND, 69.69,
-            Position.SOURCE, 69.69);
+    private static Map<Position, SmartDashboardNumber> POSITION_CONVERSIONS = Map.of(
+            Position.L4, new SmartDashboardNumber("elevator/elevator-l4", 49),
+            Position.L3, new SmartDashboardNumber("elevator/elevator-l3", 39),
+            Position.L2, new SmartDashboardNumber("elevator/elevator-l2", 29),
+            Position.L1, new SmartDashboardNumber("elevator/elevator-l1", 19),
+            Position.GROUND, new SmartDashboardNumber("elevator/elevator-ground", 5),
+            Position.SOURCE, new SmartDashboardNumber("elevator/elevator-source", 29));
 
     private final TalonFX m_elevatorLeft = new TalonFX(50); // update
     private final TalonFX m_elevatorRight = new TalonFX(51); // update
@@ -113,7 +113,7 @@ public class Elevator extends SubsystemBase {
 
     private void setElevatorPosition(Position pos) {
         this.m_elevatorLeft.setControl(
-                new MotionMagicVoltage(Elevator.POSITION_CONVERSIONS.get(pos))
+                new MotionMagicVoltage(Elevator.POSITION_CONVERSIONS.get(pos).getNumber())
                         .withSlot(0)
                         .withEnableFOC(true)
                         .withOverrideBrakeDurNeutral(false));
@@ -183,6 +183,10 @@ public class Elevator extends SubsystemBase {
     public void setTarget() {
         this.setPosition(this.target.getNumber());
     }
+
+    // public Command setL4Command() {
+    //     return new InstantCommand(() -> this.)
+    // }
 
     public static Elevator getInstance() {
         if (instance == null)
