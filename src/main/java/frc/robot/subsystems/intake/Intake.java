@@ -95,22 +95,16 @@ public class Intake extends SubsystemBase {
         double speed = intakeSpeed.getNumber() / 60d;
         this.m_intakeLeft.setControl(new MotionMagicVelocityVoltage(speed)
                 .withSlot(0).withEnableFOC(true).withOverrideBrakeDurNeutral(true));
-        this.m_intakeRight.setControl(new MotionMagicVelocityVoltage(speed)
-                .withSlot(0).withEnableFOC(true).withOverrideBrakeDurNeutral(true));
     }
 
     public void reverseIntake() {
         double speed = -intakeSpeed.getNumber() / 60d;
         this.m_intakeLeft.setControl(new MotionMagicVelocityVoltage(speed)
                 .withSlot(0).withEnableFOC(true).withOverrideBrakeDurNeutral(true));
-        this.m_intakeRight.setControl(new MotionMagicVelocityVoltage(speed)
-                .withSlot(0).withEnableFOC(true).withOverrideBrakeDurNeutral(true));
     }
 
     public void disableIntake() {
         this.m_intakeLeft.setControl(new MotionMagicVelocityVoltage(0)
-                .withSlot(0).withEnableFOC(true).withOverrideBrakeDurNeutral(true));
-        this.m_intakeRight.setControl(new MotionMagicVelocityVoltage(0)
                 .withSlot(0).withEnableFOC(true).withOverrideBrakeDurNeutral(true));
     }
 
