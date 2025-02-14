@@ -15,7 +15,7 @@ import redrocklib.wrappers.RedRockTalon;
 public class Doohickey extends SubsystemBase{
     private static Doohickey instance = null;
 
-    private RedRockTalon spinMaster = new RedRockTalon(17, "doohickey-motor");
+    private RedRockTalon spinMaster = new RedRockTalon(20, "doohickey-motor", "*");
 
     private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("doo/doo-intake-speed", 0.3);
     private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("doo/doo-outtake-speed", 0.3);

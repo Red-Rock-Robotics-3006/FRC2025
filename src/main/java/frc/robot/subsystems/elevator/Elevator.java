@@ -24,7 +24,7 @@ import redrocklib.logging.SmartDashboardNumber;
 public class Elevator extends SubsystemBase {
     private static Elevator instance = null;
 
-    public enum Position { // stores rotation values for different positions
+    public static enum Position { // stores rotation values for different positions
         L4,
         L3,
         L2,
@@ -41,8 +41,8 @@ public class Elevator extends SubsystemBase {
             Position.GROUND, new SmartDashboardNumber("elevator/elevator-ground", 5),
             Position.SOURCE, new SmartDashboardNumber("elevator/elevator-source", 29));
 
-    private final TalonFX m_elevatorLeft = new TalonFX(50); // update
-    private final TalonFX m_elevatorRight = new TalonFX(51); // update
+    private final TalonFX m_elevatorLeft = new TalonFX(50, "*"); // update
+    private final TalonFX m_elevatorRight = new TalonFX(51, "*"); // update
 
     private Slot0Configs elevatorSlot0Configs = new Slot0Configs();
 
@@ -67,8 +67,10 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber elevatorKg = new SmartDashboardNumber("elevator/kg", 0.022);
 
-    private SmartDashboardNumber delta = new SmartDashboardNumber("delta", 5);
-    private SmartDashboardNumber target = new SmartDashboardNumber("target", 0);
+    private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("elevator/target", 0);
+    private SmartDashboardNumber current = new SmartDashboardNumber("elevator/current", 0);
+    private SmartDashboardNumber threshold = new SmartDashboardNumber("elevator/threshold", 0.2);
 
                                                                                                              
 
@@ -112,15 +114,17 @@ public class Elevator extends SubsystemBase {
         this.m_elevatorRight.setControl(new Follower(50, true)); // update
     }
 
-    private void setElevatorPosition(Position pos) {
-        this.m_elevatorLeft.setControl(
-                new MotionMagicVoltage(Elevator.POSITION_CONVERSIONS.get(pos).getNumber())
-                        .withSlot(0)
-                        .withEnableFOC(true)
-                        .withOverrideBrakeDurNeutral(false));
+    public void setElevatorPosition(Position pos) {
+        // this.m_elevatorLeft.setControl(
+        //         new MotionMagicVoltage(Elevator.POSITION_CONVERSIONS.get(pos).getNumber())
+        //                 .withSlot(0)
+        //                 .withEnableFOC(true)
+        //                 .withOverrideBrakeDurNeutral(false));
+        this.setPosition(Elevator.POSITION_CONVERSIONS.get(pos).getNumber());
     }
 
     public void setPosition(double rotations) {
+        System.out.println("GOTO: " + rotations);
         this.m_elevatorLeft.setControl(
             new MotionMagicVoltage(rotations)
                 .withSlot(0)
@@ -171,6 +175,8 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/elevator-right-spike", m_elevatorRight.getTorqueCurrent().getValueAsDouble());
         SmartDashboard.putNumber("elevator/elevator-left-velocity", m_elevatorLeft.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("elevator/elevator-right-velocity", m_elevatorRight.getVelocity().getValueAsDouble());
+
+        current.putNumber(m_elevatorLeft.getPosition().getValueAsDouble());
     }
 
     public void increaseTarget() {
@@ -183,6 +189,14 @@ public class Elevator extends SubsystemBase {
 
     public void setTarget() {
         this.setPosition(this.target.getNumber());
+    }
+
+    public double getPosition() {
+        return current.getNumber();
+    }
+
+    public boolean withinTargetRotation(Position pos) {
+        return Math.abs(Elevator.POSITION_CONVERSIONS.get(pos).getNumber() - current.getNumber()) < threshold.getNumber();
     }
 
     public Command setL4Command() {
@@ -198,7 +212,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command setL1Command() {
-        return new InstantCommand(() -> this.setElevatorPosition(Position.L1), this);
+        return new InstantCommand(() -> {System.out.println(1);this.setElevatorPosition(Position.L1);}, this);
     }
 
     public Command setSourceCommand() {

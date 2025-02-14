@@ -18,11 +18,15 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.doohickey.Doohickey;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.Elevator.Position;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardNumber;
@@ -121,9 +125,9 @@ public class RobotContainer {
                 () -> !drivetrain.isRotating() && Math.abs(drivestick.getRightX()) < drivetrain.getTurnDeadBand())
         );
 
-        drivestick.y().onTrue(
-            new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
-        );
+        // drivestick.y().and(drivestick.back()).onTrue(
+        //     new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
+        // );
 
         // drivestick.povLeft().onTrue(
         //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
@@ -192,7 +196,9 @@ public class RobotContainer {
         );
 
         drivestick.a().onTrue(
-            elevator.setL1Command()
+            // elevator.setL1Command()
+            // new InstantCommand(() -> {System.out.println(2);elevator.setElevatorPosition(Elevator.Position.L1);}, elevator)
+            new InstantCommand(() -> System.out.println(2))
         );
 
         drivestick.x().onTrue(
@@ -210,6 +216,30 @@ public class RobotContainer {
         drivestick.povDown().onTrue(
             elevator.setGroundCommand()
         );
+
+        drivestick.back().and(drivestick.y()).onTrue(
+            new SequentialCommandGroup(
+                elevator.setL3Command(),
+                new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
+                doohickey.startOuttakeCommand(),
+                new WaitCommand(1),
+                doohickey.stopCommand(),
+                elevator.setSourceCommand()
+            )
+        );
+
+        // drivestick.start().and(drivestick.y()).onTrue(
+        //     new SequentialCommandGroup(
+        //         new Instant Command(() -> {drivetrain.setTargetPose(this.constructTestTargetPose()); drivetrain.enablePositionTargeting();}),
+        //         elevator.setL3Command(),
+        //         new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
+        //         doohickey.startOuttakeCommand(),
+        //         new WaitCommand(1),
+        //         doohickey.stopCommand(),
+        //         elevator.setSourceCommand()
+        //     )
+        // );
+
     }
 
     public void loop(){
