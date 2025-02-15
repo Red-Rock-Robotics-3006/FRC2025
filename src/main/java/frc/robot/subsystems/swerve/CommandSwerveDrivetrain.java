@@ -9,6 +9,7 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 
 import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
@@ -49,9 +50,10 @@ import redrocklib.logging.SmartDashboardBoolean;
 @Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 8);
-    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 1.2);
-    private SmartDashboardNumber rotateD = new SmartDashboardNumber("dt/dt-rotate-d", 0.3);
-    private SmartDashboardNumber rotateTolerance = new SmartDashboardNumber("dt/dt-rotate-tolerance", 0.1);
+    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 1); // 1.2
+    private SmartDashboardNumber rotateD = new SmartDashboardNumber("dt/dt-rotate-d", 0);
+    private SmartDashboardNumber rotateIRange = new SmartDashboardNumber("dt/dt-rotate-Irange", 0.2);
+    private SmartDashboardNumber rotateTolerance = new SmartDashboardNumber("dt/dt-rotate-tolerance", 0.015);
 
     private SmartDashboardNumber rotationOmegaSignificance = new SmartDashboardNumber("dt/dt-rotation-rate-limit", 1);
     private SmartDashboardNumber driveMaxSpeed = new SmartDashboardNumber("dt/dt-max-drive-speed", 6);
@@ -59,7 +61,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber driveDeadBand = new SmartDashboardNumber("dt/dt-drive-deadband", 0.05);
     private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.05);
 
-    private boolean enableHeadingPID = true;
+    private boolean enableHeadingPID = false;
     private boolean inPositionTargeting = false;
 
     private double targetHeadingDegrees = 0;
@@ -109,9 +111,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterY;
 
     private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 2);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 20);
-    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 1);
-    private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 3);
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 5); // 15
+    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
+    private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.3);
+
+    private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
+    private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
+    private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.1);
+
+
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02);
 
@@ -263,6 +271,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     private void initialize() {
+        // this.angleRequest.HeadingController = new PhoenixPIDController(this.rotateP.getNumber(), this.rotateI.getNumber(), this.rotateD.getNumber());
+        // this.angleRequest.HeadingController.setTolerance(this.rotateTolerance.getNumber());
+        // this.angleRequest.HeadingController.setIntegratorRange(-this.rotateIRange.getNumber(), this.rotateIRange.getNumber());
+
         positionControllerX = new PIDController(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
         positionControllerY = new PIDController(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
 
@@ -408,6 +420,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         this.angleRequest.HeadingController.setPID(this.rotateP.getNumber(), this.rotateI.getNumber(), this.rotateD.getNumber());
         this.angleRequest.HeadingController.setTolerance(this.rotateTolerance.getNumber());
+        this.angleRequest.HeadingController.setIntegratorRange(-this.rotateIRange.getNumber(), this.rotateIRange.getNumber());
+        
         if(this.angleRequest.HeadingController.atSetpoint())
         {
             this.angleRequest.HeadingController.setI(0);
@@ -415,6 +429,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
         this.positionControllerX.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
         this.positionControllerY.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
+
+        positionControllerX.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
+        positionControllerY.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
 
         this.positionControllerX.setTolerance(positionTolerance.getNumber());
         this.positionControllerY.setTolerance(positionTolerance.getNumber());
@@ -436,6 +453,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("dt/current heading", this.getHeadingDegrees());
         SmartDashboard.putNumber("dt/target heading", this.getTargetHeadingDegrees());
 
+        this.xVelocity.putNumber(this.positionControllerX.getErrorDerivative());
+        this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
+
         if (visionEnabled.getValue()) updateVisionMeasurements();
     }
 
@@ -443,11 +463,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         for (Localization.LimeLightPoseEstimateWrapper estimateWrapper : Localization.getPoseEstimates(this.getHeadingDegrees())) {
             if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {
                 this.addVisionMeasurement(estimateWrapper.poseEstimate.pose,
-                                        estimateWrapper.poseEstimate.timestampSeconds, 
+                                        // estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()), 
+                                        Utils.getCurrentTimeSeconds(),
                                         estimateWrapper.getStdvs(estimateWrapper.poseEstimate.avgTagDist));
                 estimateWrapper.field.setRobotPose(
                     estimateWrapper.poseEstimate.pose
                 );
+                SmartDashboard.putNumber("localization/timestamp", estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()));
+                SmartDashboard.putNumber("localization/currentTime", Utils.getCurrentTimeSeconds());
                 SmartDashboard.putBoolean("localization/vision-accepted", true);
             }
             else
@@ -584,7 +607,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public boolean atTargetPose() {
-        return positionControllerX.atSetpoint() && positionControllerY.atSetpoint();
+        return positionControllerX.atSetpoint() && positionControllerY.atSetpoint() && this.angleRequest.HeadingController.atSetpoint();
+    }
+
+    public boolean atTargetVelocity() {
+        return Math.abs(this.positionControllerX.getErrorDerivative()) < this.velocityTolerance.getNumber() && Math.abs(this.positionControllerY.getErrorDerivative()) < this.velocityTolerance.getNumber();
     }
 
     public boolean isTargetingPosition() {

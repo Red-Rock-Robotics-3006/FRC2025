@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.subsystems.doohickey.Doohickey;
@@ -130,7 +131,7 @@ public class RobotContainer {
                 () -> !drivetrain.isRotating() && Math.abs(drivestick.getRightX()) < drivetrain.getTurnDeadBand())
         );
 
-        drivestick.x().and(drivestick.back()).onTrue(
+        drivestick.povUp().and(drivestick.back()).onTrue(
             new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
         );
 
@@ -184,6 +185,14 @@ public class RobotContainer {
     }
 
     public void configureMechBindings() {
+        
+        RobotModeTriggers.teleop().onTrue(
+            Commands.parallel(
+                elevator.normalizeElevatorCommand()
+            )
+        );
+
+
         // drivestick.leftBumper().onTrue(
         //     Commands.sequence(
         //         elevator.setSourceCommand(),
@@ -222,15 +231,15 @@ public class RobotContainer {
             elevator.setL4Command()
         );
 
-        drivestick.povLeft().onTrue(
-            elevator.setGroundCommand()
-        );
+        // drivestick.povLeft().onTrue(
+        //     elevator.setGroundCommand()
+        // );
 
         drivestick.povDown().onTrue(
             elevator.setZeroCommand()
         );
 
-        drivestick.back().and(drivestick.y()).onTrue(
+        drivestick.back().and(drivestick.povLeft()).onTrue(
             new SequentialCommandGroup(
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
@@ -241,18 +250,27 @@ public class RobotContainer {
             )
         );
 
-        // drivestick.start().and(drivestick.y()).onTrue(
-        //     new SequentialCommandGroup(
-        //         new Instant Command(() -> {drivetrain.setTargetPose(this.constructTestTargetPose()); drivetrain.enablePositionTargeting();}),
-        //         elevator.setL3Command(),
-        //         new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
-        //         doohickey.startOuttakeCommand(),
-        //         new WaitCommand(1),
-        //         doohickey.stopCommand(),
-        //         elevator.setSourceCommand()
-        //     )
-        // );
+        drivestick.back().and(drivestick.povRight()).onTrue(
+            new SequentialCommandGroup(
+                new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(5.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
+                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                elevator.setL3Command(),
+                new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
+                doohickey.startOuttakeCommand(),
+                new WaitCommand(1),
+                doohickey.stopCommand(),
+                elevator.setSourceCommand()
+            )
+        );
 
+        drivestick.rightStick().onTrue(
+            elevator.normalizeElevatorCommand()
+        );
+
+        drivestick.leftStick().onTrue(
+            Commands.runOnce(() ->drivetrain.disablePositionTargeting())
+        );
     }
 
     public void loop(){

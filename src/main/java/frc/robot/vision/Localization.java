@@ -1,5 +1,7 @@
 package frc.robot.vision;
 
+import com.ctre.phoenix6.Utils;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,6 +22,9 @@ public class Localization {
         // {0.8, 0.8, 9999},
         {0.8, 0.8, 9999}
     };
+
+    // public static final double timeOf/fset = Utils.getCurrentTimeSeconds();
+    private static SmartDashboardNumber timeOffset = new SmartDashboardNumber("localization/timeoffset", Utils.getCurrentTimeSeconds());
 
     private static LimeLightPoseEstimateWrapper[] wrappers;
 

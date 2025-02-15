@@ -6,6 +6,8 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -36,7 +38,7 @@ public class Elevator extends SubsystemBase {
 
     private static Map<Position, SmartDashboardNumber> POSITION_CONVERSIONS = Map.of(
             Position.L4, new SmartDashboardNumber("elevator/elevator-l4", 49),
-            Position.L3, new SmartDashboardNumber("elevator/elevator-l3", 55),
+            Position.L3, new SmartDashboardNumber("elevator/elevator-l3", 56),
             Position.L2, new SmartDashboardNumber("elevator/elevator-l2", 34),
             Position.L1, new SmartDashboardNumber("elevator/elevator-l1", 19),
             Position.GROUND, new SmartDashboardNumber("elevator/elevator-ground", 5),
@@ -73,6 +75,8 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber target = new SmartDashboardNumber("elevator/target", 0);
     private SmartDashboardNumber current = new SmartDashboardNumber("elevator/current", 0);
     private SmartDashboardNumber threshold = new SmartDashboardNumber("elevator/threshold", 0.2);
+    private SmartDashboardNumber currentThreshold = new SmartDashboardNumber("elevator/current-threshold", 50);
+    private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
 
                                                                                                              
 
@@ -202,6 +206,34 @@ public class Elevator extends SubsystemBase {
 
     public boolean withinTargetRotation(Position pos) {
         return Math.abs(Elevator.POSITION_CONVERSIONS.get(pos).getNumber() - this.getPosition()) < threshold.getNumber();
+    }
+
+    public boolean atCurrentSpike()
+    {
+        return Math.abs(this.m_elevatorLeft.getTorqueCurrent().getValueAsDouble()) > this.currentThreshold.getNumber() ||
+                Math.abs(this.m_elevatorRight.getTorqueCurrent().getValueAsDouble()) > this.currentThreshold.getNumber();
+    }
+
+    public void resetMotors()
+    {
+        this.m_elevatorLeft.setControl(new CoastOut());
+        this.m_elevatorLeft.setPosition(0);
+        this.m_elevatorRight.setPosition(0);
+        this.m_elevatorLeft.setControl(new DutyCycleOut(0));
+    }
+
+    public void setNormalizeSpeed()
+    {
+        this.m_elevatorLeft.setControl(new DutyCycleOut(this.normalizationSpeed.getNumber()));
+    }
+
+    public Command normalizeElevatorCommand()
+    {
+        return new FunctionalCommand(
+            () -> this.setNormalizeSpeed(), 
+            () -> {}, 
+            (interrupted) -> this.resetMotors(), 
+            () -> this.atCurrentSpike(), this);
     }
 
     public Command setL4Command() {
