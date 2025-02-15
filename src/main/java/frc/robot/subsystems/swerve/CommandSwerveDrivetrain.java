@@ -83,7 +83,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber kRejectionDistance = new SmartDashboardNumber("localization/rejection-distance", 3);
     private SmartDashboardNumber kRejectionRotationRate = new SmartDashboardNumber("localization/rejection-rotation-rate", 3);
 
-    private SmartDashboardBoolean visionEnabled = new SmartDashboardBoolean("localization/vision-enabled", false);
+    private SmartDashboardBoolean visionEnabled = new SmartDashboardBoolean("localization/vision-enabled", true);
 
     /** Swerve request to apply during field-centric path following */
     private final SwerveRequest.ApplyFieldSpeeds m_pathApplyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
@@ -448,7 +448,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 estimateWrapper.field.setRobotPose(
                     estimateWrapper.poseEstimate.pose
                 );
+                SmartDashboard.putBoolean("localization/vision-accepted", true);
             }
+            else
+                SmartDashboard.putBoolean("localization/vision-accepted", false);
         }
     }
 

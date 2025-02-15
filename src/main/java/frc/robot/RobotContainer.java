@@ -130,9 +130,9 @@ public class RobotContainer {
                 () -> !drivetrain.isRotating() && Math.abs(drivestick.getRightX()) < drivetrain.getTurnDeadBand())
         );
 
-        // drivestick.y().and(drivestick.back()).onTrue(
-        //     new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
-        // );
+        drivestick.x().and(drivestick.back()).onTrue(
+            new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
+        );
 
         // drivestick.povLeft().onTrue(
         //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
@@ -165,45 +165,49 @@ public class RobotContainer {
         // reset the field-centric heading on left bumper press
         drivestick.start().and(drivestick.back()).onTrue(drivetrain.resetHeadingCommand());
 
-        drivestick.back().onTrue(
-            new FunctionalCommand(
-                () -> {
-                    drivetrain.setTargetPose(this.constructTestTargetPose());
-                    drivetrain.enablePositionTargeting();
-                }, 
-                () -> {}, 
-                (interrupted) -> {
-                    drivetrain.disablePositionTargeting();
-                }, 
-                () -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose())
-        ).onFalse(
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
-        );
+        // drivestick.back().onTrue(
+        //     new FunctionalCommand(
+        //         () -> {
+        //             drivetrain.setTargetPose(this.constructTestTargetPose());
+        //             drivetrain.enablePositionTargeting();
+        //         }, 
+        //         () -> {}, 
+        //         (interrupted) -> {
+        //             drivetrain.disablePositionTargeting();
+        //         }, 
+        //         () -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose())
+        // ).onFalse(
+        //     Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+        // );
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
     public void configureMechBindings() {
-        drivestick.leftBumper().onTrue(
-            Commands.sequence(
-                elevator.setSourceCommand(),
-                doohickey.intakeCommand()
-            )
-        );
+        // drivestick.leftBumper().onTrue(
+        //     Commands.sequence(
+        //         elevator.setSourceCommand(),
+        //         doohickey.intakeCommand()
+        //     )
+        // );
+
+        // drivestick.rightBumper().onTrue(
+        //     doohickey.startOuttakeCommand()
+        // ).onFalse(
+        //     Commands.sequence(
+        //         doohickey.stopCommand(),
+        //         elevator.setGroundCommand()
+        //     )
+        // );
 
         drivestick.rightBumper().onTrue(
             doohickey.startOuttakeCommand()
         ).onFalse(
-            Commands.sequence(
-                doohickey.stopCommand(),
-                elevator.setGroundCommand()
-            )
+            doohickey.stopCommand()
         );
 
         drivestick.a().onTrue(
-            // elevator.setL1Command()
-            // new InstantCommand(() -> {System.out.println(2);elevator.setElevatorPosition(Elevator.Position.L1);}, elevator)
-            new InstantCommand(() -> System.out.println(2))
+            elevator.setL1Command()
         );
 
         drivestick.x().onTrue(
@@ -218,8 +222,12 @@ public class RobotContainer {
             elevator.setL4Command()
         );
 
-        drivestick.povDown().onTrue(
+        drivestick.povLeft().onTrue(
             elevator.setGroundCommand()
+        );
+
+        drivestick.povDown().onTrue(
+            elevator.setZeroCommand()
         );
 
         drivestick.back().and(drivestick.y()).onTrue(

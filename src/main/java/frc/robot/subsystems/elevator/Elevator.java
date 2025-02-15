@@ -30,16 +30,18 @@ public class Elevator extends SubsystemBase {
         L2,
         L1,
         GROUND,
-        SOURCE
+        SOURCE,
+        ZERO
     }
 
     private static Map<Position, SmartDashboardNumber> POSITION_CONVERSIONS = Map.of(
             Position.L4, new SmartDashboardNumber("elevator/elevator-l4", 49),
-            Position.L3, new SmartDashboardNumber("elevator/elevator-l3", 39),
-            Position.L2, new SmartDashboardNumber("elevator/elevator-l2", 29),
+            Position.L3, new SmartDashboardNumber("elevator/elevator-l3", 55),
+            Position.L2, new SmartDashboardNumber("elevator/elevator-l2", 34),
             Position.L1, new SmartDashboardNumber("elevator/elevator-l1", 19),
             Position.GROUND, new SmartDashboardNumber("elevator/elevator-ground", 5),
-            Position.SOURCE, new SmartDashboardNumber("elevator/elevator-source", 29));
+            Position.SOURCE, new SmartDashboardNumber("elevator/elevator-source", 29),
+            Position.ZERO, new SmartDashboardNumber("elevator/elevator-zero", 0));
 
     private final TalonFX m_elevatorLeft = new TalonFX(50, "*"); // update
     private final TalonFX m_elevatorRight = new TalonFX(51, "*"); // update
@@ -54,14 +56,14 @@ public class Elevator extends SubsystemBase {
             .withStatorCurrentLimit(80)
             .withStatorCurrentLimitEnable(true);
 
-    private SmartDashboardNumber elevatorMotionAccel = new SmartDashboardNumber("elevator/elevator-mm-accel", 10); // update
-    private SmartDashboardNumber elevatorMotionVel = new SmartDashboardNumber("elevator/elevator-mm-vel", 10);
-    private SmartDashboardNumber elevatorMotionJerk = new SmartDashboardNumber("elevator/elevator-mm-jerk", 0);
+    private SmartDashboardNumber elevatorMotionAccel = new SmartDashboardNumber("elevator/elevator-mm-accel", 100000); // update
+    private SmartDashboardNumber elevatorMotionVel = new SmartDashboardNumber("elevator/elevator-mm-vel", 40);
+    private SmartDashboardNumber elevatorMotionJerk = new SmartDashboardNumber("elevator/elevator-mm-jerk", 1000000);
 
     private SmartDashboardNumber elevatorKs = new SmartDashboardNumber("elevator/ks", 0.12);
     private SmartDashboardNumber elevatorKa = new SmartDashboardNumber("elevator/ka", 0);
     private SmartDashboardNumber elevatorKv = new SmartDashboardNumber("elevator/kv", 0); // to be tuned;
-    private SmartDashboardNumber elevatorKp = new SmartDashboardNumber("elevator/kp", 1);
+    private SmartDashboardNumber elevatorKp = new SmartDashboardNumber("elevator/kp", 2);
     private SmartDashboardNumber elevatorKi = new SmartDashboardNumber("elevator/ki", 0);
     private SmartDashboardNumber elevatorKd = new SmartDashboardNumber("elevator/kd", 0);
 
@@ -101,8 +103,10 @@ public class Elevator extends SubsystemBase {
                 .withKG(elevatorKg.getNumber())
                 .withGravityType(GravityTypeValue.Elevator_Static);
 
-        this.elevatorMotionConfigs = new MotionMagicConfigs()   
-                .withMotionMagicAcceleration(elevatorMotionAccel.getNumber());
+        this.elevatorMotionConfigs = new MotionMagicConfigs()
+                .withMotionMagicCruiseVelocity(elevatorMotionVel.getNumber())
+                .withMotionMagicAcceleration(elevatorMotionAccel.getNumber())
+                .withMotionMagicJerk(elevatorMotionJerk.getNumber());
 
         this.m_elevatorLeft.getConfigurator().apply(elevatorSlot0Configs);
         this.m_elevatorRight.getConfigurator().apply(elevatorSlot0Configs);
@@ -112,6 +116,9 @@ public class Elevator extends SubsystemBase {
         this.m_elevatorRight.getConfigurator().apply(elevatorCurrentLimitsConfigs);
 
         this.m_elevatorRight.setControl(new Follower(50, true)); // update
+
+        this.m_elevatorLeft.setPosition(0);
+        this.m_elevatorRight.setPosition(0);
     }
 
     public void setElevatorPosition(Position pos) {
@@ -175,8 +182,6 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/elevator-right-spike", m_elevatorRight.getTorqueCurrent().getValueAsDouble());
         SmartDashboard.putNumber("elevator/elevator-left-velocity", m_elevatorLeft.getVelocity().getValueAsDouble());
         SmartDashboard.putNumber("elevator/elevator-right-velocity", m_elevatorRight.getVelocity().getValueAsDouble());
-
-        current.putNumber(m_elevatorLeft.getPosition().getValueAsDouble());
     }
 
     public void increaseTarget() {
@@ -192,11 +197,11 @@ public class Elevator extends SubsystemBase {
     }
 
     public double getPosition() {
-        return current.getNumber();
+        return m_elevatorLeft.getPosition().getValueAsDouble();
     }
 
     public boolean withinTargetRotation(Position pos) {
-        return Math.abs(Elevator.POSITION_CONVERSIONS.get(pos).getNumber() - current.getNumber()) < threshold.getNumber();
+        return Math.abs(Elevator.POSITION_CONVERSIONS.get(pos).getNumber() - this.getPosition()) < threshold.getNumber();
     }
 
     public Command setL4Command() {
@@ -212,7 +217,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public Command setL1Command() {
-        return new InstantCommand(() -> {System.out.println(1);this.setElevatorPosition(Position.L1);}, this);
+        return new InstantCommand(() -> this.setElevatorPosition(Position.L1), this);
     }
 
     public Command setSourceCommand() {
@@ -221,6 +226,10 @@ public class Elevator extends SubsystemBase {
 
     public Command setGroundCommand() {
         return new InstantCommand(() -> this.setElevatorPosition(Position.GROUND), this);
+    }
+
+    public Command setZeroCommand() {
+        return new InstantCommand(() -> this.setElevatorPosition(Position.ZERO), this);
     }
 
     public static Elevator getInstance() {
