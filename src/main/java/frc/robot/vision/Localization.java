@@ -92,7 +92,7 @@ public class Localization {
             kStdvs[1] = new SmartDashboardNumber(this.name + "/" + this.name + "-stdvY", stdvDefVals[1]);
             kStdvs[2] = new SmartDashboardNumber(this.name + "/" + this.name + "-stdvTheta", stdvDefVals[2]);
 
-            SmartDashboard.putData(this.name + "/" + this.name + "field", this.field);
+            SmartDashboard.putData(this.name + "/" + this.name + "-field", this.field);
 
             return this;
         }

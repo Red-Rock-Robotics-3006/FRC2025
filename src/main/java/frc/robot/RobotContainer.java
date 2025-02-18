@@ -30,6 +30,7 @@ import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.Elevator.Position;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
+import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
@@ -70,6 +71,8 @@ public class RobotContainer {
     private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 0);
     private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
 
+    private SmartDashboardBoolean inPIDTolerance = new SmartDashboardBoolean("dt/dt-in-pid-tolerance", false);
+
 
     public RobotContainer() {
         drivetrain.setSwerveRequest(this.driveFacingAngle);
@@ -102,16 +105,25 @@ public class RobotContainer {
             drivetrain.applyRequest(
               () -> {
                 if (drivetrain.isTargetingPosition()) {
+                    inPIDTolerance.putBoolean(false);
                     return driveFacingAngle.withVelocityX(drivetrain.getPositionPIDValueX() * MaxSpeed)
                                             .withVelocityY(drivetrain.getPositionPIDValueY() * MaxSpeed)
                                             .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
                 }
                 else if (!drivetrain.getUseHeadingPID() || Math.abs(drivestick.getRightX()) > drivetrain.getTurnDeadBand()) {
+                    inPIDTolerance.putBoolean(false);
                   return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
                               .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
                               .withRotationalRate(progressiveInput(-drivestick.getRightX(),progressiveTurnExponent) * MaxAngularRate);
                 }
+                else if (driveFacingAngle.HeadingController.atSetpoint()) {
+                    inPIDTolerance.putBoolean(true);
+                    return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
+                    .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                    .withRotationalRate(0);
+                }
                 else {
+                    inPIDTolerance.putBoolean(false);
                   return driveFacingAngle.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
                                          .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
                                          .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
@@ -192,6 +204,10 @@ public class RobotContainer {
             )
         );
 
+        drivestick.leftBumper().onTrue(
+            doohickey.intakeCommand()
+        );
+
 
         // drivestick.leftBumper().onTrue(
         //     Commands.sequence(
@@ -252,7 +268,7 @@ public class RobotContainer {
 
         drivestick.back().and(drivestick.povRight()).onTrue(
             new SequentialCommandGroup(
-                new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(5.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
+                new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(6.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
                 new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
                 new InstantCommand(() -> drivetrain.disablePositionTargeting()),
                 elevator.setL3Command(),
@@ -282,6 +298,7 @@ public class RobotContainer {
     
         driveFacingAngle.Deadband = drivetrain.getDriveDeadBand();
         driveFacingAngle.RotationalDeadband = drivetrain.getTurnDeadBand();
+        driveFacingAngle.HeadingController.setTolerance(Math.toRadians(drivetrain.getRequestedHeadingPIDTolerance()));
     }
 
     public Command getAutonomousCommand() {

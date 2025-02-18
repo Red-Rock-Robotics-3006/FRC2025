@@ -60,6 +60,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber turnMaxSpeed = new SmartDashboardNumber("dt/dt-max-turn-speed", 1.5);
     private SmartDashboardNumber driveDeadBand = new SmartDashboardNumber("dt/dt-drive-deadband", 0.05);
     private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.05);
+    private SmartDashboardNumber headingPIDTolerance = new SmartDashboardNumber("dt/dt-heading-pid-tolerance", 1.5);
 
     private boolean enableHeadingPID = false;
     private boolean inPositionTargeting = false;
@@ -363,6 +364,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void setSwerveRequest(SwerveRequest.FieldCentricFacingAngle request){
         this.angleRequest = request;
         angleRequest.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
+        angleRequest.HeadingController.setTolerance(Math.toRadians(this.getRequestedHeadingPIDTolerance()));
     }
 
     /**
@@ -464,7 +466,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {
                 this.addVisionMeasurement(estimateWrapper.poseEstimate.pose,
                                         // estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()), 
-                                        Utils.getCurrentTimeSeconds(),
+                                        Utils.getCurrentTimeSeconds() - estimateWrapper.poseEstimate.latency * 0.01,
                                         estimateWrapper.getStdvs(estimateWrapper.poseEstimate.avgTagDist));
                 estimateWrapper.field.setRobotPose(
                     estimateWrapper.poseEstimate.pose
@@ -472,6 +474,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 SmartDashboard.putNumber("localization/timestamp", estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()));
                 SmartDashboard.putNumber("localization/currentTime", Utils.getCurrentTimeSeconds());
                 SmartDashboard.putBoolean("localization/vision-accepted", true);
+                SmartDashboard.putNumber(estimateWrapper.name + "/" + estimateWrapper.name + "-latency", estimateWrapper.poseEstimate.latency);
             }
             else
                 SmartDashboard.putBoolean("localization/vision-accepted", false);
@@ -551,6 +554,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public double getTurnDeadBand(){
         return this.turnDeadBand.getNumber();
+    }
+
+    public double getRequestedHeadingPIDTolerance() {
+        return this.headingPIDTolerance.getNumber();
     }
 
     public void setUseHeadingPID(boolean b){

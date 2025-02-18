@@ -8,7 +8,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import redrocklib.logging.SmartDashboardNumber;
 import redrocklib.wrappers.RedRockTalon;
 
@@ -39,7 +41,7 @@ public class Doohickey extends SubsystemBase{
             .withKI(0)
             .withKD(0)
         )
-        .withSpikeThreshold(5);
+        .withSpikeThreshold(55);
     }
 
     public void setSpeed(double speed) {
@@ -59,12 +61,15 @@ public class Doohickey extends SubsystemBase{
     }
 
     public Command intakeCommand() {
-        return new FunctionalCommand(
-            () -> this.setIntakeSpeed(), 
-            () -> {}, 
-            (interrupted) -> this.stop(), 
-            () -> this.spinMaster.aboveSpikeThreshold(), 
-            this);
+        return Commands.sequence(
+            new FunctionalCommand(
+                () -> this.setIntakeSpeed(), 
+                () -> {}, 
+                (interrupted) -> {}, 
+                () -> this.spinMaster.aboveSpikeThreshold(), this),
+            new WaitCommand(0.05),
+            new InstantCommand(this::stop, this)
+        );
     }
 
     public Command startOuttakeCommand() {
