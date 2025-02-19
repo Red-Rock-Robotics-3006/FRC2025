@@ -8,11 +8,14 @@ import static edu.wpi.first.units.Units.*;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathConstraints;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -143,8 +146,11 @@ public class RobotContainer {
                 () -> !drivetrain.isRotating() && Math.abs(drivestick.getRightX()) < drivetrain.getTurnDeadBand())
         );
 
-        drivestick.povUp().and(drivestick.back()).onTrue(
-            new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
+        drivestick.back().and(drivestick.povUp()).onTrue(
+            Commands.sequence(
+                drivetrain.pathFindTo(targetPose),
+                Commands.print("MMMMMMMMMMMMMMMMMMMMMMMMMMM")
+            )
         );
 
         // drivestick.povLeft().onTrue(
@@ -268,9 +274,10 @@ public class RobotContainer {
 
         drivestick.back().and(drivestick.povRight()).onTrue(
             new SequentialCommandGroup(
-                new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(6.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
-                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                // new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(6.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
+                // new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                // new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                drivetrain.pathFindTo(targetPose),
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
                 doohickey.startOuttakeCommand(),
@@ -288,6 +295,8 @@ public class RobotContainer {
             Commands.runOnce(() ->drivetrain.disablePositionTargeting())
         );
     }
+
+    Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
 
     public void loop(){
         MaxSpeed = drivetrain.getMaxDriveSpeed();
