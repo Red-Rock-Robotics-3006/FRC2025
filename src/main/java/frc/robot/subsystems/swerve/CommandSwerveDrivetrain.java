@@ -503,6 +503,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         SmartDashboard.putNumber("dt/dt-fl-wheel-rotation", this.getModule(0).getDriveMotor().getPosition().getValueAsDouble());
 
+        SmartDashboard.putBoolean("dt/heading-pid-at-setpoint", angleRequest.HeadingController.atSetpoint());
+        SmartDashboard.putNumber("dt/heading-pid-actual-tolerance", angleRequest.HeadingController.getPositionTolerance());
+        SmartDashboard.putNumber("dt/heading-pid-error", angleRequest.HeadingController.getPositionError());
+
+        SmartDashboard.putNumber("dt/dt-position-x", this.getPose().getX());
+        SmartDashboard.putNumber("dt/dt-position-y", this.getPose().getY());
+
+        SmartDashboard.putNumber("dt/dt-position-x-error", positionControllerX.getError());
+        SmartDashboard.putNumber("dt/dt-position-y-error", positionControllerY.getError());
+
         this.xVelocity.putNumber(this.positionControllerX.getErrorDerivative());
         this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
 
@@ -665,12 +675,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return positionRateLimiterY.calculate(positionControllerY.calculate(getPose().getY(), targetPose2d.getY()));
     }
 
+    // public boolean atTargetPose() {
+    //     return positionControllerX.atSetpoint() && positionControllerY.atSetpoint() && this.angleRequest.HeadingController.atSetpoint();
+    // }
+
     public boolean atTargetPose() {
-        return positionControllerX.atSetpoint() && positionControllerY.atSetpoint() && this.angleRequest.HeadingController.atSetpoint();
+        return Math.abs(this.targetPose2d.getX() - this.getPose().getX()) < positionTolerance.getNumber()
+            && Math.abs(this.targetPose2d.getY() - this.getPose().getY()) < positionTolerance.getNumber()
+            && Math.abs(this.getHeadingDegrees() - this.getTargetHeadingDegrees()) < headingPIDTolerance.getNumber();
     }
 
     public boolean atTargetVelocity() {
-        return Math.abs(this.positionControllerX.getErrorDerivative()) < this.velocityTolerance.getNumber() && Math.abs(this.positionControllerY.getErrorDerivative()) < this.velocityTolerance.getNumber();
+        return true;
+        // return Math.abs(this.positionControllerX.getErrorDerivative()) < this.velocityTolerance.getNumber() && Math.abs(this.positionControllerY.getErrorDerivative()) < this.velocityTolerance.getNumber();
     }
 
     public boolean isTargetingPosition() {

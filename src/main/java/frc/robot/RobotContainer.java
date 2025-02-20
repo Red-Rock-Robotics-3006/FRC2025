@@ -35,6 +35,7 @@ import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 
@@ -147,10 +148,7 @@ public class RobotContainer {
         );
 
         drivestick.back().and(drivestick.povUp()).onTrue(
-            Commands.sequence(
-                drivetrain.pathFindTo(targetPose),
-                Commands.print("MMMMMMMMMMMMMMMMMMMMMMMMMMM")
-            )
+            new InstantCommand(drivetrain::toggleHeadingPID, drivetrain)
         );
 
         // drivestick.povLeft().onTrue(
@@ -274,10 +272,10 @@ public class RobotContainer {
 
         drivestick.back().and(drivestick.povRight()).onTrue(
             new SequentialCommandGroup(
-                // new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(6.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
-                // new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-                // new InstantCommand(() -> drivetrain.disablePositionTargeting()),
-                drivetrain.pathFindTo(targetPose),
+                new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(5.735, 3.88284978, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
+                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                // drivetrain.pathFindTo(targetPose),
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
                 doohickey.startOuttakeCommand(),
@@ -286,6 +284,19 @@ public class RobotContainer {
                 elevator.setSourceCommand()
             )
         );
+        // drivestick.back().and(drivestick.povRight()).onTrue(
+        //     new SequentialCommandGroup(
+        //         new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(6.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
+        //         new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+        //         new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+        //         Commands.print("at pose"),
+        //         new InstantCommand(
+        //             () -> drivestick.getHID().setRumble(RumbleType.kRightRumble, 0.5)
+        //         ),
+        //         new WaitCommand(0.2),
+        //         new InstantCommand(() -> drivestick.getHID().setRumble(RumbleType.kRightRumble, 0))
+        //     )
+        // );
 
         drivestick.rightStick().onTrue(
             elevator.normalizeElevatorCommand()
