@@ -71,8 +71,8 @@ public class RobotContainer {
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
 
-    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 0);
-    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 0);
+    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.735);
+    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.88284978);
     private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
 
     private SmartDashboardBoolean inPIDTolerance = new SmartDashboardBoolean("dt/dt-in-pid-tolerance", false);
@@ -272,10 +272,10 @@ public class RobotContainer {
 
         drivestick.back().and(drivestick.povRight()).onTrue(
             new SequentialCommandGroup(
-                new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(5.735, 3.88284978, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
+                new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
                 new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
                 new InstantCommand(() -> drivetrain.disablePositionTargeting()),
-                // drivetrain.pathFindTo(targetPose),
+                // drivetrain.pathFindTo(targetPose),   
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
                 doohickey.startOuttakeCommand(),
@@ -329,6 +329,10 @@ public class RobotContainer {
 
     private Pose2d constructTestTargetPose() {
         return new Pose2d(targetPoseX.getNumber(), targetPoseY.getNumber(), Rotation2d.fromDegrees(targetPoseTheta.getNumber()));
+    }
+
+    private void drivetrainSetTargetPoseConstruct() {
+        drivetrain.setTargetPose(constructTestTargetPose());
     }
     /* Puts a progressive response curve on a normalized analog input
        by raising input to exponent while preserving the sign 

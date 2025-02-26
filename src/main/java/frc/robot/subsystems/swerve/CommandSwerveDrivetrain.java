@@ -118,8 +118,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterX;
     private SlewRateLimiter positionRateLimiterY;
 
-    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 2);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 5); // 15
+    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.5);
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.1); // 15
     private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.3);
 
@@ -686,8 +686,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public boolean atTargetVelocity() {
-        return true;
-        // return Math.abs(this.positionControllerX.getErrorDerivative()) < this.velocityTolerance.getNumber() && Math.abs(this.positionControllerY.getErrorDerivative()) < this.velocityTolerance.getNumber();
+        // return true;
+        return Math.abs(this.positionControllerX.getErrorDerivative()) < this.velocityTolerance.getNumber() && Math.abs(this.positionControllerY.getErrorDerivative()) < this.velocityTolerance.getNumber();
     }
 
     public boolean isTargetingPosition() {
