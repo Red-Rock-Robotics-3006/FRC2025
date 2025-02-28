@@ -15,7 +15,6 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.units.measure.MutVelocity;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -73,7 +72,6 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("elevator/target", 0);
-    private SmartDashboardNumber current = new SmartDashboardNumber("elevator/current", 0);
     private SmartDashboardNumber threshold = new SmartDashboardNumber("elevator/threshold", 0.2);
     private SmartDashboardNumber currentThreshold = new SmartDashboardNumber("elevator/current-threshold", 50);
     private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
