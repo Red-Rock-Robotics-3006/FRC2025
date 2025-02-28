@@ -70,10 +70,6 @@ public class RobotContainer {
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
 
-    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.735);
-    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.88284978);
-    private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
-
     private SmartDashboardBoolean inPIDTolerance = new SmartDashboardBoolean("dt/dt-in-pid-tolerance", false);
 
 
@@ -330,12 +326,10 @@ public class RobotContainer {
         return autoChooser.selectedCommand();
     }
 
-    private Pose2d constructTestTargetPose() {
-        return new Pose2d(targetPoseX.getNumber(), targetPoseY.getNumber(), Rotation2d.fromDegrees(targetPoseTheta.getNumber()));
-    }
+    
 
     private void drivetrainSetTargetPoseConstruct() {
-        drivetrain.setTargetPose(constructTestTargetPose());
+        drivetrain.setTargetPose(drivetrain.constructTestTargetPose());
     }
     /* Puts a progressive response curve on a normalized analog input
        by raising input to exponent while preserving the sign 

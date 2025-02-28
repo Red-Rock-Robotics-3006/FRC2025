@@ -125,6 +125,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3);
 
+    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.735);
+    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.88284978);
+    private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
+
+
 
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02);
@@ -533,6 +538,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 this.targetHeadingDegrees = 0;
             }
         );
+    }
+
+    public Pose2d constructTestTargetPose() {
+        return new Pose2d(targetPoseX.getNumber(), targetPoseY.getNumber(), Rotation2d.fromDegrees(targetPoseTheta.getNumber()));
     }
 
     public void setTargetHeadingDegrees(double degrees){
