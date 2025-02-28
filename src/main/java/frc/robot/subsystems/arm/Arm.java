@@ -39,22 +39,22 @@ public class Arm extends SubsystemBase {
     private static Arm instance = null;
 
     private static Map<Position, SmartDashboardNumber > POSITION_CONVERSIONS = Map.of(
-        Position.L4, new SmartDashboardNumber("arm/arm-l4", 0),
-        Position.L3, new SmartDashboardNumber("arm/arm-l3", 0),
-        Position.L2, new SmartDashboardNumber("arm/arm-l2", 0),
-        Position.L1, new SmartDashboardNumber("arm/arm-l1", 0),
-        Position.SOURCE, new SmartDashboardNumber("arm/arm-source", 0),
-        Position.CORAL_GROUND, new SmartDashboardNumber("arm/arm-coral-ground", 0),
-        Position.ALGAE_GROUND, new SmartDashboardNumber("arm/arm-algae-ground", 0),
-        Position.PROCESSOR, new SmartDashboardNumber("arm/arm-processor", 0),
-        Position.STOW, new SmartDashboardNumber("arm/arm-stow", 0),
-        Position.BARGE, new SmartDashboardNumber("arm/arm-barge", 0)
+        Position.L4, new SmartDashboardNumber("arm/position/arm-l4", 0),
+        Position.L3, new SmartDashboardNumber("arm/position/arm-l3", 0),
+        Position.L2, new SmartDashboardNumber("arm/position/arm-l2", 0),
+        Position.L1, new SmartDashboardNumber("arm/position/arm-l1", 0),
+        Position.SOURCE, new SmartDashboardNumber("arm/position/arm-source", 0),
+        Position.CORAL_GROUND, new SmartDashboardNumber("arm/position/arm-coral-ground", 0),
+        Position.ALGAE_GROUND, new SmartDashboardNumber("arm/position/arm-algae-ground", 0),
+        Position.PROCESSOR, new SmartDashboardNumber("arm/position/arm-processor", 0),
+        Position.STOW, new SmartDashboardNumber("arm/position/arm-stow", 0),
+        Position.BARGE, new SmartDashboardNumber("arm/position/arm-barge", 0)
     );
 
     private Arm(){
         super("Arm");
 
-        armMotor.withMotorOutputConfigs(
+        this.armMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withPeakForwardDutyCycle(1d)
@@ -77,7 +77,7 @@ public class Arm extends SubsystemBase {
             .withMotionMagicCruiseVelocity(0)
         ).withFeedbackConfigs(
             new FeedbackConfigs()
-            .withRemoteCANcoder(m_encoder)
+            .withRemoteCANcoder(this.m_encoder)
         );
     }
 
@@ -86,8 +86,8 @@ public class Arm extends SubsystemBase {
      * @return true if the arm is on target
      */
     public boolean atTarget(){
-        return Math.abs(Arm.POSITION_CONVERSIONS.get(targetPosition).getNumber()
-        - this.armMotor.motor.getPosition().getValueAsDouble()) < armTolerance.getNumber();
+        return Math.abs(POSITION_CONVERSIONS.get(targetPosition).getNumber()
+        - this.armMotor.motor.getPosition().getValueAsDouble()) < this.armTolerance.getNumber();
     }
 
     /**
@@ -107,7 +107,7 @@ public class Arm extends SubsystemBase {
     public Command goToPosition(Position pos){ // TODO: Ensure no illegal movements
         this.targetPosition = pos;
         return Commands.runOnce(
-            () -> {this.goToAngle(Arm.POSITION_CONVERSIONS.get(pos).getNumber());}
+            () -> {this.goToAngle(POSITION_CONVERSIONS.get(pos).getNumber());}
         );
     }
 

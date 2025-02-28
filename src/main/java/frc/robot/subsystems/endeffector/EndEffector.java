@@ -35,13 +35,13 @@ import frc.robot.Superstructure.Position;
  */
 
 public class EndEffector extends SubsystemBase {
-    private final RedRockTalon endEffectorMotor = new RedRockTalon(51,"endeffector-motor","*");
+    private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
     private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
-    private final CANrange endEffectorCoralRange = new CANrange(53);
+    private final CANrange timeOfFlight = new CANrange(53);
 
     private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0);
     private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0);
-    private SmartDashboardNumber coralThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0);
+    private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.1);
     private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.2);
     private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0);
@@ -53,21 +53,21 @@ public class EndEffector extends SubsystemBase {
     private static EndEffector instance = null;
 
     private static Map<Position, SmartDashboardNumber > POSITION_CONVERSIONS = Map.of(
-        Position.L4, new SmartDashboardNumber("endeffector/endeffector-l4", 0),
-        Position.L3, new SmartDashboardNumber("endeffector/endeffector-l3", 0),
-        Position.L2, new SmartDashboardNumber("endeffector/endeffector-l2", 0),
-        Position.L1, new SmartDashboardNumber("endeffector/endeffector-l1", 0),
-        Position.SOURCE, new SmartDashboardNumber("endeffector/endeffector-source", 0),
-        Position.CORAL_GROUND, new SmartDashboardNumber("endeffector/endeffector-coral-ground", 0),
-        Position.ALGAE_GROUND, new SmartDashboardNumber("endeffector/endeffector-algae-ground", 0),
-        Position.PROCESSOR, new SmartDashboardNumber("endeffector/endeffector-processor", 0),
-        Position.STOW, new SmartDashboardNumber("endeffector/endeffector-stow", 0),
-        Position.BARGE, new SmartDashboardNumber("endeffector/endeffector-barge", 0)
+        Position.L4, new SmartDashboardNumber("endeffector/position/endeffector-l4", 0),
+        Position.L3, new SmartDashboardNumber("endeffector/position/endeffector-l3", 0),
+        Position.L2, new SmartDashboardNumber("endeffector/position/endeffector-l2", 0),
+        Position.L1, new SmartDashboardNumber("endeffector/position/endeffector-l1", 0),
+        Position.SOURCE, new SmartDashboardNumber("endeffector/position/endeffector-source", 0),
+        Position.CORAL_GROUND, new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 0),
+        Position.ALGAE_GROUND, new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 0),
+        Position.PROCESSOR, new SmartDashboardNumber("endeffector/position/endeffector-processor", 0),
+        Position.STOW, new SmartDashboardNumber("endeffector/position/endeffector-stow", 0),
+        Position.BARGE, new SmartDashboardNumber("endeffector/position/endeffector-barge", 0)
     );
 
     private EndEffector(){
         super("End Effector");
-        endEffectorMotor.withMotorOutputConfigs(
+        this.driveMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withPeakForwardDutyCycle(1d)
@@ -85,7 +85,7 @@ public class EndEffector extends SubsystemBase {
         )
         .withSpikeThreshold(55);
                 
-        wristMotor.withMotorOutputConfigs(
+        this.wristMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.Clockwise_Positive)
             .withPeakForwardDutyCycle(1d)
@@ -119,7 +119,7 @@ public class EndEffector extends SubsystemBase {
             this.running = false;
         else
             this.running = true;
-        this.endEffectorMotor.motor.set(speed);
+        this.driveMotor.motor.set(speed);
     }
     
     /**
@@ -127,8 +127,8 @@ public class EndEffector extends SubsystemBase {
      * @return true if the endeffector is on target
      */
     public boolean atTarget(){
-        return Math.abs(EndEffector.POSITION_CONVERSIONS.get(targetPosition).getNumber()
-            - this.wristMotor.motor.getPosition().getValueAsDouble()) < wristTolerance.getNumber();
+        return Math.abs(POSITION_CONVERSIONS.get(this.targetPosition).getNumber()
+            - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
     }
 
     /**
@@ -139,7 +139,7 @@ public class EndEffector extends SubsystemBase {
     public Command goToPosition(Position pos){
         this.targetPosition = pos;
         return Commands.runOnce(
-            () -> this.wristMotor.setMotionMagicPosition(EndEffector.POSITION_CONVERSIONS.get(pos).getNumber()),
+            () -> this.wristMotor.setMotionMagicPosition(POSITION_CONVERSIONS.get(pos).getNumber()),
             this);
     }
 
@@ -159,7 +159,7 @@ public class EndEffector extends SubsystemBase {
      * @return true if coral is present
      */
     private boolean coralDetected(){
-        return endEffectorCoralRange.getDistance().getValueAsDouble() < coralThreshold.getNumber();
+        return this.timeOfFlight.getDistance().getValueAsDouble() < this.tofThreshold.getNumber();
     }
 
     /**
@@ -168,7 +168,7 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeCoral(){
         return new FunctionalCommand(
-            () -> setSpeed(coralIntakeSpeed.getNumber()),
+            () -> setSpeed(this.coralIntakeSpeed.getNumber()),
             () -> {},
             (interrupted) -> setSpeed(0),
             () -> coralDetected(),
@@ -182,10 +182,10 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeAlgae(){
         return new FunctionalCommand(
-            () -> setSpeed(algaeIntakeSpeed.getNumber()),
+            () -> setSpeed(this.algaeIntakeSpeed.getNumber()),
             () -> {},
             (interrupted) -> setSpeed(0),
-            () -> this.endEffectorMotor.aboveSpikeThreshold(),
+            () -> this.driveMotor.aboveSpikeThreshold(),
             this
         );
     }
@@ -196,7 +196,7 @@ public class EndEffector extends SubsystemBase {
      */
     public Command outtakeCoral(){
         return new SequentialCommandGroup(
-            Commands.runOnce(() -> setSpeed(coralOuttakeSpeed.getNumber())),
+            Commands.runOnce(() -> setSpeed(this.coralOuttakeSpeed.getNumber())),
             new WaitUntilCommand(() -> !this.coralDetected()),
             new WaitCommand(.2),
             Commands.runOnce(() -> setSpeed(0))
@@ -209,7 +209,7 @@ public class EndEffector extends SubsystemBase {
      */
     public Command outtakeAlgae(){
         return new SequentialCommandGroup(
-            Commands.runOnce(() -> setSpeed(algaeOuttakeSpeed.getNumber())),
+            Commands.runOnce(() -> setSpeed(this.algaeOuttakeSpeed.getNumber())),
             new WaitCommand(.25),
             Commands.runOnce(() -> setSpeed(0))
         );
@@ -220,14 +220,17 @@ public class EndEffector extends SubsystemBase {
      * @return a Command to do so
      */
     public Command normalizeCommand(){
-        return new FunctionalCommand(
-            () -> setSpeed(normalizeSpeed.getNumber()),
-            () -> {},
-            (interrupted) -> {setSpeed(0);
-                this.wristMotor.motor.setPosition(0);
-            },
-            () -> this.wristMotor.aboveSpikeThreshold(),
-            this
+        return new SequentialCommandGroup(
+            new FunctionalCommand(
+                () -> setSpeed(this.normalizeSpeed.getNumber()),
+                () -> {},
+                (interrupted) -> {setSpeed(0);
+                    this.wristMotor.motor.setPosition(0);
+                },
+                () -> this.wristMotor.aboveSpikeThreshold(),
+                this
+            ),
+            this.goToPosition(this.targetPosition)
         );
     }
 

@@ -61,7 +61,7 @@ public class Superstructure {
     {
         return new SequentialCommandGroup(
             this.arm.goToPosition(pos),
-            new WaitUntilCommand(() -> !(elevator.posBelowThreshold(pos) && arm.belowThreshold())),
+            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowThreshold())),
             this.elevator.goToPosition(pos),
             this.endEffector.goToPosition(pos)
         );
@@ -109,10 +109,9 @@ public class Superstructure {
      * Abstracted full Barge scoring
      * @return a Command to do so
      */
-    public Command scoreBarge(){
+    public Command autoScoreBarge(){
         return new SequentialCommandGroup(
-            this.elevator.goToPosition(Position.BARGE),
-            this.arm.goToPosition(Position.BARGE),
+            this.goToPosition(Position.BARGE),
             new WaitUntilCommand(() -> this.atTargets()),
             new WaitCommand(.1),
             this.arm.scoreBarge(),
