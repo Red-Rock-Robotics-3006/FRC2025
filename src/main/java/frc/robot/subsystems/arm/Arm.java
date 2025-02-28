@@ -1,157 +1,139 @@
 package frc.robot.subsystems.arm;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import java.util.Map;
+
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.controls.MotionMagicVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import redrocklib.logging.SmartDashboardNumber;
+import redrocklib.wrappers.RedRockTalon;
+import redrocklib.wrappers.SmartDashboardNumber;
+import frc.robot.Superstructure.Position;
+
+/* TODO
+ * Find pos values
+ * Tune Slot0
+ * Tune MM
+ * Tune tolerance
+ * Tune scoreBarge
+ */
 
 public class Arm extends SubsystemBase {
+    private final RedRockTalon armMotor = new RedRockTalon(41, "arm-motor", "*");
+    private final CANcoder m_encoder = new CANcoder(42);
+
+    private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", 0);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0);
+
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0);
+    private Position targetPosition = Position.STOW;
+
     private static Arm instance = null;
 
-    private final TalonFX m_armMotor = new TalonFX(0); // TODO FILLER
+    private static Map<Position, SmartDashboardNumber > POSITION_CONVERSIONS = Map.of(
+        Position.L4, new SmartDashboardNumber("arm/arm-l4", 0),
+        Position.L3, new SmartDashboardNumber("arm/arm-l3", 0),
+        Position.L2, new SmartDashboardNumber("arm/arm-l2", 0),
+        Position.L1, new SmartDashboardNumber("arm/arm-l1", 0),
+        Position.SOURCE, new SmartDashboardNumber("arm/arm-source", 0),
+        Position.CORAL_GROUND, new SmartDashboardNumber("arm/arm-coral-ground", 0),
+        Position.ALGAE_GROUND, new SmartDashboardNumber("arm/arm-algae-ground", 0),
+        Position.PROCESSOR, new SmartDashboardNumber("arm/arm-processor", 0),
+        Position.STOW, new SmartDashboardNumber("arm/arm-stow", 0),
+        Position.BARGE, new SmartDashboardNumber("arm/arm-barge", 0)
+    );
 
-    private SmartDashboardNumber minMotorPosition = new SmartDashboardNumber("arm/minMotorPosition", 0);
-    private SmartDashboardNumber maxMotorPosition = new SmartDashboardNumber("arm/maxMotorPosition", 0);
-    private SmartDashboardNumber minDegrees = new SmartDashboardNumber("arm/minDegrees", 0);
-    private SmartDashboardNumber maxDegrees = new SmartDashboardNumber("arm/maxDegrees", 0);
-    
-
-    private Slot0Configs armSlot0Configs = new Slot0Configs();
-
-    private MotionMagicConfigs armMotionConfigs = new MotionMagicConfigs();
-
-    private CurrentLimitsConfigs armCurrentLimitsConfigs = new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(50)
-            .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(80)
-            .withStatorCurrentLimitEnable(true);
-
-    private SmartDashboardNumber armMotionAccel = new SmartDashboardNumber("arm/arm-mm-accel", 10); // update
-    private SmartDashboardNumber armMotionVel = new SmartDashboardNumber("arm/arm-mm-vel", 10);
-    private SmartDashboardNumber armMotionJerk = new SmartDashboardNumber("arm/arm-mm-jerk", 0);
-
-    private SmartDashboardNumber armKs = new SmartDashboardNumber("arm/ks", 0.12);
-    private SmartDashboardNumber armKa = new SmartDashboardNumber("arm/ka", 0);
-    private SmartDashboardNumber armKv = new SmartDashboardNumber("arm/kv", 0); // to be tuned;
-    private SmartDashboardNumber armKp = new SmartDashboardNumber("arm/kp", 1);
-    private SmartDashboardNumber armKi = new SmartDashboardNumber("arm/ki", 0);
-    private SmartDashboardNumber armKd = new SmartDashboardNumber("arm/kd", 0);
-
-    private SmartDashboardNumber armKg = new SmartDashboardNumber("arm/kg", 0.022);
-
-    private SmartDashboardNumber delta = new SmartDashboardNumber("delta", 5);
-    private SmartDashboardNumber target = new SmartDashboardNumber("target", 0);
-
-                                                                                                             
-
-    private Arm() {
+    private Arm(){
         super("Arm");
 
-        this.m_armMotor.getConfigurator().apply(
-                new MotorOutputConfigs()
-                        .withInverted(InvertedValue.CounterClockwise_Positive)
-                        .withPeakForwardDutyCycle(1d)
-                        .withPeakReverseDutyCycle(-1d)
-                        .withNeutralMode(NeutralModeValue.Brake));
-
-        
-        this.armSlot0Configs = new Slot0Configs()
-                .withKS(armKs.getNumber())
-                .withKA(armKa.getNumber())
-                .withKV(armKv.getNumber())
-                .withKP(armKp.getNumber())
-                .withKI(armKi.getNumber())
-                .withKD(armKd.getNumber())
-                .withKG(armKg.getNumber())
-                .withGravityType(GravityTypeValue.Arm_Cosine);
-
-        this.armMotionConfigs = new MotionMagicConfigs()   
-                .withMotionMagicAcceleration(armMotionAccel.getNumber());
-
-        this.m_armMotor.getConfigurator().apply(armSlot0Configs);
-        
-        this.m_armMotor.getConfigurator().apply(armMotionConfigs);
-      
-        this.m_armMotor.getConfigurator().apply(armCurrentLimitsConfigs);
-
-    }
-
-    public void setPosition(double rotations) {
-        this.m_armMotor.setControl(
-            new MotionMagicVoltage(rotations)
-                .withSlot(0)
-                .withEnableFOC(true)
-                .withOverrideBrakeDurNeutral(false)
+        armMotor.withMotorOutputConfigs(
+            new MotorOutputConfigs()
+            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withPeakForwardDutyCycle(1d)
+            .withPeakReverseDutyCycle(-1d)
+            .withNeutralMode(NeutralModeValue.Brake)
+        )
+        .withSlot0Configs(
+            new Slot0Configs()
+            .withKA(0)
+            .withKS(0)
+            .withKV(0)
+            .withKP(0)
+            .withKI(0)
+            .withKD(0)
+            .withGravityType(GravityTypeValue.Arm_Cosine)
+        )
+        .withMotionMagicConfigs(
+            new MotionMagicConfigs()
+            .withMotionMagicAcceleration(0)
+            .withMotionMagicCruiseVelocity(0)
+        ).withFeedbackConfigs(
+            new FeedbackConfigs()
+            .withRemoteCANcoder(m_encoder)
         );
     }
 
-    public void setPostionDegrees(double degrees) {
-        this.setPosition(this.degreesToRotations(degrees));
+    /**
+     * Check if the arm is at target position
+     * @return true if the arm is on target
+     */
+    public boolean atTarget(){
+        return Math.abs(Arm.POSITION_CONVERSIONS.get(targetPosition).getNumber()
+        - this.armMotor.motor.getPosition().getValueAsDouble()) < armTolerance.getNumber();
     }
 
-    @Override
-    public void periodic() {
-        if (armKs.hasChanged()
-                || armKa.hasChanged()
-                || armKv.hasChanged()
-                || armKp.hasChanged()
-                || armKi.hasChanged()
-                || armKd.hasChanged()
-                || armKg.hasChanged()) {
-            armSlot0Configs.kS = armKs.getNumber();
-            armSlot0Configs.kA = armKa.getNumber();
-            armSlot0Configs.kV = armKv.getNumber();
-            armSlot0Configs.kP = armKp.getNumber();
-            armSlot0Configs.kI = armKi.getNumber();
-            armSlot0Configs.kD = armKd.getNumber();
-            armSlot0Configs.kG = armKg.getNumber();
-
-            this.m_armMotor.getConfigurator().apply(armSlot0Configs);
-            
-            System.out.println("applied"); // comment when necessary
-        }
-
-        if (armMotionAccel.hasChanged() || armMotionVel.hasChanged()) {
-            armMotionConfigs.MotionMagicAcceleration = armMotionAccel.getNumber();
-            armMotionConfigs.MotionMagicCruiseVelocity = armMotionVel.getNumber();
-            this.m_armMotor.getConfigurator().apply(armMotionConfigs);
-        }
-
-        if (armMotionJerk.hasChanged()) {
-            armMotionConfigs.MotionMagicJerk = armMotionJerk.getNumber();
-            this.m_armMotor.getConfigurator().apply(armMotionConfigs);
-        }
-
-        SmartDashboard.putNumber("arm/arm-Motor-position", m_armMotor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("arm/arm-Motor-spike", m_armMotor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("arm/arm-Motor-velocity", m_armMotor.getVelocity().getValueAsDouble());
+    /**
+     * Move the arm to a clamped angle
+     * @param angle the angle to mvoe to
+     */
+    private void goToAngle(double angle)
+    {
+        this.armMotor.setMotionMagicPosition(Math.max(this.minRotation.getNumber(), Math.min(this.maxRotation.getNumber(), angle)));
     }
 
-    public void increaseTarget() {
-        target.putNumber(target.getNumber() + delta.getNumber());
-      }
-    
-    public void decreaseTarget() {
-        target.putNumber(target.getNumber() - delta.getNumber());
+    /**
+     * Move the arm to a Position
+     * @param pos the Position to move to
+     * @return a Command to do so
+     */
+    public Command goToPosition(Position pos){ // TODO: Ensure no illegal movements
+        this.targetPosition = pos;
+        return Commands.runOnce(
+            () -> {this.goToAngle(Arm.POSITION_CONVERSIONS.get(pos).getNumber());}
+        );
     }
 
-    public void setTarget() {
-        this.setPosition(this.target.getNumber());
+    /**
+     * Check if the arm is in danger of hitting the floor
+     * @return true if the arm is too low
+     */
+    public boolean belowThreshold() {
+        return this.armMotor.motor.getPosition().getValueAsDouble() < this.armTolerance.getNumber();
     }
-    public double degreesToRotations(double angle){
-        return (maxMotorPosition.getNumber()- minMotorPosition.getNumber())/(maxDegrees.getNumber()-minDegrees.getNumber())*(angle- minDegrees.getNumber())+minMotorPosition.getNumber();
+
+    /**
+     * Swing arm to score in the Barge
+     * @return a Command to do so
+     */
+    public Command scoreBarge(){
+        return goToPosition(Position.L3); // A bit jank but it should work
     }
-    public static Arm getInstance() {
-        if (instance == null)
+
+    /**
+     * Get singleton instance
+     * @return the Arm
+     */
+    public static Arm getInstance()
+    {
+        if(instance == null)
             instance = new Arm();
         return instance;
     }

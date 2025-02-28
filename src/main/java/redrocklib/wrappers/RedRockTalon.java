@@ -1,6 +1,7 @@
 package redrocklib.wrappers;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -9,7 +10,6 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import redrocklib.logging.SmartDashboardNumber;
 
 public class RedRockTalon {
     public TalonFX motor;
@@ -92,7 +92,11 @@ public class RedRockTalon {
 
     public RedRockTalon withMotorOutputConfigs(MotorOutputConfigs configs) {
         this.motor.getConfigurator().apply(configs);
+        return this;
+    }
 
+    public RedRockTalon withFeedbackConfigs(FeedbackConfigs configs){
+        this.motor.getConfigurator().apply(configs);
         return this;
     }
 
