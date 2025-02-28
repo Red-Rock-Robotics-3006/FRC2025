@@ -13,6 +13,7 @@ import com.pathplanner.lib.path.PathConstraints;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -110,26 +111,26 @@ public class RobotContainer {
               () -> {
                 if (drivetrain.isTargetingPosition()) {
                     inPIDTolerance.putBoolean(false);
-                    return driveFacingAngle.withVelocityX(drivetrain.getPositionPIDValueX() * MaxSpeed)
-                                            .withVelocityY(drivetrain.getPositionPIDValueY() * MaxSpeed)
+                    return driveFacingAngle.withVelocityX(MathUtil.clamp(drivetrain.getPositionPIDValueX() * drivetrain.getPIDScale(), -drivetrain.getMaxPIDVelocity(), drivetrain.getMaxPIDVelocity()))
+                                            .withVelocityY(MathUtil.clamp(drivetrain.getPositionPIDValueY() * drivetrain.getPIDScale(), -drivetrain.getMaxPIDVelocity(), drivetrain.getMaxPIDVelocity()))
                                             .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
                 }
                 else if (!drivetrain.getUseHeadingPID() || Math.abs(drivestick.getRightX()) > drivetrain.getTurnDeadBand()) {
                     inPIDTolerance.putBoolean(false);
                   return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                              .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                              .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
                               .withRotationalRate(progressiveInput(-drivestick.getRightX(),progressiveTurnExponent) * MaxAngularRate);
                 }
                 else if (driveFacingAngle.HeadingController.atSetpoint()) {
                     inPIDTolerance.putBoolean(true);
                     return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                    .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                    .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
                     .withRotationalRate(0);
                 }
                 else {
                     inPIDTolerance.putBoolean(false);
                   return driveFacingAngle.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                                         .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                                         .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
                                          .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
                   
                 }
@@ -149,6 +150,10 @@ public class RobotContainer {
 
         drivestick.back().and(drivestick.povUp()).onTrue(
             new InstantCommand(drivetrain::toggleHeadingPID, drivetrain)
+        );
+
+        drivestick.rightStick().onTrue(
+            new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
         );
 
         // drivestick.povLeft().onTrue(
@@ -274,13 +279,13 @@ public class RobotContainer {
             new SequentialCommandGroup(
                 new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
                 new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
                 // drivetrain.pathFindTo(targetPose),   
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
                 doohickey.startOuttakeCommand(),
                 new WaitCommand(1),
                 doohickey.stopCommand(),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
                 elevator.setSourceCommand()
             )
         );
@@ -341,5 +346,9 @@ public class RobotContainer {
     {
         if(input == 0) return 0;
         return Math.min(1,Math.max(-1,Math.abs(input)/input * Math.pow(Math.abs(input), exponent)));
+    }
+
+    public double progressiveInput(double input, double exponent, boolean b) {
+        return progressiveInput(input, exponent) * drivetrain.getSingleAxisMultiplier();
     }
 }

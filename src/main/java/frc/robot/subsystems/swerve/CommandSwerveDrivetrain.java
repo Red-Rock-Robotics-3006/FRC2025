@@ -56,8 +56,8 @@ import redrocklib.logging.SmartDashboardBoolean;
  */
 @Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-    private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 8);
-    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 1); // 1.2
+    private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 4);
+    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 0.5); // 1.2
     private SmartDashboardNumber rotateD = new SmartDashboardNumber("dt/dt-rotate-d", 0);
     private SmartDashboardNumber rotateIRange = new SmartDashboardNumber("dt/dt-rotate-Irange", 0.2);
     private SmartDashboardNumber rotateTolerance = new SmartDashboardNumber("dt/dt-rotate-tolerance", 0.015);
@@ -71,6 +71,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private boolean enableHeadingPID = false;
     private boolean inPositionTargeting = false;
+
+    private boolean usingSingleAxisDrive = false;
 
     private double targetHeadingDegrees = 0;
 
@@ -97,6 +99,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     /** Swerve request to apply during field-centric path following */
     private final SwerveRequest.ApplyFieldSpeeds m_pathApplyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+
+    private SmartDashboardNumber pidScaleVelo = new SmartDashboardNumber("dt/dt-pid-scale-velo", 6);
     
 
     /* Swerve requests to apply during SysId characterization */
@@ -125,7 +129,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
     private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
-    private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.1);
+    private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3);
 
 
     
@@ -134,6 +138,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final PIDController m_pathXController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
     private final PIDController m_pathYController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
     private final PIDController m_pathThetaController = new PIDController(rotateP.getNumber(), rotateI.getNumber(), rotateD.getNumber());
+
+    private SmartDashboardNumber pidMaxVelo = new SmartDashboardNumber("dt/dt-max-pid-velo", 0.8);
   
     private DriverStation.Alliance alliance = Alliance.Blue;
 
@@ -513,6 +519,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("dt/dt-position-x-error", positionControllerX.getError());
         SmartDashboard.putNumber("dt/dt-position-y-error", positionControllerY.getError());
 
+        SmartDashboard.putBoolean("dt/dt-using-single-axis", this.usingSingleAxisDrive);
+
         this.xVelocity.putNumber(this.positionControllerX.getErrorDerivative());
         this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
 
@@ -667,6 +675,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.setTargetHeadingDegrees(pose.getRotation().getDegrees());
     }
 
+    public double getMaxPIDVelocity() {
+        return this.pidMaxVelo.getNumber();
+    }
+
     public double getPositionPIDValueX() {
         return positionRateLimiterX.calculate(positionControllerX.calculate(getPose().getX(), targetPose2d.getX()));
     }
@@ -700,5 +712,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void disablePositionTargeting() {
         this.inPositionTargeting = false;
+    }
+
+    public double getSingleAxisMultiplier() {
+        if (usingSingleAxisDrive) return 0;
+        return 1;
+    }
+
+    public void toggleUsingSingleAxis() {
+        usingSingleAxisDrive = !usingSingleAxisDrive;
+
+    }
+
+    public double getPIDScale() {
+        return pidScaleVelo.getNumber();
     }
 }
