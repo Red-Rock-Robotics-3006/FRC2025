@@ -19,7 +19,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import redrocklib.wrappers.RedRockTalon;
-import redrocklib.wrappers.SmartDashboardNumber;
+import redrocklib.logging.SmartDashboardNumber;
 import frc.robot.Superstructure.Position;
 
 /* TODO

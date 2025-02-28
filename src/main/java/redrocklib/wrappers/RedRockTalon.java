@@ -10,6 +10,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import redrocklib.logging.SmartDashboardNumber;
 
 public class RedRockTalon {
     public TalonFX motor;

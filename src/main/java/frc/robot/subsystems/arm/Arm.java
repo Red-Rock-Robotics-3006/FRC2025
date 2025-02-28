@@ -15,7 +15,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import redrocklib.wrappers.RedRockTalon;
-import redrocklib.wrappers.SmartDashboardNumber;
+import redrocklib.logging.SmartDashboardNumber;
 import frc.robot.Superstructure.Position;
 
 /* TODO
