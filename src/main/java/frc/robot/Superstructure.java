@@ -15,7 +15,7 @@ import frc.robot.subsystems.endeffector.EndEffector;
  */
 
 public class Superstructure {
-    private Elevator elevator = new Elevator();
+    private Elevator elevator = Elevator.getInstance();
     private Arm arm = Arm.getInstance();
     private EndEffector endEffector = EndEffector.getInstance();
     
@@ -36,7 +36,7 @@ public class Superstructure {
 
     private Superstructure()
     {
-        this.initialize();
+        // this.initialize();
     }
 
     /**
@@ -48,7 +48,7 @@ public class Superstructure {
         return new ParallelCommandGroup(
             this.endEffector.normalizeCommand(),
             this.arm.goToPosition(Position.STOW),
-            this.elevator.normalizeCommand()
+            this.elevator.normalizeElevatorCommand()
         );
     }
 
@@ -93,7 +93,7 @@ public class Superstructure {
      * Dispense Coral from EndEffector
      * @return a Command to do so
      */
-    public Command scoreCoral(){
+    public Command outtakeCoral(){
         return this.endEffector.outtakeCoral();
     }
 
@@ -101,8 +101,16 @@ public class Superstructure {
      * Dispense Algae from EndEffector
      * @return a Command to do so
      */
-    public Command scoreAlgae(){
+    public Command outtakeAlgae(){
         return this.endEffector.outtakeAlgae();
+    }
+
+    /**
+     * Stop the endeffector
+     * @return a Command to do so
+     */
+    public Command stopEndEffector(){
+        return this.endEffector.stop();
     }
 
     /**
@@ -139,8 +147,7 @@ public class Superstructure {
         return new SequentialCommandGroup(
             this.goToPosition(pos),
             new WaitUntilCommand(() -> this.atTargets()),
-            this.endEffector.outtakeCoral(), //TODO See if this SCG waits for the EE's SCG
-            new WaitUntilCommand(() -> this.endEffector.isIdle()), // If so this can be removed
+            this.endEffector.outtakeCoral(),
             this.goToPosition(Position.STOW)
         );
     }
@@ -154,7 +161,7 @@ public class Superstructure {
         return new SequentialCommandGroup(
             this.goToPosition(Position.PROCESSOR),
             new WaitUntilCommand(() -> this.atTargets()),
-            this.endEffector.outtakeAlgae(), // TODO This assumes that we await the secondary SCG
+            this.endEffector.outtakeAlgae(),
             this.goToPosition(Position.STOW)
         );
     }

@@ -39,10 +39,10 @@ public class Arm extends SubsystemBase {
     private static Arm instance = null;
 
     private static Map<Position, SmartDashboardNumber > POSITION_CONVERSIONS = Map.of(
-        Position.L4, new SmartDashboardNumber("arm/position/arm-l4", 0),
-        Position.L3, new SmartDashboardNumber("arm/position/arm-l3", 0),
-        Position.L2, new SmartDashboardNumber("arm/position/arm-l2", 0),
         Position.L1, new SmartDashboardNumber("arm/position/arm-l1", 0),
+        Position.L2, new SmartDashboardNumber("arm/position/arm-l2", 0),
+        Position.L3, new SmartDashboardNumber("arm/position/arm-l3", 0),
+        Position.L4, new SmartDashboardNumber("arm/position/arm-l4", 0),
         Position.SOURCE, new SmartDashboardNumber("arm/position/arm-source", 0),
         Position.CORAL_GROUND, new SmartDashboardNumber("arm/position/arm-coral-ground", 0),
         Position.ALGAE_GROUND, new SmartDashboardNumber("arm/position/arm-algae-ground", 0),

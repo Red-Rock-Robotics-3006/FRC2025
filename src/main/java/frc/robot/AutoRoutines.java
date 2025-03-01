@@ -6,12 +6,28 @@ import choreo.auto.AutoTrajectory;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import frc.robot.Superstructure.Position;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
+import redrocklib.logging.SmartDashboardNumber;
 
 public class AutoRoutines {
     private final AutoFactory m_factory;
 
+    public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
+    // private final Elevator elevator = Elevator.getInstance();
+    private final Superstructure superstructure = Superstructure.getInstance();
+
+    private SmartDashboardNumber waitTimePID = new SmartDashboardNumber("PID wait time", 1);
+
     public AutoRoutines(AutoFactory factory) {
         m_factory = factory;
+    }
+
+    private void drivetrainSetTargetPoseConstruct() {
+        drivetrain.setTargetPose(drivetrain.constructTestTargetPose());
     }
 
     public Command testAuto1() {
@@ -21,7 +37,8 @@ public class AutoRoutines {
             m_factory.resetOdometry("testpath2"),
             new InstantCommand(() -> System.out.println("hi")),
             m_factory.trajectoryCmd("testpath2"),
-            testpath2Command);
+            testpath2Command
+        );
     }
 
     public AutoRoutine testpath2Auto() {
@@ -30,10 +47,120 @@ public class AutoRoutines {
 
         routine.active().onTrue(
             Commands.sequence(
-            m_factory.resetOdometry("testpath2"),
-            Commands.print("MMMMMMMMMMMMM"),
-            simplePath.cmd(),
-            Commands.print("MMMMMMMMMMMMM")
+                m_factory.resetOdometry("testpath2"),
+                Commands.print("MMMMMMMMMMMMM"),
+                simplePath.cmd(),
+                Commands.print("MMMMMMMMMMMMM")
+            )
+        );
+        return routine;
+    }
+
+    public AutoRoutine testlong1Auto() {
+        final AutoRoutine routine = m_factory.newRoutine("Test Long 1 Auto Full");
+        final AutoTrajectory path1 = routine.trajectory("testlong1");
+        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
+
+        routine.active().onTrue(
+            Commands.sequence(
+                m_factory.resetOdometry("testlong1"),
+                path1.cmd(),
+                drivetrain.goToPoseCommand(),
+                superstructure.goToPosition(Position.L3),// elevator.goToPosition(Position.L3),
+                new WaitUntilCommand(() -> superstructure.atTargets()),//elevator.withinTargetRotation(Position.L3)),
+                // doohickey.startOuttakeCommand(),
+                new WaitCommand(1),
+                // doohickey.stopCommand(),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                superstructure.goToPosition(Position.SOURCE),// elevator.goToPosition(Position.SOURCE),
+                path2.cmd()
+            )
+        );
+        return routine;
+    }
+
+    public AutoRoutine testlong1Paths() {
+        final AutoRoutine routine = m_factory.newRoutine("Test Long 1 Auto Paths");
+        final AutoTrajectory path1 = routine.trajectory("testlong1");
+        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
+
+        routine.active().onTrue(
+            Commands.sequence(
+                m_factory.resetOdometry("testlong1"),
+                path1.cmd(),
+                path2.cmd()
+            )
+        );
+        return routine;
+    }
+
+    public AutoRoutine testlong1PathsPID() {
+        final AutoRoutine routine = m_factory.newRoutine("Test Long 1 Auto Paths + PID");
+        final AutoTrajectory path1 = routine.trajectory("testlong1");
+        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
+
+        routine.active().onTrue(
+            Commands.sequence(
+                m_factory.resetOdometry("testlong1"),
+                path1.cmd(),
+                drivetrain.goToPoseCommand(),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                path2.cmd()
+            )
+        );
+        return routine;
+    }
+
+    public AutoRoutine testcuts1Auto() {
+        final AutoRoutine routine = m_factory.newRoutine("Test Cuts 1 Auto Full");
+        final AutoTrajectory path1 = routine.trajectory("testcuts1");
+        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
+
+        routine.active().onTrue(
+            Commands.sequence(
+                m_factory.resetOdometry("testcuts1"),
+                path1.cmd(),
+                drivetrain.goToPoseCommand(),
+                superstructure.goToPosition(Position.L3),// elevator.goToPosition(Position.L3),
+                new WaitUntilCommand(() -> superstructure.atTargets()),//elevator.withinTargetRotation(Position.L3)),
+                // doohickey.startOuttakeCommand(),
+                new WaitCommand(1),
+                // doohickey.stopCommand(),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                superstructure.goToPosition(Position.SOURCE),// elevator.goToPosition(Position.SOURCE),
+                path2.cmd()
+            )
+        );
+        return routine;
+    }
+
+    public AutoRoutine testcuts1Paths() {
+        final AutoRoutine routine = m_factory.newRoutine("Test Cuts 1 Auto Paths");
+        final AutoTrajectory path1 = routine.trajectory("testcuts1");
+        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
+
+        routine.active().onTrue(
+            Commands.sequence(
+                m_factory.resetOdometry("testcuts1"),
+                path1.cmd(),
+                path2.cmd()
+            )
+        );
+        return routine;
+    }
+
+    public AutoRoutine testcuts1PathsPID() {
+        final AutoRoutine routine = m_factory.newRoutine("Test Cuts 1 Auto Paths + PID");
+        final AutoTrajectory path1 = routine.trajectory("testcuts1");
+        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
+
+        routine.active().onTrue(
+            Commands.sequence(
+                m_factory.resetOdometry("testcuts1"),
+                path1.cmd(),
+                drivetrain.goToPoseCommand(),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+                path2.cmd()
             )
         );
         return routine;

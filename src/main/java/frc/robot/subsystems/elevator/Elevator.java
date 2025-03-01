@@ -1,35 +1,212 @@
 package frc.robot.subsystems.elevator;
 
+import java.util.Map;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.Follower;
+import com.ctre.phoenix6.signals.GravityTypeValue;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import redrocklib.logging.SmartDashboardNumber;
+import redrocklib.wrappers.RedRockTalon;
 import frc.robot.Superstructure.Position;
 
 public class Elevator extends SubsystemBase {
-    /**
-     * Check if the elevator is at target position
-     * @return true if the elevator is on target
-     */
-    public boolean atTarget(){return true;}
+    private static Elevator instance = null;
+
+    private static Map<Position, SmartDashboardNumber> POSITION_CONVERSIONS = Map.of(
+            Position.L4, new SmartDashboardNumber("elevator/position/elevator-l4", 60),
+            Position.L3, new SmartDashboardNumber("elevator/position/elevator-l3", 56),
+            Position.L2, new SmartDashboardNumber("elevator/position/elevator-l2", 34),
+            Position.L1, new SmartDashboardNumber("elevator/position/elevator-l1", 19),
+            Position.SOURCE, new SmartDashboardNumber("elevator/position/elevator-source", 29),
+            Position.CORAL_GROUND, new SmartDashboardNumber("elevator/position/elevator-coral-ground", 5),
+            Position.ALGAE_GROUND, new SmartDashboardNumber("elevator/position/elevator-algae-ground", 0),
+            Position.PROCESSOR, new SmartDashboardNumber("elevator/position/elevator-processor", 0),
+            Position.STOW, new SmartDashboardNumber("elevator/position/elevator-stow", 0),
+            Position.BARGE, new SmartDashboardNumber("elevator/position/elevator-barge", 60)
+        );
+
+    private final RedRockTalon m_elevatorLeft = new RedRockTalon(50, "elevator-left", "*");
+    private final RedRockTalon m_elevatorRight = new RedRockTalon(51, "elevator-right", "*");
+    
+
+    private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("elevator/target", 0);
+    private SmartDashboardNumber threshold = new SmartDashboardNumber("elevator/threshold", 0.2);
+    private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
+
+    private Position targetPosition = Position.STOW;
+    private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
+                                                                                                             
+
+    private Elevator() {
+        super("Elevator");
+
+        MotorOutputConfigs elevatorMotorOutputConfigs = new MotorOutputConfigs()
+            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withPeakForwardDutyCycle(1d)
+            .withPeakReverseDutyCycle(-1d)
+            .withNeutralMode(NeutralModeValue.Brake);
+
+        Slot0Configs elevatorSlot0Configs = new Slot0Configs()
+            .withKS(0.12)
+            .withKA(0)
+            .withKV(0)
+            .withKP(2)
+            .withKI(0)
+            .withKD(0)
+            .withKG(0.022)
+            .withGravityType(GravityTypeValue.Elevator_Static);
+
+        MotionMagicConfigs elevatorMotionConfigs = new MotionMagicConfigs()
+            .withMotionMagicCruiseVelocity(40)
+            .withMotionMagicAcceleration(100000)
+            .withMotionMagicJerk(1000000);
+
+        CurrentLimitsConfigs elevatorCurrentLimitsConfigs = new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(50)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(80)
+            .withStatorCurrentLimitEnable(true);
+        
+        double currentThreshold = 50;
+        
+        this.m_elevatorLeft
+        .withMotorOutputConfigs(elevatorMotorOutputConfigs)
+        .withSlot0Configs(elevatorSlot0Configs)
+        .withMotionMagicConfigs(elevatorMotionConfigs)
+        .withCurrentLimitConfigs(elevatorCurrentLimitsConfigs)
+        .withSpikeThreshold(currentThreshold);
+        
+        this.m_elevatorLeft
+        .withMotorOutputConfigs(elevatorMotorOutputConfigs)
+        .withSlot0Configs(elevatorSlot0Configs)
+        .withMotionMagicConfigs(elevatorMotionConfigs)
+        .withCurrentLimitConfigs(elevatorCurrentLimitsConfigs)
+        .withSpikeThreshold(currentThreshold);
+
+        this.m_elevatorRight.motor.setControl(new Follower(50, true)); // update
+
+        this.m_elevatorLeft.motor.setPosition(0);
+        this.m_elevatorRight.motor.setPosition(0);
+    }
+
     /**
      * Move the elevator to a Position
      * @param pos the Position to move to
      * @return a Command to do so
      */
-    public Command goToPosition(Position pos){return new Command() {};}
+    public Command goToPosition(Position pos) {
+        this.targetPosition = pos;
+        return Commands.runOnce(() ->this.setPosition(Elevator.POSITION_CONVERSIONS.get(pos).getNumber()));
+    }
+
+    public void setPosition(double rotations) {
+        System.out.println("GOTO: " + rotations);
+        this.m_elevatorLeft.setMotionMagicPosition(rotations);
+    }
+
+    @Override
+    public void periodic() {
+
+        SmartDashboard.putNumber("elevator/elevator-left-position", this.m_elevatorLeft.motor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/elevator-right-position", this.m_elevatorRight.motor.getPosition().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/elevator-left-spike", this.m_elevatorLeft.motor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/elevator-right-spike", this.m_elevatorRight.motor.getTorqueCurrent().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/elevator-left-velocity", this.m_elevatorLeft.motor.getVelocity().getValueAsDouble());
+        SmartDashboard.putNumber("elevator/elevator-right-velocity", this.m_elevatorRight.motor.getVelocity().getValueAsDouble());
+    }
+
+    public void increaseTarget() {
+        target.putNumber(target.getNumber() + delta.getNumber());
+      }
+    
+    public void decreaseTarget() {
+        target.putNumber(target.getNumber() - delta.getNumber());
+    }
+
+    public void setTarget() {
+        this.setPosition(this.target.getNumber());
+    }
+
+    public double getPosition() {
+        return m_elevatorLeft.motor.getPosition().getValueAsDouble();
+    }
+
+    public boolean withinTargetRotation(Position pos) {
+        return Math.abs(Elevator.POSITION_CONVERSIONS.get(pos).getNumber() - this.getPosition()) < threshold.getNumber();
+    }
+
+
+    public void resetMotors()
+    {
+        this.m_elevatorLeft.motor.setControl(new CoastOut());
+        this.m_elevatorLeft.motor.setPosition(0);
+        this.m_elevatorRight.motor.setPosition(0);
+        this.m_elevatorLeft.motor.setControl(new DutyCycleOut(0));
+    }
+
+    public void setNormalizeSpeed()
+    {
+        this.m_elevatorLeft.motor.setControl(new DutyCycleOut(this.normalizationSpeed.getNumber()));
+    }
+
+    public boolean atCurrentSpike()
+    {
+        return this.m_elevatorLeft.aboveSpikeThreshold() || this.m_elevatorRight.aboveSpikeThreshold();
+    }
+
+
+    /**
+     * Check if the elevator is at target position
+     * @return true if the elevator is on target
+     */
+    public boolean atTarget(){
+        return this.withinTargetRotation(this.targetPosition);
+    }
+
     /**
      * Check if a Position may drop the arm too low
      * @param pos the Position to check
      * @return true if the Position is below a threshold
      */
-    public boolean posBelowThreshold(Position pos) {return true;}
+    public boolean posBelowThreshold(Position pos) {
+        return POSITION_CONVERSIONS.get(pos).getNumber() < this.armThreshold.getNumber();
+    }
+    
     /**
-     * Move the endeffector to a normal position and zero it
+     * Move the elevator to a normal position and zero it
      * @return a Command to do so
      */
-    public Command normalizeCommand() {return new Command() {};}
+    public Command normalizeElevatorCommand()
+    {
+        return new FunctionalCommand(
+            () -> this.setNormalizeSpeed(), 
+            () -> {}, 
+            (interrupted) -> this.resetMotors(), 
+            () -> this.atCurrentSpike(), this);
+    }
+
+
     /**
      * Get singleton instance
      * @return the Elevator
      */
-    public static Elevator getInstance(){return new Elevator();}
+    public static Elevator getInstance() {
+        if (instance == null)
+            instance = new Elevator();
+        return instance;
+    }
 }

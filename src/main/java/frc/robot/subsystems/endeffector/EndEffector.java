@@ -48,15 +48,14 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.1);
     
     private Position targetPosition = Position.STOW;
-    private boolean running = false;
 
     private static EndEffector instance = null;
 
     private static Map<Position, SmartDashboardNumber > POSITION_CONVERSIONS = Map.of(
-        Position.L4, new SmartDashboardNumber("endeffector/position/endeffector-l4", 0),
-        Position.L3, new SmartDashboardNumber("endeffector/position/endeffector-l3", 0),
-        Position.L2, new SmartDashboardNumber("endeffector/position/endeffector-l2", 0),
         Position.L1, new SmartDashboardNumber("endeffector/position/endeffector-l1", 0),
+        Position.L2, new SmartDashboardNumber("endeffector/position/endeffector-l2", 0),
+        Position.L3, new SmartDashboardNumber("endeffector/position/endeffector-l3", 0),
+        Position.L4, new SmartDashboardNumber("endeffector/position/endeffector-l4", 0),
         Position.SOURCE, new SmartDashboardNumber("endeffector/position/endeffector-source", 0),
         Position.CORAL_GROUND, new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 0),
         Position.ALGAE_GROUND, new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 0),
@@ -115,10 +114,6 @@ public class EndEffector extends SubsystemBase {
      * @param speed the power to drive at
      */
     private void setSpeed(double speed){
-        if(speed == 0)
-            this.running = false;
-        else
-            this.running = true;
         this.driveMotor.motor.set(speed);
     }
     
@@ -168,10 +163,10 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeCoral(){
         return new FunctionalCommand(
-            () -> setSpeed(this.coralIntakeSpeed.getNumber()),
+            () -> this.setSpeed(this.coralIntakeSpeed.getNumber()),
             () -> {},
-            (interrupted) -> setSpeed(0),
-            () -> coralDetected(),
+            (interrupted) -> this.setSpeed(0),
+            () -> this.coralDetected(),
             this
         );
     }
@@ -182,9 +177,9 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeAlgae(){
         return new FunctionalCommand(
-            () -> setSpeed(this.algaeIntakeSpeed.getNumber()),
+            () -> this.setSpeed(this.algaeIntakeSpeed.getNumber()),
             () -> {},
-            (interrupted) -> setSpeed(0),
+            (interrupted) -> this.setSpeed(0),
             () -> this.driveMotor.aboveSpikeThreshold(),
             this
         );
@@ -196,10 +191,10 @@ public class EndEffector extends SubsystemBase {
      */
     public Command outtakeCoral(){
         return new SequentialCommandGroup(
-            Commands.runOnce(() -> setSpeed(this.coralOuttakeSpeed.getNumber())),
+            Commands.runOnce(() -> this.setSpeed(this.coralOuttakeSpeed.getNumber())),
             new WaitUntilCommand(() -> !this.coralDetected()),
             new WaitCommand(.2),
-            Commands.runOnce(() -> setSpeed(0))
+            this.stop()
         );
     }
 
@@ -211,8 +206,12 @@ public class EndEffector extends SubsystemBase {
         return new SequentialCommandGroup(
             Commands.runOnce(() -> setSpeed(this.algaeOuttakeSpeed.getNumber())),
             new WaitCommand(.25),
-            Commands.runOnce(() -> setSpeed(0))
+            this.stop()
         );
+    }
+
+    public Command stop(){
+        return Commands.runOnce(() -> setSpeed(0));
     }
 
     /**
@@ -222,9 +221,9 @@ public class EndEffector extends SubsystemBase {
     public Command normalizeCommand(){
         return new SequentialCommandGroup(
             new FunctionalCommand(
-                () -> setSpeed(this.normalizeSpeed.getNumber()),
+                () -> this.setSpeed(this.normalizeSpeed.getNumber()),
                 () -> {},
-                (interrupted) -> {setSpeed(0);
+                (interrupted) -> {this.setSpeed(0);
                     this.wristMotor.motor.setPosition(0);
                 },
                 () -> this.wristMotor.aboveSpikeThreshold(),
@@ -232,15 +231,6 @@ public class EndEffector extends SubsystemBase {
             ),
             this.goToPosition(this.targetPosition)
         );
-    }
-
-    /**
-     * Check if the endeffector has finished control
-     * @return true if the endeffector is idle
-     */
-    public boolean isIdle()
-    {
-        return this.atTarget() && !this.running;
     }
 
     /**

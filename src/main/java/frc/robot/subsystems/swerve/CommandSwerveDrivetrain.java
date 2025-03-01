@@ -9,6 +9,7 @@ import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 
 import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
@@ -21,6 +22,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableListener;
@@ -31,6 +33,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -48,19 +51,23 @@ import redrocklib.logging.SmartDashboardBoolean;
  */
 @Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
-    private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 8);
-    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 1.2);
-    private SmartDashboardNumber rotateD = new SmartDashboardNumber("dt/dt-rotate-d", 0.3);
-    private SmartDashboardNumber rotateTolerance = new SmartDashboardNumber("dt/dt-rotate-tolerance", 0.1);
+    private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 4);
+    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 0.5); // 1.2
+    private SmartDashboardNumber rotateD = new SmartDashboardNumber("dt/dt-rotate-d", 0);
+    private SmartDashboardNumber rotateIRange = new SmartDashboardNumber("dt/dt-rotate-Irange", 0.2);
+    private SmartDashboardNumber rotateTolerance = new SmartDashboardNumber("dt/dt-rotate-tolerance", 0.015);
 
     private SmartDashboardNumber rotationOmegaSignificance = new SmartDashboardNumber("dt/dt-rotation-rate-limit", 1);
     private SmartDashboardNumber driveMaxSpeed = new SmartDashboardNumber("dt/dt-max-drive-speed", 6);
     private SmartDashboardNumber turnMaxSpeed = new SmartDashboardNumber("dt/dt-max-turn-speed", 1.5);
     private SmartDashboardNumber driveDeadBand = new SmartDashboardNumber("dt/dt-drive-deadband", 0.05);
     private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.05);
+    private SmartDashboardNumber headingPIDTolerance = new SmartDashboardNumber("dt/dt-heading-pid-tolerance", 1.5);
 
-    private boolean enableHeadingPID = true;
+    private boolean enableHeadingPID = false;
     private boolean inPositionTargeting = false;
+
+    private boolean usingSingleAxisDrive = false;
 
     private double targetHeadingDegrees = 0;
 
@@ -83,10 +90,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber kRejectionDistance = new SmartDashboardNumber("localization/rejection-distance", 3);
     private SmartDashboardNumber kRejectionRotationRate = new SmartDashboardNumber("localization/rejection-rotation-rate", 3);
 
-    private SmartDashboardBoolean visionEnabled = new SmartDashboardBoolean("localization/vision-enabled", false);
+    private SmartDashboardBoolean visionEnabled = new SmartDashboardBoolean("localization/vision-enabled", true);
 
     /** Swerve request to apply during field-centric path following */
     private final SwerveRequest.ApplyFieldSpeeds m_pathApplyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+
+    private SmartDashboardNumber pidScaleVelo = new SmartDashboardNumber("dt/dt-pid-scale-velo", 6);
     
 
     /* Swerve requests to apply during SysId characterization */
@@ -108,17 +117,35 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterX;
     private SlewRateLimiter positionRateLimiterY;
 
-    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 2);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 20);
-    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 1);
-    private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 3);
+    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.5);
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.1); // 15
+    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
+    private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.3);
+
+    private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
+    private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
+    private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3);
+
+    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.73);
+    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.83);
+    private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
+
+
+
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02);
 
     private final PIDController m_pathXController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
     private final PIDController m_pathYController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
     private final PIDController m_pathThetaController = new PIDController(rotateP.getNumber(), rotateI.getNumber(), rotateD.getNumber());
+
+    private SmartDashboardNumber pidMaxVelo = new SmartDashboardNumber("dt/dt-max-pid-velo", 0.8);
   
+    private DriverStation.Alliance alliance = Alliance.Blue;
+
+    private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+
+    
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
     private final SysIdRoutine m_sysIdRoutineTranslation = new SysIdRoutine(
         new SysIdRoutine.Config(
@@ -261,6 +288,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     private void initialize() {
+        // this.angleRequest.HeadingController = new PhoenixPIDController(this.rotateP.getNumber(), this.rotateI.getNumber(), this.rotateD.getNumber());
+        // this.angleRequest.HeadingController.setTolerance(this.rotateTolerance.getNumber());
+        // this.angleRequest.HeadingController.setIntegratorRange(-this.rotateIRange.getNumber(), this.rotateIRange.getNumber());
+
         positionControllerX = new PIDController(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
         positionControllerY = new PIDController(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
 
@@ -279,29 +310,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     /**
-     * Creates a new auto factory for this drivetrain.
-     *
-     * @return AutoFactory for this drivetrain
-     */
-    public AutoFactory createAutoFactory() {
-        return createAutoFactory((sample, isStart) -> {});
-    }
-
-    /**
      * Creates a new auto factory for this drivetrain with the given
      * trajectory logger.
      *
      * @param trajLogger Logger for the trajectory
      * @return AutoFactory for this drivetrain
      */
-    public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
+    public AutoFactory createAutoFactory() {//TrajectoryLogger<SwerveSample> trajLogger
         return new AutoFactory(
             () -> getState().Pose,
             this::resetPose,
             this::followPath,
             true,
-            this,
-            trajLogger
+            this
+            // trajLogger
         );
     }
 
@@ -349,6 +371,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void setSwerveRequest(SwerveRequest.FieldCentricFacingAngle request){
         this.angleRequest = request;
         angleRequest.HeadingController.enableContinuousInput(-Math.PI, Math.PI);
+        angleRequest.HeadingController.setTolerance(Math.toRadians(this.getRequestedHeadingPIDTolerance()));
     }
 
     /**
@@ -394,17 +417,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
          */
         if (!m_hasAppliedOperatorPerspective || DriverStation.isDisabled()) {
             DriverStation.getAlliance().ifPresent(allianceColor -> {
-                setOperatorPerspectiveForward(
-                    allianceColor == Alliance.Red
-                        ? kRedAlliancePerspectiveRotation
-                        : kBlueAlliancePerspectiveRotation
-                );
+                // setOperatorPerspectiveForward(
+                //     allianceColor == Alliance.Red
+                //         ? kRedAlliancePerspectiveRotation
+                //         : kBlueAlliancePerspectiveRotation
+                // );
+                this.setAllianceColor(allianceColor);
                 m_hasAppliedOperatorPerspective = true;
             });
         }
 
         this.angleRequest.HeadingController.setPID(this.rotateP.getNumber(), this.rotateI.getNumber(), this.rotateD.getNumber());
         this.angleRequest.HeadingController.setTolerance(this.rotateTolerance.getNumber());
+        this.angleRequest.HeadingController.setIntegratorRange(-this.rotateIRange.getNumber(), this.rotateIRange.getNumber());
+        
         if(this.angleRequest.HeadingController.atSetpoint())
         {
             this.angleRequest.HeadingController.setI(0);
@@ -412,6 +438,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
         this.positionControllerX.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
         this.positionControllerY.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
+
+        positionControllerX.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
+        positionControllerY.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
 
         this.positionControllerX.setTolerance(positionTolerance.getNumber());
         this.positionControllerY.setTolerance(positionTolerance.getNumber());
@@ -428,25 +457,60 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         
         SmartDashboard.putBoolean("dt/dt-at-target-pose", this.atTargetPose());
+        SmartDashboard.putBoolean("dt/dt-at-target-velo", this.atTargetVelocity());
+        SmartDashboard.putBoolean("dt/dt-settled", this.settled());
         SmartDashboard.putBoolean("dt/using heading pid", this.enableHeadingPID);
         SmartDashboard.putBoolean("dt/dt-is-targeting-pose", this.isTargetingPosition());
         SmartDashboard.putNumber("dt/current heading", this.getHeadingDegrees());
         SmartDashboard.putNumber("dt/target heading", this.getTargetHeadingDegrees());
 
+        SmartDashboard.putNumber("dt/dt-fl-wheel-rotation", this.getModule(0).getDriveMotor().getPosition().getValueAsDouble());
+
+        SmartDashboard.putBoolean("dt/heading-pid-at-setpoint", angleRequest.HeadingController.atSetpoint());
+        SmartDashboard.putNumber("dt/heading-pid-actual-tolerance", angleRequest.HeadingController.getPositionTolerance());
+        SmartDashboard.putNumber("dt/heading-pid-error", angleRequest.HeadingController.getPositionError());
+
+        SmartDashboard.putNumber("dt/dt-position-x", this.getPose().getX());
+        SmartDashboard.putNumber("dt/dt-position-y", this.getPose().getY());
+
+        SmartDashboard.putNumber("dt/dt-position-x-error", positionControllerX.getError());
+        SmartDashboard.putNumber("dt/dt-position-y-error", positionControllerY.getError());
+
+        SmartDashboard.putBoolean("dt/dt-using-single-axis", this.usingSingleAxisDrive);
+
+        this.xVelocity.putNumber(this.positionControllerX.getErrorDerivative());
+        this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
+
         if (visionEnabled.getValue()) updateVisionMeasurements();
+    }
+
+    public boolean settled()
+    {
+        return this.isTargetingPosition() && this.atTargetPose() && this.atTargetVelocity();
     }
 
     public void updateVisionMeasurements() {
         for (Localization.LimeLightPoseEstimateWrapper estimateWrapper : Localization.getPoseEstimates(this.getHeadingDegrees())) {
             if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {
                 this.addVisionMeasurement(estimateWrapper.poseEstimate.pose,
-                                        estimateWrapper.poseEstimate.timestampSeconds, 
+                                        // estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()), 
+                                        Utils.getCurrentTimeSeconds() - estimateWrapper.poseEstimate.latency * 0.01,
                                         estimateWrapper.getStdvs(estimateWrapper.poseEstimate.avgTagDist));
                 estimateWrapper.field.setRobotPose(
                     estimateWrapper.poseEstimate.pose
                 );
+                SmartDashboard.putNumber("localization/timestamp", estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()));
+                SmartDashboard.putNumber("localization/currentTime", Utils.getCurrentTimeSeconds());
+                SmartDashboard.putBoolean("localization/vision-accepted", true);
+                SmartDashboard.putNumber(estimateWrapper.name + "/" + estimateWrapper.name + "-latency", estimateWrapper.poseEstimate.latency);
             }
+            else
+                SmartDashboard.putBoolean("localization/vision-accepted", false);
         }
+    }
+
+    private void setAllianceColor(DriverStation.Alliance alliance) {
+        this.alliance = alliance;
     }
 
     private boolean poseEstimateIsValid(LimelightHelpers.PoseEstimate e) {
@@ -484,6 +548,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         );
     }
 
+    public Command goToPoseCommand() {
+        return new FunctionalCommand(
+            () -> {this.setTargetPose(this.constructTestTargetPose()); this.enablePositionTargeting();}, 
+            () -> {}, 
+            (interrupted) -> System.out.println("@@@@@#@#@#@$U@#%(*&#(*%&@#(*$)))"), 
+            () -> SmartDashboard.getBoolean("dt/dt-settled", false)
+        );
+    }
+
+    public Pose2d constructTestTargetPose() {
+        return new Pose2d(targetPoseX.getNumber(), targetPoseY.getNumber(), Rotation2d.fromDegrees(targetPoseTheta.getNumber()));
+    }
 
     public void setTargetHeadingDegrees(double degrees){
         this.targetHeadingDegrees = degrees;
@@ -494,8 +570,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public double getTargetHeadingDegrees(){
-        if (this.isTargetingPosition()) return targetPose2d.getRotation().getDegrees();
-        return this.targetHeadingDegrees;
+        // double offset = (this.alliance == Alliance.Red) ? 180 : 0;
+        double offset = 0;
+        if (this.isTargetingPosition()) return targetPose2d.getRotation().getDegrees() + offset;
+        return this.targetHeadingDegrees + offset;
     }
 
     public boolean isRotating(){
@@ -516,6 +594,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public double getTurnDeadBand(){
         return this.turnDeadBand.getNumber();
+    }
+
+    public double getRequestedHeadingPIDTolerance() {
+        return this.headingPIDTolerance.getNumber();
     }
 
     public void setUseHeadingPID(boolean b){
@@ -563,6 +645,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.setTargetHeadingDegrees(pose.getRotation().getDegrees());
     }
 
+    public double getMaxPIDVelocity() {
+        return this.pidMaxVelo.getNumber();
+    }
+
     public double getPositionPIDValueX() {
         return positionRateLimiterX.calculate(positionControllerX.calculate(getPose().getX(), targetPose2d.getX()));
     }
@@ -571,8 +657,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return positionRateLimiterY.calculate(positionControllerY.calculate(getPose().getY(), targetPose2d.getY()));
     }
 
+    // public boolean atTargetPose() {
+    //     return positionControllerX.atSetpoint() && positionControllerY.atSetpoint() && this.angleRequest.HeadingController.atSetpoint();
+    // }
+
     public boolean atTargetPose() {
-        return positionControllerX.atSetpoint() && positionControllerY.atSetpoint();
+        return Math.abs(this.targetPose2d.getX() - this.getPose().getX()) < positionTolerance.getNumber()
+            && Math.abs(this.targetPose2d.getY() - this.getPose().getY()) < positionTolerance.getNumber();
+            // && Math.abs(this.getHeadingDegrees() - this.getTargetHeadingDegrees()) < headingPIDTolerance.getNumber();
+    }
+
+    public boolean atTargetVelocity() {
+        // return true;
+        return Math.abs(this.positionControllerX.getErrorDerivative()) < this.velocityTolerance.getNumber() && Math.abs(this.positionControllerY.getErrorDerivative()) < this.velocityTolerance.getNumber();
     }
 
     public boolean isTargetingPosition() {
@@ -585,5 +682,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void disablePositionTargeting() {
         this.inPositionTargeting = false;
+    }
+
+    public double getSingleAxisMultiplier() {
+        if (usingSingleAxisDrive) return 0;
+        return 1;
+    }
+
+    public void toggleUsingSingleAxis() {
+        usingSingleAxisDrive = !usingSingleAxisDrive;
+
+    }
+
+    public double getPIDScale() {
+        return pidScaleVelo.getNumber();
     }
 }

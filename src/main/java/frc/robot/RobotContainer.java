@@ -11,19 +11,28 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
+import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 
@@ -49,6 +58,8 @@ public class RobotContainer {
     private final CommandXboxController drivestick = new CommandXboxController(0);
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
+    // private final Elevator elevator = Elevator.getInstance();
+    private final Superstructure superstructure = Superstructure.getInstance();
 
     /* Path follower */
     private final AutoFactory autoFactory;
@@ -57,9 +68,7 @@ public class RobotContainer {
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
 
-    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 0);
-    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 0);
-    private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
+    private SmartDashboardBoolean inPIDTolerance = new SmartDashboardBoolean("dt/dt-in-pid-tolerance", false);
 
 
     public RobotContainer() {
@@ -68,7 +77,15 @@ public class RobotContainer {
         autoFactory = drivetrain.createAutoFactory();
         autoRoutines = new AutoRoutines(autoFactory);
 
-        autoChooser.addRoutine("TestPath Auto", autoRoutines::testpath2Auto);
+        autoChooser.addRoutine("TestPath2 Auto", autoRoutines::testpath2Auto);
+
+        autoChooser.addRoutine("testlong1Auto Auto", autoRoutines::testlong1Auto);
+        autoChooser.addRoutine("testlong1Paths Auto", autoRoutines::testlong1Paths);
+        autoChooser.addRoutine("testlong1PathsPID Auto", autoRoutines::testlong1PathsPID);
+        autoChooser.addRoutine("testcuts1Auto Auto", autoRoutines::testcuts1Auto);
+        autoChooser.addRoutine("testcuts1Paths Auto", autoRoutines::testcuts1Paths);
+        autoChooser.addRoutine("testcuts1PathsPID Auto", autoRoutines::testcuts1PathsPID);
+
         SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
@@ -82,24 +99,38 @@ public class RobotContainer {
         
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
-    
+
     private void configureBindings() {
+        configureDriveBindings();
+        configureMechBindings();
+    }
+    
+    private void configureDriveBindings() {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(
               () -> {
                 if (drivetrain.isTargetingPosition()) {
-                    return driveFacingAngle.withVelocityX(drivetrain.getPositionPIDValueX() * MaxSpeed)
-                                            .withVelocityY(drivetrain.getPositionPIDValueY() * MaxSpeed)
+                    inPIDTolerance.putBoolean(false);
+                    return driveFacingAngle.withVelocityX(MathUtil.clamp(drivetrain.getPositionPIDValueX() * drivetrain.getPIDScale(), -drivetrain.getMaxPIDVelocity(), drivetrain.getMaxPIDVelocity()))
+                                            .withVelocityY(MathUtil.clamp(drivetrain.getPositionPIDValueY() * drivetrain.getPIDScale(), -drivetrain.getMaxPIDVelocity(), drivetrain.getMaxPIDVelocity()))
                                             .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
                 }
                 else if (!drivetrain.getUseHeadingPID() || Math.abs(drivestick.getRightX()) > drivetrain.getTurnDeadBand()) {
+                    inPIDTolerance.putBoolean(false);
                   return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                              .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                              .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
                               .withRotationalRate(progressiveInput(-drivestick.getRightX(),progressiveTurnExponent) * MaxAngularRate);
                 }
+                else if (driveFacingAngle.HeadingController.atSetpoint()) {
+                    inPIDTolerance.putBoolean(true);
+                    return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
+                    .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
+                    .withRotationalRate(0);
+                }
                 else {
+                    inPIDTolerance.putBoolean(false);
                   return driveFacingAngle.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                                         .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent) * MaxSpeed)
+                                         .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
                                          .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
                   
                 }
@@ -117,58 +148,175 @@ public class RobotContainer {
                 () -> !drivetrain.isRotating() && Math.abs(drivestick.getRightX()) < drivetrain.getTurnDeadBand())
         );
 
-        drivestick.leftBumper().onTrue(
-            new InstantCommand(() -> drivetrain.toggleHeadingPID(), drivetrain)
+        drivestick.back().and(drivestick.povUp()).onTrue(
+            new InstantCommand(drivetrain::toggleHeadingPID, drivetrain)
         );
 
-        drivestick.povLeft().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
+        drivestick.rightStick().onTrue(
+            new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
         );
 
-        drivestick.povUp().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(0), drivetrain)
-        );
+        // drivestick.povLeft().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
+        // );
 
-        drivestick.povRight().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(-90), drivetrain)
-        );
+        // drivestick.povUp().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(0), drivetrain)
+        // );
 
-        drivestick.povDown().onTrue(
-            new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
-        );
+        // drivestick.povRight().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(-90), drivetrain)
+        // );
 
-        drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        drivestick.b().whileTrue(drivetrain.applyRequest(() ->
-            point.withModuleDirection(new Rotation2d(-drivestick.getLeftY(), -drivestick.getLeftX()))
-        ));
+        // drivestick.povDown().onTrue(
+        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
+        // );
+
+        // drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
+        // drivestick.b().whileTrue(drivetrain.applyRequest(() ->
+        //     point.withModuleDirection(new Rotation2d(-drivestick.getLeftY(), -drivestick.getLeftX()))
+        // ));
 
         // Run SysId routines when holding back/start and X/Y.
         // Note that each routine should be run exactly once in a single log.
-        drivestick.back().and(drivestick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        drivestick.back().and(drivestick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        drivestick.start().and(drivestick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        drivestick.start().and(drivestick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
+        // drivestick.back().and(drivestick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
+        // drivestick.back().and(drivestick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
+        // drivestick.start().and(drivestick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
+        // drivestick.start().and(drivestick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
 
         // reset the field-centric heading on left bumper press
         drivestick.start().and(drivestick.back()).onTrue(drivetrain.resetHeadingCommand());
 
-        drivestick.rightBumper().onTrue(
-            new FunctionalCommand(
-                () -> {
-                    drivetrain.setTargetPose(this.constructTestTargetPose());
-                    drivetrain.enablePositionTargeting();
-                }, 
-                () -> {}, 
-                (interrupted) -> {
-                    drivetrain.disablePositionTargeting();
-                }, 
-                () -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose())
-        ).onFalse(
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
-        );
+        // drivestick.back().onTrue(
+        //     new FunctionalCommand(
+        //         () -> {
+        //             drivetrain.setTargetPose(this.constructTestTargetPose());
+        //             drivetrain.enablePositionTargeting();
+        //         }, 
+        //         () -> {}, 
+        //         (interrupted) -> {
+        //             drivetrain.disablePositionTargeting();
+        //         }, 
+        //         () -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose())
+        // ).onFalse(
+        //     Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+        // );
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
+
+    public void configureMechBindings() {
+        
+        RobotModeTriggers.teleop().onTrue(
+            Commands.parallel(
+                superstructure.initialize()// elevator.normalizeElevatorCommand()
+            )
+        );
+
+        drivestick.leftBumper().onTrue(
+            superstructure.intakeCoral()// doohickey.intakeCommand()
+        );
+
+
+        // drivestick.leftBumper().onTrue(
+        //     Commands.sequence(
+        //         elevator.setSourceCommand(),
+        //         doohickey.intakeCommand()
+        //     )
+        // );
+
+        // drivestick.rightBumper().onTrue(
+        //     doohickey.startOuttakeCommand()
+        // ).onFalse(
+        //     Commands.sequence(
+        //         doohickey.stopCommand(),
+        //         elevator.setGroundCommand()
+        //     )
+        // );
+
+        drivestick.rightBumper().onTrue(
+            superstructure.outtakeCoral()// doohickey.startOuttakeCommand()
+        ).onFalse(
+            superstructure.stopEndEffector()// doohickey.stopCommand()
+        );
+
+        drivestick.a().onTrue(
+            superstructure.goToPosition(Position.L1)
+        );
+
+        drivestick.x().onTrue(
+            superstructure.goToPosition(Position.L2)// elevator.setL2Command()
+        );
+
+        drivestick.y().onTrue(
+            superstructure.goToPosition(Position.L3)// elevator.setL3Command()
+        );
+
+        drivestick.b().onTrue(
+            superstructure.goToPosition(Position.L4)// elevator.setL4Command()
+        );
+
+        // drivestick.povLeft().onTrue(
+        //     elevator.setGroundCommand()
+        // );
+
+        drivestick.povDown().onTrue(
+            superstructure.goToPosition(Position.STOW)// elevator.setStowCommand()
+        );
+
+        drivestick.back().and(drivestick.povLeft()).onTrue(
+            superstructure.autoScoreCoral(Position.L3)
+            // new SequentialCommandGroup(
+            //     superstructure.goToPosition(Position.L3),// elevator.setL3Command(),
+            //     new WaitUntilCommand(() -> superstructure.atTargets()),//elevator.withinTargetRotation(Elevator.Position.L3)),
+            //     superstructure.outtakeCoral(),// doohickey.startOuttakeCommand(),
+            //     // new WaitCommand(1),
+            //     // superstructure.stopEndEffector(),// doohickey.stopCommand(),
+            //     superstructure.goToPosition(Position.SOURCE)// elevator.setSourceCommand()
+            // )
+        );
+
+        drivestick.back().and(drivestick.povRight()).onTrue(
+            new SequentialCommandGroup(
+                
+                // new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
+                // new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                drivetrain.goToPoseCommand(),
+                Commands.print("@@@@@@@@@@@@@@@@@@@@@@@@"),
+                superstructure.autoScoreCoral(Position.L3),
+                // elevator.setL3Command(),
+                // new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
+                // doohickey.startOuttakeCommand(),
+                // new WaitCommand(1),
+                // doohickey.stopCommand(),
+                // elevator.setSourceCommand(),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting())
+            )
+        );
+        // drivestick.back().and(drivestick.povRight()).onTrue(
+        //     new SequentialCommandGroup(
+        //         new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(6.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
+        //         new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+        //         new InstantCommand(() -> drivetrain.disablePositionTargeting()),
+        //         Commands.print("at pose"),
+        //         new InstantCommand(
+        //             () -> drivestick.getHID().setRumble(RumbleType.kRightRumble, 0.5)
+        //         ),
+        //         new WaitCommand(0.2),
+        //         new InstantCommand(() -> drivestick.getHID().setRumble(RumbleType.kRightRumble, 0))
+        //     )
+        // );
+
+        drivestick.rightStick().onTrue(
+            superstructure.initialize()// elevator.normalizeElevatorCommand()
+        );
+
+        drivestick.leftStick().onTrue(
+            Commands.runOnce(() ->drivetrain.disablePositionTargeting())
+        );
+    }
+
+    Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
 
     public void loop(){
         MaxSpeed = drivetrain.getMaxDriveSpeed();
@@ -179,6 +327,7 @@ public class RobotContainer {
     
         driveFacingAngle.Deadband = drivetrain.getDriveDeadBand();
         driveFacingAngle.RotationalDeadband = drivetrain.getTurnDeadBand();
+        driveFacingAngle.HeadingController.setTolerance(Math.toRadians(drivetrain.getRequestedHeadingPIDTolerance()));
     }
 
     public Command getAutonomousCommand() {
@@ -187,8 +336,10 @@ public class RobotContainer {
         return autoChooser.selectedCommand();
     }
 
-    private Pose2d constructTestTargetPose() {
-        return new Pose2d(targetPoseX.getNumber(), targetPoseY.getNumber(), Rotation2d.fromDegrees(targetPoseTheta.getNumber()));
+    
+
+    private void drivetrainSetTargetPoseConstruct() {
+        drivetrain.setTargetPose(drivetrain.constructTestTargetPose());
     }
     /* Puts a progressive response curve on a normalized analog input
        by raising input to exponent while preserving the sign 
@@ -197,5 +348,9 @@ public class RobotContainer {
     {
         if(input == 0) return 0;
         return Math.min(1,Math.max(-1,Math.abs(input)/input * Math.pow(Math.abs(input), exponent)));
+    }
+
+    public double progressiveInput(double input, double exponent, boolean b) {
+        return progressiveInput(input, exponent) * drivetrain.getSingleAxisMultiplier();
     }
 }
