@@ -218,7 +218,7 @@ public class EndEffector extends SubsystemBase {
      * Move the endeffector to a normal position and zero it
      * @return a Command to do so
      */
-    public Command normalizeCommand(){
+    public Command normalizeEndEffectorCommand(){
         return new SequentialCommandGroup(
             new FunctionalCommand(
                 () -> this.setSpeed(this.normalizeSpeed.getNumber()),

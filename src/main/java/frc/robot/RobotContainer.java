@@ -214,7 +214,10 @@ public class RobotContainer {
         );
 
         drivestick.leftBumper().onTrue(
-            superstructure.intakeCoral()// doohickey.intakeCommand()
+            Commands.sequence(
+                superstructure.intakeCoral(),// doohickey.intakeCommand()
+                superstructure.goToPosition(Position.SOURCE)
+            )
         );
 
 
@@ -316,7 +319,7 @@ public class RobotContainer {
         );
     }
 
-    Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
+    // Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
 
     public void loop(){
         MaxSpeed = drivetrain.getMaxDriveSpeed();

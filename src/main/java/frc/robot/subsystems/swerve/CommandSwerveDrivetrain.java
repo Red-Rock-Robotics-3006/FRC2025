@@ -2,6 +2,7 @@ package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -37,6 +38,7 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import frc.robot.subsystems.swerve.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants2;
@@ -144,6 +146,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private DriverStation.Alliance alliance = Alliance.Blue;
 
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
+
+    public static enum ScorePose {A, B, C, D, E, F, G, H, I, J, K, L}
+    
+    ScorePose scorePose = ScorePose.A;
 
     
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */

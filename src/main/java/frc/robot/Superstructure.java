@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -34,8 +35,7 @@ public class Superstructure {
         BARGE
     }
 
-    private Superstructure()
-    {
+    private Superstructure() {
         // this.initialize();
     }
 
@@ -43,10 +43,9 @@ public class Superstructure {
      * Prepare subsystems' hardware
      * @return a Command to do so
      */
-    public Command initialize()
-    {
+    public Command initialize() {
         return new ParallelCommandGroup(
-            this.endEffector.normalizeCommand(),
+            this.endEffector.normalizeEndEffectorCommand(),
             this.arm.goToPosition(Position.STOW),
             this.elevator.normalizeElevatorCommand()
         );
@@ -57,8 +56,7 @@ public class Superstructure {
      * @param pos the position to move to
      * @return a Command to do so
      */
-    public Command goToPosition(Position pos)
-    {
+    public Command goToPosition(Position pos) {
         return new SequentialCommandGroup(
             this.arm.goToPosition(pos),
             new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowThreshold())),
@@ -71,7 +69,7 @@ public class Superstructure {
      * Intake Coral to EndEffector
      * @return a Command to do so
      */
-    public Command intakeCoral(){
+    public Command intakeCoral() {
         return new InstantCommand(
             () -> this.endEffector.intakeCoral(),
             this.endEffector
@@ -82,7 +80,7 @@ public class Superstructure {
      * Intake Algae to EndEffector
      * @return a Command to do so
      */
-    public Command intakeAlgae(){
+    public Command intakeAlgae() {
         return new InstantCommand(
             () -> this.endEffector.intakeAlgae(),
             this.endEffector
@@ -93,7 +91,7 @@ public class Superstructure {
      * Dispense Coral from EndEffector
      * @return a Command to do so
      */
-    public Command outtakeCoral(){
+    public Command outtakeCoral() {
         return this.endEffector.outtakeCoral();
     }
 
@@ -101,7 +99,7 @@ public class Superstructure {
      * Dispense Algae from EndEffector
      * @return a Command to do so
      */
-    public Command outtakeAlgae(){
+    public Command outtakeAlgae() {
         return this.endEffector.outtakeAlgae();
     }
 
@@ -109,7 +107,7 @@ public class Superstructure {
      * Stop the endeffector
      * @return a Command to do so
      */
-    public Command stopEndEffector(){
+    public Command stopEndEffector() {
         return this.endEffector.stop();
     }
 
@@ -117,7 +115,7 @@ public class Superstructure {
      * Abstracted full Barge scoring
      * @return a Command to do so
      */
-    public Command autoScoreBarge(){
+    public Command autoScoreBarge() {
         return new SequentialCommandGroup(
             this.goToPosition(Position.BARGE),
             new WaitUntilCommand(() -> this.atTargets()),
@@ -132,8 +130,7 @@ public class Superstructure {
      * Check if subsystems are at target positions
      * @return true if subsystems are on target
      */
-    public boolean atTargets()
-    {
+    public boolean atTargets() {
         return this.elevator.atTarget() && this.arm.atTarget() && this.endEffector.atTarget();
     }
 
@@ -142,9 +139,8 @@ public class Superstructure {
      * @param pos the Position to score Coral at
      * @return a Command to do so
      */
-    public Command autoScoreCoral(Position pos)
-    {
-        return new SequentialCommandGroup(
+    public Command autoScoreCoral(Position pos) {
+        return Commands.sequence(
             this.goToPosition(pos),
             new WaitUntilCommand(() -> this.atTargets()),
             this.endEffector.outtakeCoral(),
@@ -156,9 +152,8 @@ public class Superstructure {
      * Abstracted full Proc scoring
      * @return a Command to do so
      */
-    public Command autoScoreProcessor()
-    {
-        return new SequentialCommandGroup(
+    public Command autoScoreProcessor() {
+        return Commands.sequence(
             this.goToPosition(Position.PROCESSOR),
             new WaitUntilCommand(() -> this.atTargets()),
             this.endEffector.outtakeAlgae(),
@@ -170,8 +165,7 @@ public class Superstructure {
      * Get singleton instance
      * @return the Superstructure
      */
-    public static Superstructure getInstance()
-    {
+    public static Superstructure getInstance() {
         if(instance == null)
             instance = new Superstructure();
         return instance;
