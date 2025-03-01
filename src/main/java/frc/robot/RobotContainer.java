@@ -79,7 +79,15 @@ public class RobotContainer {
         autoFactory = drivetrain.createAutoFactory();
         autoRoutines = new AutoRoutines(autoFactory);
 
-        autoChooser.addRoutine("TestPath Auto", autoRoutines::testpath2Auto);
+        autoChooser.addRoutine("TestPath2 Auto", autoRoutines::testpath2Auto);
+
+        autoChooser.addRoutine("testlong1Auto Auto", autoRoutines::testlong1Auto);
+        autoChooser.addRoutine("testlong1Paths Auto", autoRoutines::testlong1Paths);
+        autoChooser.addRoutine("testlong1PathsPID Auto", autoRoutines::testlong1PathsPID);
+        autoChooser.addRoutine("testcuts1Auto Auto", autoRoutines::testcuts1Auto);
+        autoChooser.addRoutine("testcuts1Paths Auto", autoRoutines::testcuts1Paths);
+        autoChooser.addRoutine("testcuts1PathsPID Auto", autoRoutines::testcuts1PathsPID);
+
         SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
@@ -271,9 +279,11 @@ public class RobotContainer {
 
         drivestick.back().and(drivestick.povRight()).onTrue(
             new SequentialCommandGroup(
-                new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
-                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-                // drivetrain.pathFindTo(targetPose),   
+                
+                // new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
+                // new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                drivetrain.goToPoseCommand(),
+                Commands.print("@@@@@@@@@@@@@@@@@@@@@@@@"),
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
                 doohickey.startOuttakeCommand(),

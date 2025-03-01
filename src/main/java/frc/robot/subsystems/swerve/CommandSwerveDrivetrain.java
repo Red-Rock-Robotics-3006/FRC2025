@@ -33,6 +33,7 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -125,8 +126,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3);
 
-    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.735);
-    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.88284978);
+    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.73);
+    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.83);
     private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
 
 
@@ -456,6 +457,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         
         SmartDashboard.putBoolean("dt/dt-at-target-pose", this.atTargetPose());
+        SmartDashboard.putBoolean("dt/dt-at-target-velo", this.atTargetVelocity());
+        SmartDashboard.putBoolean("dt/dt-settled", this.settled());
         SmartDashboard.putBoolean("dt/using heading pid", this.enableHeadingPID);
         SmartDashboard.putBoolean("dt/dt-is-targeting-pose", this.isTargetingPosition());
         SmartDashboard.putNumber("dt/current heading", this.getHeadingDegrees());
@@ -479,6 +482,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
 
         if (visionEnabled.getValue()) updateVisionMeasurements();
+    }
+
+    public boolean settled()
+    {
+        return this.isTargetingPosition() && this.atTargetPose() && this.atTargetVelocity();
     }
 
     public void updateVisionMeasurements() {
@@ -537,6 +545,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 );
                 this.targetHeadingDegrees = 0;
             }
+        );
+    }
+
+    public Command goToPoseCommand() {
+        return new FunctionalCommand(
+            () -> {this.setTargetPose(this.constructTestTargetPose()); this.enablePositionTargeting();}, 
+            () -> {}, 
+            (interrupted) -> System.out.println("@@@@@#@#@#@$U@#%(*&#(*%&@#(*$)))"), 
+            () -> SmartDashboard.getBoolean("dt/dt-settled", false)
         );
     }
 
@@ -646,8 +663,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public boolean atTargetPose() {
         return Math.abs(this.targetPose2d.getX() - this.getPose().getX()) < positionTolerance.getNumber()
-            && Math.abs(this.targetPose2d.getY() - this.getPose().getY()) < positionTolerance.getNumber()
-            && Math.abs(this.getHeadingDegrees() - this.getTargetHeadingDegrees()) < headingPIDTolerance.getNumber();
+            && Math.abs(this.targetPose2d.getY() - this.getPose().getY()) < positionTolerance.getNumber();
+            // && Math.abs(this.getHeadingDegrees() - this.getTargetHeadingDegrees()) < headingPIDTolerance.getNumber();
     }
 
     public boolean atTargetVelocity() {

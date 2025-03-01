@@ -65,8 +65,7 @@ public class AutoRoutines {
             Commands.sequence(
                 m_factory.resetOdometry("testlong1"),
                 path1.cmd(),
-                new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
-                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                drivetrain.goToPoseCommand(),
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
                 doohickey.startOuttakeCommand(),
@@ -104,8 +103,7 @@ public class AutoRoutines {
             Commands.sequence(
                 m_factory.resetOdometry("testlong1"),
                 path1.cmd(),
-                new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
-                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                drivetrain.goToPoseCommand(),
                 new InstantCommand(() -> drivetrain.disablePositionTargeting()),
                 path2.cmd()
             )
@@ -122,8 +120,7 @@ public class AutoRoutines {
             Commands.sequence(
                 m_factory.resetOdometry("testcuts1"),
                 path1.cmd(),
-                new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
-                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                drivetrain.goToPoseCommand(),
                 elevator.setL3Command(),
                 new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
                 doohickey.startOuttakeCommand(),
@@ -161,8 +158,7 @@ public class AutoRoutines {
             Commands.sequence(
                 m_factory.resetOdometry("testcuts1"),
                 path1.cmd(),
-                new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
-                new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                drivetrain.goToPoseCommand(),
                 new InstantCommand(() -> drivetrain.disablePositionTargeting()),
                 path2.cmd()
             )
