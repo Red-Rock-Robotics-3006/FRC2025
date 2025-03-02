@@ -19,7 +19,7 @@ import redrocklib.logging.SmartDashboardNumber;
 import frc.robot.Superstructure.Position;
 
 /* TODO
- * Find pos values
+ * Find pos values & combine accordingly
  * Tune Slot0
  * Tune MM
  * Tune tolerance
@@ -38,18 +38,17 @@ public class Arm extends SubsystemBase {
 
     private static Arm instance = null;
 
-    private static Map<Position, SmartDashboardNumber > POSITION_CONVERSIONS = Map.of(
-        Position.L1, new SmartDashboardNumber("arm/position/arm-l1", 0),
-        Position.L2, new SmartDashboardNumber("arm/position/arm-l2", 0),
-        Position.L3, new SmartDashboardNumber("arm/position/arm-l3", 0),
-        Position.L4, new SmartDashboardNumber("arm/position/arm-l4", 0),
-        Position.SOURCE, new SmartDashboardNumber("arm/position/arm-source", 0),
-        Position.CORAL_GROUND, new SmartDashboardNumber("arm/position/arm-coral-ground", 0),
-        Position.ALGAE_GROUND, new SmartDashboardNumber("arm/position/arm-algae-ground", 0),
-        Position.PROCESSOR, new SmartDashboardNumber("arm/position/arm-processor", 0),
-        Position.STOW, new SmartDashboardNumber("arm/position/arm-stow", 0),
-        Position.BARGE, new SmartDashboardNumber("arm/position/arm-barge", 0)
-    );
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 0);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 0);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 0);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 0);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 0);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", 0);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 0);
+    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 0);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0);
+    
 
     private Arm(){
         super("Arm");
@@ -82,11 +81,43 @@ public class Arm extends SubsystemBase {
     }
 
     /**
+     * Converts a Position to its corresponding value
+     * @param pos the Position to convert
+     * @return the numerical value
+     */
+    private double convertPosition(Position pos)
+    {
+        switch (pos) {
+            case L1:
+                return this.l1Position.getNumber();
+            case L2:
+                return this.l2Position.getNumber();
+            case L3:
+                return this.l3Position.getNumber();
+            case L4:
+                return this.l4Position.getNumber();
+            case SOURCE:
+                return this.sourcePosition.getNumber();
+            case CORAL_GROUND:
+                return this.coralGroundPosition.getNumber();
+            case ALGAE_GROUND:
+                return this.algaeGroundPosition.getNumber();
+            case PROCESSOR:
+                return this.processorPosition.getNumber();
+            default: // Unreachable; Just to keep the compiler from complaining
+            case STOW:
+                return this.stowPosition.getNumber();
+            case BARGE:
+                return this.bargePosition.getNumber();
+        }
+    }
+
+    /**
      * Check if the arm is at target position
      * @return true if the arm is on target
      */
     public boolean atTarget(){
-        return Math.abs(POSITION_CONVERSIONS.get(targetPosition).getNumber()
+        return Math.abs(this.convertPosition(this.targetPosition)
         - this.armMotor.motor.getPosition().getValueAsDouble()) < this.armTolerance.getNumber();
     }
 
@@ -107,7 +138,7 @@ public class Arm extends SubsystemBase {
     public Command goToPosition(Position pos){ // TODO: Ensure no illegal movements
         this.targetPosition = pos;
         return Commands.runOnce(
-            () -> {this.goToAngle(POSITION_CONVERSIONS.get(pos).getNumber());}
+            () -> {this.goToAngle(this.convertPosition(pos));}
         );
     }
 

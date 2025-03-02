@@ -25,7 +25,7 @@ import frc.robot.Superstructure.Position;
 /* TODO
  * Tune speeds
  * Tune tolerance
- * Find positions
+ * Find positions & combine accordingly
  * Tune Slot0s
  * Tune MMs
  * Tune spikeThresholds
@@ -51,18 +51,17 @@ public class EndEffector extends SubsystemBase {
 
     private static EndEffector instance = null;
 
-    private static Map<Position, SmartDashboardNumber > POSITION_CONVERSIONS = Map.of(
-        Position.L1, new SmartDashboardNumber("endeffector/position/endeffector-l1", 0),
-        Position.L2, new SmartDashboardNumber("endeffector/position/endeffector-l2", 0),
-        Position.L3, new SmartDashboardNumber("endeffector/position/endeffector-l3", 0),
-        Position.L4, new SmartDashboardNumber("endeffector/position/endeffector-l4", 0),
-        Position.SOURCE, new SmartDashboardNumber("endeffector/position/endeffector-source", 0),
-        Position.CORAL_GROUND, new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 0),
-        Position.ALGAE_GROUND, new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 0),
-        Position.PROCESSOR, new SmartDashboardNumber("endeffector/position/endeffector-processor", 0),
-        Position.STOW, new SmartDashboardNumber("endeffector/position/endeffector-stow", 0),
-        Position.BARGE, new SmartDashboardNumber("endeffector/position/endeffector-barge", 0)
-    );
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 0);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 0);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 0);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 0);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 0);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 0);
+    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 0);
+    
 
     private EndEffector(){
         super("End Effector");
@@ -110,6 +109,38 @@ public class EndEffector extends SubsystemBase {
     }
 
     /**
+     * Converts a Position to its corresponding value
+     * @param pos the Position to convert
+     * @return the numerical value
+     */
+    private double convertPosition(Position pos)
+    {
+        switch (pos) {
+            case L1:
+                return this.l1Position.getNumber();
+            case L2:
+                return this.l2Position.getNumber();
+            case L3:
+                return this.l3Position.getNumber();
+            case L4:
+                return this.l4Position.getNumber();
+            case SOURCE:
+                return this.sourcePosition.getNumber();
+            case CORAL_GROUND:
+                return this.coralGroundPosition.getNumber();
+            case ALGAE_GROUND:
+                return this.algaeGroundPosition.getNumber();
+            case PROCESSOR:
+                return this.processorPosition.getNumber();
+            default: // Unreachable; Just to keep the compiler from complaining
+            case STOW:
+                return this.stowPosition.getNumber();
+            case BARGE:
+                return this.bargePosition.getNumber();
+        }
+    }
+
+    /**
      * Set the drive speed to a specified power
      * @param speed the power to drive at
      */
@@ -122,7 +153,7 @@ public class EndEffector extends SubsystemBase {
      * @return true if the endeffector is on target
      */
     public boolean atTarget(){
-        return Math.abs(POSITION_CONVERSIONS.get(this.targetPosition).getNumber()
+        return Math.abs(this.convertPosition(this.targetPosition)
             - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
     }
 
@@ -134,7 +165,7 @@ public class EndEffector extends SubsystemBase {
     public Command goToPosition(Position pos){
         this.targetPosition = pos;
         return Commands.runOnce(
-            () -> this.wristMotor.setMotionMagicPosition(POSITION_CONVERSIONS.get(pos).getNumber()),
+            () -> this.wristMotor.setMotionMagicPosition(this.convertPosition(pos)),
             this);
     }
 

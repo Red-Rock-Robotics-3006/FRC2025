@@ -25,18 +25,18 @@ import frc.robot.Superstructure.Position;
 public class Elevator extends SubsystemBase {
     private static Elevator instance = null;
 
-    private static Map<Position, SmartDashboardNumber> POSITION_CONVERSIONS = Map.of(
-            Position.L4, new SmartDashboardNumber("elevator/position/elevator-l4", 60),
-            Position.L3, new SmartDashboardNumber("elevator/position/elevator-l3", 56),
-            Position.L2, new SmartDashboardNumber("elevator/position/elevator-l2", 34),
-            Position.L1, new SmartDashboardNumber("elevator/position/elevator-l1", 19),
-            Position.SOURCE, new SmartDashboardNumber("elevator/position/elevator-source", 29),
-            Position.CORAL_GROUND, new SmartDashboardNumber("elevator/position/elevator-coral-ground", 5),
-            Position.ALGAE_GROUND, new SmartDashboardNumber("elevator/position/elevator-algae-ground", 0),
-            Position.PROCESSOR, new SmartDashboardNumber("elevator/position/elevator-processor", 0),
-            Position.STOW, new SmartDashboardNumber("elevator/position/elevator-stow", 0),
-            Position.BARGE, new SmartDashboardNumber("elevator/position/elevator-barge", 60)
-        );
+    
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/position/elevator-l1", 60);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/position/elevator-l2", 56);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/position/elevator-l3", 34);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/position/elevator-l4", 19);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/position/elevator-source", 29);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/position/elevator-coral-ground", 5);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/position/elevator-algae-ground", 0);
+    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/position/elevator-processor", 0);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/position/elevator-stow", 0);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("elevator/position/elevator-barge", 60);
+    
 
     private final RedRockTalon m_elevatorLeft = new RedRockTalon(50, "elevator-left", "*");
     private final RedRockTalon m_elevatorRight = new RedRockTalon(51, "elevator-right", "*");
@@ -104,13 +104,45 @@ public class Elevator extends SubsystemBase {
     }
 
     /**
+     * Converts a Position to its corresponding value
+     * @param pos the Position to convert
+     * @return the numerical value
+     */
+    private double convertPosition(Position pos)
+    {
+        switch (pos) {
+            case L1:
+                return this.l1Position.getNumber();
+            case L2:
+                return this.l2Position.getNumber();
+            case L3:
+                return this.l3Position.getNumber();
+            case L4:
+                return this.l4Position.getNumber();
+            case SOURCE:
+                return this.sourcePosition.getNumber();
+            case CORAL_GROUND:
+                return this.coralGroundPosition.getNumber();
+            case ALGAE_GROUND:
+                return this.algaeGroundPosition.getNumber();
+            case PROCESSOR:
+                return this.processorPosition.getNumber();
+            default: // Unreachable; Just to keep the compiler from complaining
+            case STOW:
+                return this.stowPosition.getNumber();
+            case BARGE:
+                return this.bargePosition.getNumber();
+        }
+    }
+
+    /**
      * Move the elevator to a Position
      * @param pos the Position to move to
      * @return a Command to do so
      */
     public Command goToPosition(Position pos) {
         this.targetPosition = pos;
-        return Commands.runOnce(() ->this.setPosition(Elevator.POSITION_CONVERSIONS.get(pos).getNumber()));
+        return Commands.runOnce(() ->this.setPosition(this.convertPosition(pos)));
     }
 
     public void setPosition(double rotations) {
@@ -145,11 +177,6 @@ public class Elevator extends SubsystemBase {
         return m_elevatorLeft.motor.getPosition().getValueAsDouble();
     }
 
-    public boolean withinTargetRotation(Position pos) {
-        return Math.abs(Elevator.POSITION_CONVERSIONS.get(pos).getNumber() - this.getPosition()) < threshold.getNumber();
-    }
-
-
     public void resetMotors()
     {
         this.m_elevatorLeft.motor.setControl(new CoastOut());
@@ -174,7 +201,7 @@ public class Elevator extends SubsystemBase {
      * @return true if the elevator is on target
      */
     public boolean atTarget(){
-        return this.withinTargetRotation(this.targetPosition);
+        return Math.abs(this.convertPosition(this.targetPosition) - this.getPosition()) < threshold.getNumber();
     }
 
     /**
@@ -183,7 +210,7 @@ public class Elevator extends SubsystemBase {
      * @return true if the Position is below a threshold
      */
     public boolean posBelowThreshold(Position pos) {
-        return POSITION_CONVERSIONS.get(pos).getNumber() < this.armThreshold.getNumber();
+        return this.convertPosition(pos) < this.armThreshold.getNumber();
     }
     
     /**
