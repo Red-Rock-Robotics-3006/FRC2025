@@ -703,4 +703,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public double getPIDScale() {
         return pidScaleVelo.getNumber();
     }
+
+    /**
+     * Finds the side of our reef we are clostest to as an int
+     * <p>0 indexed, starting from the side in the +X direction, and increasing CCW</p>
+     * @param reefCenter the center of our alliance's reef
+     * @param robotCenter the center of the robot
+     * @return the side of the reef we are closest to
+     */
+    public static int getClosestReefSide(Pose2d reefCenter, Pose2d robotCenter)
+    {
+        double rad = Math.atan2(robotCenter.getX()-reefCenter.getX(), reefCenter.getY()-robotCenter.getY()) - Math.PI/3;
+        if(rad < 0) rad += 2*Math.PI;
+        return (int)(rad*3/Math.PI);
+    }
 }
