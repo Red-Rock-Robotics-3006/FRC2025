@@ -2,14 +2,18 @@ package frc.robot.subsystems.arm;
 
 import java.util.Map;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
+import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -27,8 +31,13 @@ import frc.robot.Superstructure.Position;
  */
 
 public class Arm extends SubsystemBase {
+    public static final double kCANCoderOffset = 0;
+    public static final double kDiscontinuityPoint = 0.875;
+    public static final double kRotorToSensorRatio = 68 / 10 * 68 / 16 * 48 / 9;
+    public static final double kSensorToMechRatio = 1;
+
     private final RedRockTalon armMotor = new RedRockTalon(41, "arm-motor", "*");
-    private final CANcoder m_encoder = new CANcoder(42);
+    private final CANcoder cancoder = new CANcoder(42);
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0);
@@ -53,6 +62,16 @@ public class Arm extends SubsystemBase {
     private Arm(){
         super("Arm");
 
+        this.cancoder.getConfigurator().apply(
+            new MagnetSensorConfigs()
+            .withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+            .withAbsoluteSensorDiscontinuityPoint(kDiscontinuityPoint)
+            .withMagnetOffset(kCANCoderOffset)
+        );
+    
+
+        
+
         this.armMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
@@ -76,7 +95,9 @@ public class Arm extends SubsystemBase {
             .withMotionMagicCruiseVelocity(0)
         ).withFeedbackConfigs(
             new FeedbackConfigs()
-            .withRemoteCANcoder(this.m_encoder)
+            .withFusedCANcoder(cancoder)
+            .withRotorToSensorRatio(kRotorToSensorRatio)
+            .withSensorToMechanismRatio(kSensorToMechRatio)
         );
     }
 
