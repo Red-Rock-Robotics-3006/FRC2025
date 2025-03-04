@@ -3,6 +3,7 @@ package frc.robot.subsystems.swerve;
 import static edu.wpi.first.units.Units.*;
 
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.SignalLogger;
@@ -16,6 +17,7 @@ import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
 import edu.wpi.first.epilogue.Logged;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
@@ -34,8 +36,10 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.Position;
@@ -87,6 +91,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
+
+    private Rotation2d fieldCentircOffset = Rotation2d.kZero;
 
     
     private SmartDashboardNumber kRejectionDistance = new SmartDashboardNumber("localization/rejection-distance", 3);
@@ -429,6 +435,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 //         : kBlueAlliancePerspectiveRotation
                 // );
                 this.setAllianceColor(allianceColor);
+                if (allianceColor == Alliance.Red) this.setFieldCentricOffset(kRedAlliancePerspectiveRotation);
+                else this.setFieldCentricOffset(kBlueAlliancePerspectiveRotation);
                 m_hasAppliedOperatorPerspective = true;
             });
         }
@@ -490,11 +498,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if (visionEnabled.getValue()) updateVisionMeasurements();
     }
 
-    public boolean settled()
-    {
-        return this.isTargetingPosition() && this.atTargetPose() && this.atTargetVelocity();
-    }
-
+    
     public void updateVisionMeasurements() {
         for (Localization.LimeLightPoseEstimateWrapper estimateWrapper : Localization.getPoseEstimates(this.getHeadingDegrees())) {
             if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {
@@ -515,6 +519,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         }
     }
 
+    public boolean settled()
+    {
+        return this.isTargetingPosition() && this.atTargetPose() && this.atTargetVelocity();
+    }
+
+    private void setFieldCentricOffset(Rotation2d offset) {
+        this.fieldCentircOffset = offset;
+    }
+
+    public Rotation2d getFieldCentricOffset() {
+        return this.fieldCentircOffset;
+    }
     private void setAllianceColor(DriverStation.Alliance alliance) {
         this.alliance = alliance;
     }
@@ -702,6 +718,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public double getPIDScale() {
         return pidScaleVelo.getNumber();
+    }
+
+    public Command pidToPoseContinuousCommand() {
+        return this.applyRequest(
+            () -> angleRequest.withVelocityX(MathUtil.clamp(this.getPositionPIDValueX() * this.getPIDScale(), -this.getMaxPIDVelocity(), this.getMaxPIDVelocity()))
+                                            .withVelocityY(MathUtil.clamp(this.getPositionPIDValueY() * this.getPIDScale(), -this.getMaxPIDVelocity(), this.getMaxPIDVelocity()))
+                                            .withTargetDirection(Rotation2d.fromDegrees(this.getTargetHeadingDegrees()))
+        );
+    }
+
+    public Command pidToPoseUntilCommand(BooleanSupplier bSupplier) {
+        return Commands.deadline(
+            Commands.waitUntil(bSupplier), 
+            pidToPoseContinuousCommand());
     }
 
     /**

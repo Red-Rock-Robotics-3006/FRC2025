@@ -1,4 +1,4 @@
-package frc.robot.subsystems.arm;
+package frc.robot.subsystems;
 
 import java.util.Map;
 
@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -46,10 +47,13 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0);
 
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-below-floor-threshold", 0);
+    private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", 0);
+    private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0);
     private Position targetPosition = Position.STOW;
 
     private static Arm instance = null;
+
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.15);
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 0);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 0);
@@ -61,6 +65,9 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 0);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0);
+
+    private SmartDashboardNumber delta = new SmartDashboardNumber("arm/tuning/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("arm/tuning/target", 0);
     
 
     private Arm(){
@@ -103,6 +110,22 @@ public class Arm extends SubsystemBase {
             .withRotorToSensorRatio(kRotorToSensorRatio)
             .withSensorToMechanismRatio(kSensorToMechRatio)
         );
+    }
+
+    public void increaseTarget() {
+        target.putNumber(target.getNumber() + delta.getNumber());
+      }
+    
+    public void decreaseTarget() {
+        target.putNumber(target.getNumber() - delta.getNumber());
+    }
+
+    public void setTarget() {
+        this.setPosition(this.target.getNumber());
+    }
+
+    public void setPosition(double rotation) {
+        this.armMotor.setMotionMagicPosition(rotation);
     }
 
     /**
@@ -153,7 +176,7 @@ public class Arm extends SubsystemBase {
      */
     private void goToAngle(double angle)
     {
-        this.armMotor.setMotionMagicPosition(MathUtil.clamp(minRotation.getNumber(), maxRotation.getNumber(), angleToRotations(angle)));
+        this.setPosition(MathUtil.clamp(minRotation.getNumber(), maxRotation.getNumber(), angleToRotations(angle)));
     }
 
     private double angleToRotations(double degrees) {
@@ -163,6 +186,7 @@ public class Arm extends SubsystemBase {
     @Override
     public void periodic() {
         this.armMotor.update();
+        SmartDashboard.putBoolean("arm/arm-in-safe-zone", this.inSafeZone());
     }
 
     /**
@@ -171,18 +195,28 @@ public class Arm extends SubsystemBase {
      * @return a Command to do so
      */
     public Command goToPosition(Position pos){ // TODO: Ensure no illegal movements
-        this.targetPosition = pos;
         return Commands.runOnce(
-            () -> {this.goToAngle(this.convertPosition(pos));}
+            () -> {this.setPosition(pos);;}, this
         );
     }
+
+    public void setPosition(Position pos) {
+        this.targetPosition = pos;
+        this.goToAngle(this.convertPosition(pos));
+    }
+
 
     /**
      * Check if the arm is in danger of hitting the floor
      * @return true if the arm is too low
      */
+    public boolean inSafeZone() {
+        return this.armMotor.motor.getPosition().getValueAsDouble() > this.floorThreshold.getNumber() 
+        && this.armMotor.motor.getPosition().getValueAsDouble() < verticalThreshold.getNumber();
+    }
+
     public boolean belowFloorThreshold() {
-        return this.armMotor.motor.getPosition().getValueAsDouble() < this.armTolerance.getNumber();
+        return this.armMotor.motor.getPosition().getValueAsDouble() < this.floorThreshold.getNumber();
     }
 
     /**
@@ -191,6 +225,10 @@ public class Arm extends SubsystemBase {
      */
     public Command scoreBarge(){
         return goToPosition(Position.L3); // A bit jank but it should work
+    }
+
+    public Command stowCommand() {
+        return this.goToPosition(Position.STOW);
     }
 
     /**

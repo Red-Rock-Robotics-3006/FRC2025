@@ -1,4 +1,4 @@
-package frc.robot.subsystems.endeffector;
+package frc.robot.subsystems;
 
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -67,6 +67,10 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 0);
+
+    private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/tuning/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/tuning/target", 0);
+
     
 
     private EndEffector(){
@@ -112,6 +116,27 @@ public class EndEffector extends SubsystemBase {
             .withMotionMagicCruiseVelocity(0)
         )
         .withSpikeThreshold(55);       
+    }
+
+    public void increaseTarget() {
+        target.putNumber(target.getNumber() + delta.getNumber());
+      }
+    
+    public void decreaseTarget() {
+        target.putNumber(target.getNumber() - delta.getNumber());
+    }
+
+    public void setTarget() {
+        this.setPosition(this.target.getNumber());
+    }
+
+    public void setPosition(double rotation) {
+        this.wristMotor.setMotionMagicPosition(rotation);
+    }
+
+    public void setPosition(Position pos) {
+        this.targetPosition = pos;
+        this.wristMotor.setMotionMagicPosition(convertPosition(pos));
     }
 
     /**
@@ -208,9 +233,8 @@ public class EndEffector extends SubsystemBase {
      * @return a Command to do so
      */
     public Command goToPosition(Position pos){
-        this.targetPosition = pos;
         return Commands.runOnce(
-            () -> this.wristMotor.setMotionMagicPosition(this.convertPosition(pos)),
+            () -> this.setPosition(convertPosition(pos)),
             this);
     }
 

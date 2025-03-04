@@ -1,4 +1,4 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems;
 
 import java.util.Map;
 
@@ -39,16 +39,25 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/position/elevator-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/position/elevator-stow", 0);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("elevator/position/elevator-barge", 60);
+
+    private SmartDashboardNumber l1min = new SmartDashboardNumber("elevator/reef-safe-zones/l1-min", 0);
+    private SmartDashboardNumber l1max = new SmartDashboardNumber("elevator/reef-safe-zones/l1-max", 0);
+    private SmartDashboardNumber l2min = new SmartDashboardNumber("elevator/reef-safe-zones/l2-min", 0);
+    private SmartDashboardNumber l2max = new SmartDashboardNumber("elevator/reef-safe-zones/l2-max", 0);
+    private SmartDashboardNumber l3min = new SmartDashboardNumber("elevator/reef-safe-zones/l3-min", 0);
+    private SmartDashboardNumber l3max = new SmartDashboardNumber("elevator/reef-safe-zones/l3-max", 0);
+    private SmartDashboardNumber l4min = new SmartDashboardNumber("elevator/reef-safe-zones/l4-min", 0);
+    private SmartDashboardNumber l4max = new SmartDashboardNumber("elevator/reef-safe-zones/l4-max", 0);
     
 
     private final RedRockTalon m_elevatorLeft = new RedRockTalon(50, "elevator-left", "*");
     private final RedRockTalon m_elevatorRight = new RedRockTalon(51, "elevator-right", "*");
     
 
-    private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/delta", 5);
-    private SmartDashboardNumber target = new SmartDashboardNumber("elevator/target", 0);
-    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 0.2);
-    private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
+    private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/tuning/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("elevator/tuning/target", 0);
+    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tuning/tolerance", 0.2);
+    private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/tuning/normalization-speed", -0.1);
 
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
@@ -135,6 +144,16 @@ public class Elevator extends SubsystemBase {
                 return this.stowPosition.getNumber();
             case BARGE:
                 return this.bargePosition.getNumber();
+        }
+    }
+
+    public boolean inReefSafeZone(Position position) {
+        switch (position) {
+            case L1: return this.getPosition() > l1min.getNumber() && this.getPosition() < l1max.getNumber();
+            case L2: return this.getPosition() > l2min.getNumber() && this.getPosition() < l2max.getNumber();
+            case L3: return this.getPosition() > l3min.getNumber() && this.getPosition() < l3max.getNumber();
+            case L4: return this.getPosition() > l4min.getNumber() && this.getPosition() < l4max.getNumber();
+            default: return false;
         }
     }
 

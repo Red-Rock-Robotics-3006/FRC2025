@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Superstructure.Position;
-import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import redrocklib.logging.SmartDashboardNumber;
 

@@ -7,9 +7,9 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-import frc.robot.subsystems.arm.Arm;
-import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.endeffector.EndEffector;
+import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.EndEffector;
 
 /* TODO
  * Tune scoreBarge delays
@@ -51,6 +51,46 @@ public class Superstructure {
         );
     }
 
+    public Command goToReefPosition(Position pos) {
+        return Commands.sequence(
+            this.arm.stowCommand(),
+            Commands.waitUntil(() -> this.arm.inSafeZone()),
+            this.elevator.goToPosition(pos),
+            // Commands.waitUntil(() -> this.elevator.inReefSafeZone(pos)),
+            Commands.waitUntil(() -> this.elevator.atTarget()),
+            this.arm.goToPosition(pos)
+        );
+    }
+
+    public Command stowCommand() {
+        // return Commands.sequence(
+        //     this.arm.stowCommand(),
+        //     Commands.waitUntil(() -> this.arm.inSafeZone()),
+        //     this.elevator.goToPosition(Position.STOW)
+        // );
+        return this.goToPosition(Position.STOW);
+    }
+
+    public Command goToL4Command() {
+        return this.goToReefPosition(Position.L4);
+    }
+
+    public Command goToL3Command() {
+        return this.goToReefPosition(Position.L3);
+    }
+
+    public Command goToL2Command() {
+        return this.goToReefPosition(Position.L2);
+    }
+
+    public Command goToL1Command() {
+        return this.goToReefPosition(Position.L1);
+    }
+
+    public Command goToSourceIntakePosition() {
+        return this.goToPosition(Position.SOURCE);
+    }
+
     /**
      * Move subsystems to a Position
      * @param pos the position to move to
@@ -70,21 +110,15 @@ public class Superstructure {
      * @return a Command to do so
      */
     public Command intakeCoral() {
-        return new InstantCommand(
-            () -> this.endEffector.intakeCoral(),
-            this.endEffector
-        );    
+        return this.endEffector.intakeCoral();
     }
 
     /**
      * Intake Algae to EndEffector
      * @return a Command to do so
      */
-    public Command intakeAlgae() {
-        return new InstantCommand(
-            () -> this.endEffector.intakeAlgae(),
-            this.endEffector
-        );
+    public Command intakeAlgaeEndeffector() {
+        return this.endEffector.intakeAlgae();
     }
 
     /**

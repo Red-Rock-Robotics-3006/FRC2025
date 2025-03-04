@@ -28,6 +28,9 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.Superstructure.Position;
+import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardBoolean;
@@ -90,6 +93,10 @@ public class RobotContainer {
 
         configureBindings();
         configureSelector();
+
+        configureElevatorTuning();
+        // configureArmTuning();
+        // configureEndEffectorTuning();
     }
 
     public void configureSelector(){
@@ -109,6 +116,7 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(
               () -> {
+                double[] drivestickValues = this.rotateBy(-drivestick.getLeftY(), -drivestick.getLeftX(), drivetrain.getFieldCentricOffset());
                 if (drivetrain.isTargetingPosition()) {
                     inPIDTolerance.putBoolean(false);
                     return driveFacingAngle.withVelocityX(MathUtil.clamp(drivetrain.getPositionPIDValueX() * drivetrain.getPIDScale(), -drivetrain.getMaxPIDVelocity(), drivetrain.getMaxPIDVelocity()))
@@ -117,20 +125,20 @@ public class RobotContainer {
                 }
                 else if (!drivetrain.getUseHeadingPID() || Math.abs(drivestick.getRightX()) > drivetrain.getTurnDeadBand()) {
                     inPIDTolerance.putBoolean(false);
-                  return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                              .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
+                  return drive.withVelocityX(progressiveInput(drivestickValues[0],progressiveDriveExponent) * MaxSpeed)
+                              .withVelocityY(progressiveInput(drivestickValues[1],progressiveDriveExponent, true) * MaxSpeed)
                               .withRotationalRate(progressiveInput(-drivestick.getRightX(),progressiveTurnExponent) * MaxAngularRate);
                 }
                 else if (driveFacingAngle.HeadingController.atSetpoint()) {
                     inPIDTolerance.putBoolean(true);
-                    return drive.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                    .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
+                    return drive.withVelocityX(progressiveInput(drivestickValues[0],progressiveDriveExponent) * MaxSpeed)
+                    .withVelocityY(progressiveInput(drivestickValues[1],progressiveDriveExponent, true) * MaxSpeed)
                     .withRotationalRate(0);
                 }
                 else {
                     inPIDTolerance.putBoolean(false);
-                  return driveFacingAngle.withVelocityX(progressiveInput(-drivestick.getLeftY(),progressiveDriveExponent) * MaxSpeed)
-                                         .withVelocityY(progressiveInput(-drivestick.getLeftX(),progressiveDriveExponent, true) * MaxSpeed)
+                  return driveFacingAngle.withVelocityX(progressiveInput(drivestickValues[0],progressiveDriveExponent) * MaxSpeed)
+                                         .withVelocityY(progressiveInput(drivestickValues[1],progressiveDriveExponent, true) * MaxSpeed)
                                          .withTargetDirection(Rotation2d.fromDegrees(drivetrain.getTargetHeadingDegrees()));
                   
                 }
@@ -216,7 +224,7 @@ public class RobotContainer {
         drivestick.leftBumper().onTrue(
             Commands.sequence(
                 superstructure.intakeCoral(),// doohickey.intakeCommand()
-                superstructure.goToPosition(Position.SOURCE)
+                superstructure.goToSourceIntakePosition()
             )
         );
 
@@ -244,19 +252,19 @@ public class RobotContainer {
         );
 
         drivestick.a().onTrue(
-            superstructure.goToPosition(Position.L1)
+            superstructure.goToL1Command()
         );
 
         drivestick.x().onTrue(
-            superstructure.goToPosition(Position.L2)// elevator.setL2Command()
+            superstructure.goToL2Command()
         );
 
         drivestick.y().onTrue(
-            superstructure.goToPosition(Position.L3)// elevator.setL3Command()
+            superstructure.goToL3Command()
         );
 
         drivestick.b().onTrue(
-            superstructure.goToPosition(Position.L4)// elevator.setL4Command()
+            superstructure.goToL4Command()
         );
 
         // drivestick.povLeft().onTrue(
@@ -264,7 +272,7 @@ public class RobotContainer {
         // );
 
         drivestick.povDown().onTrue(
-            superstructure.goToPosition(Position.STOW)// elevator.setStowCommand()
+            superstructure.stowCommand()
         );
 
         drivestick.back().and(drivestick.povLeft()).onTrue(
@@ -319,6 +327,45 @@ public class RobotContainer {
         );
     }
 
+    private void configureElevatorTuning() {
+        drivestick.povUp().onTrue(
+            Commands.runOnce(() -> Elevator.getInstance().increaseTarget(), Elevator.getInstance())
+        );
+        drivestick.povDown().onTrue(
+            Commands.runOnce(() -> Elevator.getInstance().decreaseTarget(), Elevator.getInstance())
+        );
+
+        drivestick.a().onTrue(
+            Commands.runOnce(() -> Elevator.getInstance().setTarget(), Elevator.getInstance())
+        );
+    }
+
+    private void configureArmTuning() {
+        drivestick.povUp().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().increaseTarget(), Arm.getInstance())
+        );
+        drivestick.povDown().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().decreaseTarget(), Arm.getInstance())
+        );
+
+        drivestick.a().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().setTarget(), Arm.getInstance())
+        );
+    }
+
+    private void configureEndEffectorTuning() {
+        drivestick.povUp().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().increaseTarget(), EndEffector.getInstance())
+        );
+        drivestick.povDown().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().decreaseTarget(), EndEffector.getInstance())
+        );
+
+        drivestick.a().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().setTarget(), EndEffector.getInstance())
+        );
+    }
+
     // Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
 
     public void loop(){
@@ -355,5 +402,12 @@ public class RobotContainer {
 
     public double progressiveInput(double input, double exponent, boolean b) {
         return progressiveInput(input, exponent) * drivetrain.getSingleAxisMultiplier();
+    }
+
+    public double[] rotateBy(double x, double y, Rotation2d rotate) {
+        return new double[] {
+            x * rotate.getCos() - y * rotate.getSin(),
+            x * rotate.getSin() + y * rotate.getCos()
+        };
     }
 }
