@@ -77,7 +77,7 @@ public class RobotContainer {
         autoFactory = drivetrain.createAutoFactory();
         autoRoutines = new AutoRoutines(autoFactory);
 
-        autoChooser.addRoutine("TestPath2 Auto", autoRoutines::testpath2Auto);
+        // autoChooser.addRoutine("TestPath2 Auto", autoRoutines::testpath2Auto);
 
         autoChooser.addRoutine("testlong1Auto Auto", autoRoutines::testlong1Auto);
         autoChooser.addRoutine("testlong1Paths Auto", autoRoutines::testlong1Paths);
