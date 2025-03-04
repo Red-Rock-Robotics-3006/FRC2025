@@ -3,6 +3,8 @@ package frc.robot.subsystems.endeffector;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.controls.CoastOut;
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -13,6 +15,7 @@ import java.util.Map;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -35,6 +38,9 @@ import frc.robot.Superstructure.Position;
  */
 
 public class EndEffector extends SubsystemBase {
+    public static final double kCoralOuttakeWaitTime = 0.2;
+    public static final double kAlgaeOUttakeWaitTime = 0.2;
+
     private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
     private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
     private final CANrange timeOfFlight = new CANrange(53);
@@ -145,7 +151,38 @@ public class EndEffector extends SubsystemBase {
      * @param speed the power to drive at
      */
     private void setSpeed(double speed){
-        this.driveMotor.motor.set(speed);
+        this.driveMotor.motor.setControl(
+            new DutyCycleOut(speed)
+        );
+    }
+
+    public void setCoralIntakeSpeed() {
+        this.setSpeed(this.coralIntakeSpeed.getNumber());
+    }
+
+    public void setCoralOuttakeSpeed() {
+        this.setSpeed(this.coralOuttakeSpeed.getNumber());
+    }
+
+    public void setAlgaeIntakeSpeed() {
+        this.setSpeed(this.algaeIntakeSpeed.getNumber());
+    }
+
+    public void setAlgaeOuttakeSpeed() {
+        this.setSpeed(this.algaeOuttakeSpeed.getNumber());
+    }
+
+    public void setNormalizeSpeed() {
+        this.driveMotor.motor.setControl(new DutyCycleOut(this.normalizeSpeed.getNumber()));
+    }
+
+    public void stop() {
+        this.driveMotor.motor.setControl(new DutyCycleOut(0));
+    }
+
+    public void resetWrist() {
+        this.wristMotor.motor.setControl(new CoastOut());
+        this.wristMotor.motor.setPosition(0);
     }
     
     /**
@@ -153,8 +190,16 @@ public class EndEffector extends SubsystemBase {
      * @return true if the endeffector is on target
      */
     public boolean atTarget(){
-        return Math.abs(this.convertPosition(this.targetPosition)
-            - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
+        // return Math.abs(this.convertPosition(this.targetPosition)
+        //     - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
+        return this.driveMotor.motor.getClosedLoopError().getValueAsDouble() < this.wristTolerance.getNumber() 
+            || Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
+    }
+
+    @Override
+    public void periodic() {
+        this.driveMotor.update();
+        this.wristMotor.update();
     }
 
     /**
@@ -194,9 +239,9 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeCoral(){
         return new FunctionalCommand(
-            () -> this.setSpeed(this.coralIntakeSpeed.getNumber()),
+            () -> this.setCoralIntakeSpeed(),
             () -> {},
-            (interrupted) -> this.setSpeed(0),
+            (interrupted) -> this.stop(),
             () -> this.coralDetected(),
             this
         );
@@ -210,7 +255,7 @@ public class EndEffector extends SubsystemBase {
         return new FunctionalCommand(
             () -> this.setSpeed(this.algaeIntakeSpeed.getNumber()),
             () -> {},
-            (interrupted) -> this.setSpeed(0),
+            (interrupted) -> this.stop(),
             () -> this.driveMotor.aboveSpikeThreshold(),
             this
         );
@@ -222,10 +267,10 @@ public class EndEffector extends SubsystemBase {
      */
     public Command outtakeCoral(){
         return new SequentialCommandGroup(
-            Commands.runOnce(() -> this.setSpeed(this.coralOuttakeSpeed.getNumber())),
+            new InstantCommand(this::setCoralOuttakeSpeed, this),
             new WaitUntilCommand(() -> !this.coralDetected()),
-            new WaitCommand(.2),
-            this.stop()
+            new WaitCommand(kCoralOuttakeWaitTime),
+            this.stopCommand()
         );
     }
 
@@ -235,14 +280,14 @@ public class EndEffector extends SubsystemBase {
      */
     public Command outtakeAlgae(){
         return new SequentialCommandGroup(
-            Commands.runOnce(() -> setSpeed(this.algaeOuttakeSpeed.getNumber())),
-            new WaitCommand(.25),
-            this.stop()
+            new InstantCommand(this::setAlgaeIntakeSpeed, this),
+            new WaitCommand(kAlgaeOUttakeWaitTime),
+            this.stopCommand()
         );
     }
 
-    public Command stop(){
-        return Commands.runOnce(() -> setSpeed(0));
+    public Command stopCommand(){
+        return this.runOnce(this::stop);
     }
 
     /**
@@ -252,15 +297,14 @@ public class EndEffector extends SubsystemBase {
     public Command normalizeEndEffectorCommand(){
         return new SequentialCommandGroup(
             new FunctionalCommand(
-                () -> this.setSpeed(this.normalizeSpeed.getNumber()),
+                () -> this.setNormalizeSpeed(),
                 () -> {},
-                (interrupted) -> {this.setSpeed(0);
-                    this.wristMotor.motor.setPosition(0);
-                },
+                (interrupted) -> this.resetWrist(),
                 () -> this.wristMotor.aboveSpikeThreshold(),
                 this
-            ),
-            this.goToPosition(this.targetPosition)
+            )
+            // ,
+            // this.goToPosition(this.targetPosition)
         );
     }
 

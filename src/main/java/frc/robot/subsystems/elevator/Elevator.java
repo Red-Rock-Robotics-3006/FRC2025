@@ -13,6 +13,7 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -25,7 +26,9 @@ import frc.robot.Superstructure.Position;
 public class Elevator extends SubsystemBase {
     private static Elevator instance = null;
 
-    
+    private SmartDashboardNumber minRotation = new SmartDashboardNumber("elevator/min-rotation", 0);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 60);
+
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/position/elevator-l1", 60);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/position/elevator-l2", 56);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/position/elevator-l3", 34);
@@ -44,7 +47,7 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("elevator/target", 0);
-    private SmartDashboardNumber threshold = new SmartDashboardNumber("elevator/threshold", 0.2);
+    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 0.2);
     private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
 
     private Position targetPosition = Position.STOW;
@@ -147,18 +150,21 @@ public class Elevator extends SubsystemBase {
 
     public void setPosition(double rotations) {
         System.out.println("GOTO: " + rotations);
-        this.m_elevatorLeft.setMotionMagicPosition(rotations);
+        this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(minRotation.getNumber(), maxRotation.getNumber(), rotations));
     }
 
     @Override
     public void periodic() {
 
-        SmartDashboard.putNumber("elevator/elevator-left-position", this.m_elevatorLeft.motor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/elevator-right-position", this.m_elevatorRight.motor.getPosition().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/elevator-left-spike", this.m_elevatorLeft.motor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/elevator-right-spike", this.m_elevatorRight.motor.getTorqueCurrent().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/elevator-left-velocity", this.m_elevatorLeft.motor.getVelocity().getValueAsDouble());
-        SmartDashboard.putNumber("elevator/elevator-right-velocity", this.m_elevatorRight.motor.getVelocity().getValueAsDouble());
+        // SmartDashboard.putNumber("elevator/elevator-left-position", this.m_elevatorLeft.motor.getPosition().getValueAsDouble());
+        // SmartDashboard.putNumber("elevator/elevator-right-position", this.m_elevatorRight.motor.getPosition().getValueAsDouble());
+        // SmartDashboard.putNumber("elevator/elevator-left-spike", this.m_elevatorLeft.motor.getTorqueCurrent().getValueAsDouble());
+        // SmartDashboard.putNumber("elevator/elevator-right-spike", this.m_elevatorRight.motor.getTorqueCurrent().getValueAsDouble());
+        // SmartDashboard.putNumber("elevator/elevator-left-velocity", this.m_elevatorLeft.motor.getVelocity().getValueAsDouble());
+        // SmartDashboard.putNumber("elevator/elevator-right-velocity", this.m_elevatorRight.motor.getVelocity().getValueAsDouble());
+
+        this.m_elevatorLeft.update();
+        this.m_elevatorRight.update();
     }
 
     public void increaseTarget() {
@@ -201,7 +207,9 @@ public class Elevator extends SubsystemBase {
      * @return true if the elevator is on target
      */
     public boolean atTarget(){
-        return Math.abs(this.convertPosition(this.targetPosition) - this.getPosition()) < threshold.getNumber();
+        return this.m_elevatorLeft.motor.getClosedLoopError().getValueAsDouble() < tolerance.getNumber() ||
+        this.m_elevatorRight.motor.getClosedLoopError().getValueAsDouble() < tolerance.getNumber() || 
+         Math.abs(this.convertPosition(this.targetPosition) - this.getPosition()) < tolerance.getNumber();
     }
 
     /**

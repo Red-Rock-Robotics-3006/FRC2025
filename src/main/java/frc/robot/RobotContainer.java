@@ -209,7 +209,7 @@ public class RobotContainer {
         
         RobotModeTriggers.teleop().onTrue(
             Commands.parallel(
-                superstructure.initialize()// elevator.normalizeElevatorCommand()
+                superstructure.normalizeCommand()// elevator.normalizeElevatorCommand()
             )
         );
 
@@ -311,7 +311,7 @@ public class RobotContainer {
         // );
 
         drivestick.rightStick().onTrue(
-            superstructure.initialize()// elevator.normalizeElevatorCommand()
+            superstructure.normalizeCommand()// elevator.normalizeElevatorCommand()
         );
 
         drivestick.leftStick().onTrue(

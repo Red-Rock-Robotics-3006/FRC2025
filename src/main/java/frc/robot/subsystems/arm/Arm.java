@@ -15,6 +15,8 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -39,10 +41,12 @@ public class Arm extends SubsystemBase {
     private final RedRockTalon armMotor = new RedRockTalon(41, "arm-motor", "*");
     private final CANcoder cancoder = new CANcoder(42);
 
+    private SmartDashboardNumber minAngleDegrees = new SmartDashboardNumber("arm/min-angle", 0);
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", 0);
+    private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0);
 
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0);
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-below-floor-threshold", 0);
     private Position targetPosition = Position.STOW;
 
     private static Arm instance = null;
@@ -64,7 +68,7 @@ public class Arm extends SubsystemBase {
 
         this.cancoder.getConfigurator().apply(
             new MagnetSensorConfigs()
-            .withSensorDirection(SensorDirectionValue.Clockwise_Positive)
+            .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
             .withAbsoluteSensorDiscontinuityPoint(kDiscontinuityPoint)
             .withMagnetOffset(kCANCoderOffset)
         );
@@ -138,7 +142,8 @@ public class Arm extends SubsystemBase {
      * @return true if the arm is on target
      */
     public boolean atTarget(){
-        return Math.abs(this.convertPosition(this.targetPosition)
+        return this.armMotor.motor.getClosedLoopError().getValueAsDouble() < this.armTolerance.getNumber() ||
+        Math.abs(this.convertPosition(this.targetPosition)
         - this.armMotor.motor.getPosition().getValueAsDouble()) < this.armTolerance.getNumber();
     }
 
@@ -148,7 +153,16 @@ public class Arm extends SubsystemBase {
      */
     private void goToAngle(double angle)
     {
-        this.armMotor.setMotionMagicPosition(Math.max(this.minRotation.getNumber(), Math.min(this.maxRotation.getNumber(), angle)));
+        this.armMotor.setMotionMagicPosition(MathUtil.clamp(minRotation.getNumber(), maxRotation.getNumber(), angleToRotations(angle)));
+    }
+
+    private double angleToRotations(double degrees) {
+        return ((maxRotation.getNumber() - minRotation.getNumber()) / (maxAngleDegrees.getNumber() - minAngleDegrees.getNumber())) * (degrees - minAngleDegrees.getNumber()) + minRotation.getNumber(); 
+    }
+
+    @Override
+    public void periodic() {
+        this.armMotor.update();
     }
 
     /**
@@ -167,7 +181,7 @@ public class Arm extends SubsystemBase {
      * Check if the arm is in danger of hitting the floor
      * @return true if the arm is too low
      */
-    public boolean belowThreshold() {
+    public boolean belowFloorThreshold() {
         return this.armMotor.motor.getPosition().getValueAsDouble() < this.armTolerance.getNumber();
     }
 

@@ -43,7 +43,7 @@ public class Superstructure {
      * Prepare subsystems' hardware
      * @return a Command to do so
      */
-    public Command initialize() {
+    public Command normalizeCommand() {
         return new ParallelCommandGroup(
             this.endEffector.normalizeEndEffectorCommand(),
             this.arm.goToPosition(Position.STOW),
@@ -59,7 +59,7 @@ public class Superstructure {
     public Command goToPosition(Position pos) {
         return new SequentialCommandGroup(
             this.arm.goToPosition(pos),
-            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowThreshold())),
+            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
             this.elevator.goToPosition(pos),
             this.endEffector.goToPosition(pos)
         );
@@ -108,7 +108,7 @@ public class Superstructure {
      * @return a Command to do so
      */
     public Command stopEndEffector() {
-        return this.endEffector.stop();
+        return this.endEffector.stopCommand();
     }
 
     /**

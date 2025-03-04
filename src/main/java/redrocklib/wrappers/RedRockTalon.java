@@ -37,14 +37,39 @@ public class RedRockTalon {
         this(motorID, "motor-" + motorID);
     }
 
+    /**
+     * Creates a wrapper for TalonFX that handles commonly used configs, commonly used telemetry, and updating config code
+     * 
+     * REMMEBER TO CALL {@link #update()} every loop somewhere in code
+     * @param motorID
+     * @param name
+     * @param canivore
+     */
     public RedRockTalon(int motorID, String name, String canivore) {
         this(motorID, name, canivore, new MotorOutputConfigs(), new Slot0Configs());
     }
 
+    /**
+     *Creates a wrapper for TalonFX that handles commonly used configs, commonly used telemetry, and updating config code
+     * 
+     * REMMEBER TO CALL {@link #update()} every loop somewhere in code
+     * @param motorID
+     * @param name
+     */
     public RedRockTalon(int motorID, String name) {
         this(motorID, name, new MotorOutputConfigs(), new Slot0Configs());
     }
 
+    /**
+     * Creates a wrapper for TalonFX that handles commonly used configs, commonly used telemetry, and updating config code
+     * 
+     * REMMEBER TO CALL {@link #update()} every loop somewhere in code
+     * @param motorID
+     * @param name
+     * @param canivore
+     * @param outPutConfigs
+     * @param slot0Configs
+     */
     public RedRockTalon(int motorID, String name, String canivore, MotorOutputConfigs outPutConfigs, Slot0Configs slot0Configs) {
         this.motor = new TalonFX(motorID, canivore);
 
@@ -63,6 +88,15 @@ public class RedRockTalon {
 
     }
 
+    /**
+     * Creates a wrapper for TalonFX that handles commonly used configs, commonly used telemetry, and updating config code
+     * 
+     * REMMEBER TO CALL {@link #update()} every loop somewhere in code
+     * @param motorID
+     * @param name
+     * @param outPutConfigs
+     * @param slot0Configs
+     */
     public RedRockTalon(int motorID, String name, MotorOutputConfigs outPutConfigs, Slot0Configs slot0Configs) {
         this.motor = new TalonFX(motorID);
 
@@ -148,7 +182,11 @@ public class RedRockTalon {
         );
     }
 
-
+    /**
+     * Updates telemetry, and applies any changed config numbers for the motor
+     * 
+     * MUST BE CALLED EVERY LOOP
+     */
     public void update() {
         if (kS.hasChanged()
             || kA.hasChanged()
