@@ -50,8 +50,8 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber l4max = new SmartDashboardNumber("elevator/reef-safe-zones/l4-max", 0);
     
 
-    private final RedRockTalon m_elevatorLeft = new RedRockTalon(50, "elevator-left", "*");
-    private final RedRockTalon m_elevatorRight = new RedRockTalon(51, "elevator-right", "*");
+    private final RedRockTalon m_elevatorLeft = new RedRockTalon(31, "elevator-left", "*");
+    private final RedRockTalon m_elevatorRight = new RedRockTalon(32, "elevator-right", "*");
     
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/tuning/delta", 5);
