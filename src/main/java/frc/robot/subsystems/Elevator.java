@@ -164,7 +164,7 @@ public class Elevator extends SubsystemBase {
      */
     public Command goToPosition(Position pos) {
         this.targetPosition = pos;
-        return Commands.runOnce(() ->this.setPosition(this.convertPosition(pos)));
+        return Commands.runOnce(() ->this.setPosition(this.convertPosition(pos)), this);
     }
 
     public void setPosition(double rotations) {

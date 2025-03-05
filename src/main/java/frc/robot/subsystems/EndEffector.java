@@ -235,7 +235,8 @@ public class EndEffector extends SubsystemBase {
     public Command goToPosition(Position pos){
         return Commands.runOnce(
             () -> this.setPosition(convertPosition(pos)),
-            this);
+            this
+        );
     }
 
     /**

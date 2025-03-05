@@ -196,7 +196,7 @@ public class Arm extends SubsystemBase {
      */
     public Command goToPosition(Position pos){ // TODO: Ensure no illegal movements
         return Commands.runOnce(
-            () -> {this.setPosition(pos);;}, this
+            () -> {this.setPosition(pos);}, this
         );
     }
 

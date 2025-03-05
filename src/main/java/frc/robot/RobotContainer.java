@@ -59,12 +59,11 @@ public class RobotContainer {
     private final Telemetry logger = new Telemetry(MaxSpeed);
 
     private final CommandXboxController drivestick = new CommandXboxController(0);
+    private final CommandXboxController mechstick = new CommandXboxController(1);
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
-    // private final Elevator elevator = Elevator.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
 
-    /* Path follower */
     private final AutoFactory autoFactory;
     private final AutoRoutines autoRoutines;
     private final AutoChooser autoChooser = new AutoChooser();
@@ -109,7 +108,7 @@ public class RobotContainer {
 
     private void configureBindings() {
         configureDriveBindings();
-        configureMechBindings();
+        configureTestBindings();
     }
     
     private void configureDriveBindings() {
@@ -164,56 +163,14 @@ public class RobotContainer {
             new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
         );
 
-        // drivestick.povLeft().onTrue(
-        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(90), drivetrain)
-        // );
-
-        // drivestick.povUp().onTrue(
-        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(0), drivetrain)
-        // );
-
-        // drivestick.povRight().onTrue(
-        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(-90), drivetrain)
-        // );
-
-        // drivestick.povDown().onTrue(
-        //     new InstantCommand(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
-        // );
-
         // drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
-        // drivestick.b().whileTrue(drivetrain.applyRequest(() ->
-        //     point.withModuleDirection(new Rotation2d(-drivestick.getLeftY(), -drivestick.getLeftX()))
-        // ));
 
-        // Run SysId routines when holding back/start and X/Y.
-        // Note that each routine should be run exactly once in a single log.
-        // drivestick.back().and(drivestick.y()).whileTrue(drivetrain.sysIdDynamic(Direction.kForward));
-        // drivestick.back().and(drivestick.x()).whileTrue(drivetrain.sysIdDynamic(Direction.kReverse));
-        // drivestick.start().and(drivestick.y()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kForward));
-        // drivestick.start().and(drivestick.x()).whileTrue(drivetrain.sysIdQuasistatic(Direction.kReverse));
-
-        // reset the field-centric heading on left bumper press
         drivestick.start().and(drivestick.back()).onTrue(drivetrain.resetHeadingCommand());
-
-        // drivestick.back().onTrue(
-        //     new FunctionalCommand(
-        //         () -> {
-        //             drivetrain.setTargetPose(this.constructTestTargetPose());
-        //             drivetrain.enablePositionTargeting();
-        //         }, 
-        //         () -> {}, 
-        //         (interrupted) -> {
-        //             drivetrain.disablePositionTargeting();
-        //         }, 
-        //         () -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose())
-        // ).onFalse(
-        //     Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
-        // );
 
         drivetrain.registerTelemetry(logger::telemeterize);
     }
 
-    public void configureMechBindings() {
+    public void configureTestBindings() {
         
         RobotModeTriggers.teleop().onTrue(
             Commands.parallel(
@@ -227,23 +184,6 @@ public class RobotContainer {
                 superstructure.goToSourceIntakePosition()
             )
         );
-
-
-        // drivestick.leftBumper().onTrue(
-        //     Commands.sequence(
-        //         elevator.setSourceCommand(),
-        //         doohickey.intakeCommand()
-        //     )
-        // );
-
-        // drivestick.rightBumper().onTrue(
-        //     doohickey.startOuttakeCommand()
-        // ).onFalse(
-        //     Commands.sequence(
-        //         doohickey.stopCommand(),
-        //         elevator.setGroundCommand()
-        //     )
-        // );
 
         drivestick.rightBumper().onTrue(
             superstructure.outtakeCoral()// doohickey.startOuttakeCommand()
@@ -267,24 +207,12 @@ public class RobotContainer {
             superstructure.goToL4Command()
         );
 
-        // drivestick.povLeft().onTrue(
-        //     elevator.setGroundCommand()
-        // );
-
         drivestick.povDown().onTrue(
             superstructure.stowCommand()
         );
 
         drivestick.back().and(drivestick.povLeft()).onTrue(
             superstructure.autoScoreCoral(Position.L3)
-            // new SequentialCommandGroup(
-            //     superstructure.goToPosition(Position.L3),// elevator.setL3Command(),
-            //     new WaitUntilCommand(() -> superstructure.atTargets()),//elevator.withinTargetRotation(Elevator.Position.L3)),
-            //     superstructure.outtakeCoral(),// doohickey.startOuttakeCommand(),
-            //     // new WaitCommand(1),
-            //     // superstructure.stopEndEffector(),// doohickey.stopCommand(),
-            //     superstructure.goToPosition(Position.SOURCE)// elevator.setSourceCommand()
-            // )
         );
 
         drivestick.back().and(drivestick.povRight()).onTrue(
@@ -304,19 +232,6 @@ public class RobotContainer {
                 new InstantCommand(() -> drivetrain.disablePositionTargeting())
             )
         );
-        // drivestick.back().and(drivestick.povRight()).onTrue(
-        //     new SequentialCommandGroup(
-        //         new InstantCommand(() -> {drivetrain.setTargetPose(new Pose2d(6.70328981, 3.76387475, new Rotation2d(0))); drivetrain.enablePositionTargeting();}),
-        //         new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-        //         new InstantCommand(() -> drivetrain.disablePositionTargeting()),
-        //         Commands.print("at pose"),
-        //         new InstantCommand(
-        //             () -> drivestick.getHID().setRumble(RumbleType.kRightRumble, 0.5)
-        //         ),
-        //         new WaitCommand(0.2),
-        //         new InstantCommand(() -> drivestick.getHID().setRumble(RumbleType.kRightRumble, 0))
-        //     )
-        // );
 
         drivestick.rightStick().onTrue(
             superstructure.normalizeCommand()// elevator.normalizeElevatorCommand()
@@ -324,6 +239,53 @@ public class RobotContainer {
 
         drivestick.leftStick().onTrue(
             Commands.runOnce(() ->drivetrain.disablePositionTargeting())
+        );
+    }
+
+    private void configureCompBindings() {
+        RobotModeTriggers.teleop().onTrue(
+            Commands.parallel(
+                superstructure.normalizeCommand()
+            )
+        );
+
+        drivestick.leftBumper().onTrue(
+            Commands.waitSeconds(0) //TODO make this the intake deploy
+        ).onFalse(
+            Commands.waitSeconds(0) //TODO make this the intake stow
+        );
+
+        drivestick.rightBumper().onTrue(
+            superstructure.goToRequestedPositionCommand() //TODO add swerve thing
+        ).onFalse(
+            superstructure.stowCommand() //TODO add swerve thing
+        );
+
+        drivestick.leftTrigger(0.25).onTrue(
+            superstructure.goToPosition(Position.SOURCE) //TODO add swerve thing
+        ).onFalse(
+            superstructure.stowCommand() //TODO add swerve thing
+        );
+
+        drivestick.rightTrigger(0.25).onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0), //TODO make this the intake L1 score thing
+                superstructure.setRequestedScoringPositionCommand(Position.L1)
+            )
+        ).onFalse(
+            Commands.waitSeconds(0) //TODO make this the intake stow
+        );
+
+        drivestick.x().onTrue(
+            superstructure.outtakeCoral()
+        );
+        
+        drivestick.y().onTrue(
+            superstructure.goToRequestedPositionCommand()
+        );
+
+        drivestick.b().onTrue(
+            superstructure.stowCommand()
         );
     }
 

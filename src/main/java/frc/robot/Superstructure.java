@@ -22,6 +22,8 @@ public class Superstructure {
     
     private static Superstructure instance = null;
 
+    private Position requestedScoringPosition = Position.STOW;
+
     public static enum Position {
         L1,
         L2,
@@ -51,6 +53,14 @@ public class Superstructure {
         );
     }
 
+    public void setRequestedScoringPosition(Position pos) {
+        this.requestedScoringPosition = pos;
+    }
+
+    public Position getRequestedScoringPosition() {
+        return this.requestedScoringPosition;
+    }
+
     public Command goToReefPosition(Position pos) {
         return Commands.sequence(
             this.arm.stowCommand(),
@@ -60,6 +70,14 @@ public class Superstructure {
             Commands.waitUntil(() -> this.elevator.atTarget()),
             this.arm.goToPosition(pos)
         );
+    }
+
+    public Command setRequestedScoringPositionCommand(Position pos) {
+        return Commands.runOnce(() -> this.setRequestedScoringPosition(pos));
+    }
+
+    public Command goToRequestedPositionCommand() {
+        return this.goToReefPosition(this.getRequestedScoringPosition());
     }
 
     public Command stowCommand() {
@@ -126,6 +144,7 @@ public class Superstructure {
      * @return a Command to do so
      */
     public Command outtakeCoral() {
+        if (requestedScoringPosition == Position.L1) return this.endEffector.outtakeCoral(); //TODO make intake outtake coral from l1
         return this.endEffector.outtakeCoral();
     }
 
