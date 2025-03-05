@@ -108,7 +108,7 @@ public class RobotContainer {
 
     private void configureBindings() {
         configureDriveBindings();
-        configureTestBindings();
+        // configureTestBindings();
     }
     
     private void configureDriveBindings() {

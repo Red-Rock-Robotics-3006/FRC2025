@@ -109,7 +109,7 @@ public class Elevator extends SubsystemBase {
         .withCurrentLimitConfigs(elevatorCurrentLimitsConfigs)
         .withSpikeThreshold(currentThreshold);
 
-        this.m_elevatorRight.motor.setControl(new Follower(50, true)); // update
+        this.m_elevatorRight.motor.setControl(new Follower(31, true)); // update
 
         this.m_elevatorLeft.motor.setPosition(0);
         this.m_elevatorRight.motor.setPosition(0);
