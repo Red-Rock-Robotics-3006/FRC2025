@@ -173,4 +173,36 @@ public class Intake extends SubsystemBase{
         );
     }
 
+    public Command deployIntakeCommand() {
+        return Commands.runOnce(this::setIntakeDeploy, this);
+    }
+
+    public Command stowIntakeCommand() {
+        return Commands.runOnce(this::setIntakeStow, this);
+    }
+
+    public Command startIntakeCommand() {
+        return Commands.runOnce(this::startIntakeCommand, this);
+    }
+
+    public Command stopIntakeCommand() {
+        return Commands.runOnce(this::stopIntakeCommand, this);
+    }
+
+    public Command startOutCommand() {
+        return Commands.runOnce(this::setOuttakeSpeed, this);
+    }
+
+    public Command intakeCoralCommand() {
+        return Commands.sequence(
+            this.startIntakeCommand(),
+            Commands.waitUntil(() -> this.coralDetected()),
+            this.stopIntakeCommand()
+        );
+    }
+
+    public static Intake getInstance() {
+        if (instance == null) instance = new Intake();
+        return instance;
+    }
 }

@@ -1,5 +1,7 @@
 package frc.robot;
 
+import java.util.function.Supplier;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -61,13 +63,25 @@ public class Superstructure {
     }
 
     public Command goToReefPosition(Position pos) {
+        // return Commands.sequence(
+        //     this.arm.goToPosition(Position.STOW),
+        //     Commands.waitUntil(() -> this.arm.inSafeZone()),
+        //     this.elevator.goToPosition(pos),
+        //     // Commands.waitUntil(() -> this.elevator.inReefSafeZone(pos)),
+        //     Commands.waitUntil(() -> this.elevator.atTarget()),
+        //     this.arm.goToPosition(pos)
+        // );
+        return this.goToReefPosition(() -> pos);
+    }
+
+    public Command goToReefPosition(Supplier<Position> pos) {
         return Commands.sequence(
             this.arm.goToPosition(Position.STOW),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
-            this.elevator.goToPosition(pos),
+            this.elevator.goToPosition(pos.get()),
             // Commands.waitUntil(() -> this.elevator.inReefSafeZone(pos)),
             Commands.waitUntil(() -> this.elevator.atTarget()),
-            this.arm.goToPosition(pos)
+            this.arm.goToPosition(pos.get())
         );
     }
 
@@ -76,7 +90,7 @@ public class Superstructure {
     }
 
     public Command goToRequestedPositionCommand() {
-        return this.goToReefPosition(this.getRequestedScoringPosition());
+        return this.goToReefPosition(() -> this.getRequestedScoringPosition());
     }
 
     public Command stowCommand() {

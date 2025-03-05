@@ -26,6 +26,7 @@ import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardBoolean;
@@ -319,6 +320,19 @@ public class RobotContainer {
 
         drivestick.a().onTrue(
             Commands.runOnce(() -> EndEffector.getInstance().setTarget(), EndEffector.getInstance())
+        );
+    }
+
+    private void configureIntakeTuning() {
+        drivestick.povUp().onTrue(
+            Commands.runOnce(() -> Intake.getInstance().increaseTarget(), Intake.getInstance())
+        );
+        drivestick.povDown().onTrue(
+            Commands.runOnce(() -> Intake.getInstance().decreaseTarget(), Intake.getInstance())
+        );
+
+        drivestick.a().onTrue(
+            Commands.runOnce(() -> Intake.getInstance().setTarget(), Intake.getInstance())
         );
     }
 
