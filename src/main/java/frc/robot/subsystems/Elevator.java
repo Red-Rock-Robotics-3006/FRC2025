@@ -166,7 +166,7 @@ public class Elevator extends SubsystemBase {
 
     public void setPosition(double rotations) {
         System.out.println("GOTO: " + rotations);
-        this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(minRotation.getNumber(), maxRotation.getNumber(), rotations));
+        this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(rotations, minRotation.getNumber(), maxRotation.getNumber()));
     }
 
     @Override

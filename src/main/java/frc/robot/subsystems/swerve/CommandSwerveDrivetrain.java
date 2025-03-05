@@ -747,4 +747,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         if(rad < 0) rad += 2*Math.PI;
         return (int)(rad*3/Math.PI);
     }
+
+    public static Pose2d rotatePose(Pose2d pose, Rotation2d theta, Pose2d center) {
+        double dx = center.getX() - pose.getX();
+        double dy = center.getY() - pose.getY();
+
+        return new Pose2d(
+            center.getX() + dx * theta.getCos() - dy * theta.getSin(),
+            center.getY() + dx * theta.getSin() + dy * theta.getCos(),
+            pose.getRotation().plus(theta)
+        );
+    }
 }

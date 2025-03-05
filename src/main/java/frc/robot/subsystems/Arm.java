@@ -1,11 +1,14 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -101,9 +104,16 @@ public class Arm extends SubsystemBase {
             .withMotionMagicCruiseVelocity(0)
         ).withFeedbackConfigs(
             new FeedbackConfigs()
-            .withFusedCANcoder(cancoder)
+            .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+            .withFeedbackRemoteSensorID(cancoder.getDeviceID())
             .withRotorToSensorRatio(kRotorToSensorRatio)
             .withSensorToMechanismRatio(kSensorToMechRatio)
+        ).withCurrentLimitConfigs(
+            new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(45)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(80)
+            .withStatorCurrentLimitEnable(true)
         );
     }
 
@@ -120,7 +130,7 @@ public class Arm extends SubsystemBase {
     }
 
     public void setPosition(double rotation) {
-        this.armMotor.setMotionMagicPosition(rotation);
+        this.armMotor.setMotionMagicPosition(MathUtil.clamp(rotation, minRotation.getNumber(), maxRotation.getNumber()));
     }
 
     /**

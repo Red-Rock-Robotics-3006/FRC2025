@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -10,6 +11,9 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import java.util.Map;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -37,11 +41,14 @@ import frc.robot.Superstructure.Position;
 
 public class EndEffector extends SubsystemBase {
     public static final double kCoralOuttakeWaitTime = 0.2;
-    public static final double kAlgaeOuttakeWaitTime = 0.2;
+    public static final double kAlgaeOUttakeWaitTime = 0.2;
 
     private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
     private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
     private final CANrange timeOfFlight = new CANrange(53);
+
+    private SmartDashboardNumber minRotation = new SmartDashboardNumber("endeffector/min-rotation", 0);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 0);
 
     private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0);
     private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0);
@@ -89,7 +96,14 @@ public class EndEffector extends SubsystemBase {
             .withKI(0)
             .withKD(0)
         )
-        .withSpikeThreshold(55);
+        .withSpikeThreshold(55)
+        .withCurrentLimitConfigs(
+            new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(25)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(40)
+            .withStatorCurrentLimitEnable(true)
+        );
                 
         this.wristMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
@@ -113,7 +127,14 @@ public class EndEffector extends SubsystemBase {
             .withMotionMagicAcceleration(0)
             .withMotionMagicCruiseVelocity(0)
         )
-        .withSpikeThreshold(55);       
+        .withSpikeThreshold(55)
+        .withCurrentLimitConfigs(
+            new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(45)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimitEnable(true)
+        );       
     }
 
     public void increaseTarget() {
@@ -129,7 +150,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public void setPosition(double rotation) {
-        this.wristMotor.setMotionMagicPosition(rotation);
+        this.wristMotor.setMotionMagicPosition(MathUtil.clamp(rotation, minRotation.getNumber(), maxRotation.getNumber()));
     }
 
     public void setPosition(Position pos) {
@@ -233,8 +254,7 @@ public class EndEffector extends SubsystemBase {
     public Command goToPosition(Position pos){
         return Commands.runOnce(
             () -> this.setPosition(convertPosition(pos)),
-            this
-        );
+            this);
     }
 
     /**
@@ -304,7 +324,7 @@ public class EndEffector extends SubsystemBase {
     public Command outtakeAlgae(){
         return new SequentialCommandGroup(
             new InstantCommand(this::setAlgaeIntakeSpeed, this),
-            new WaitCommand(kAlgaeOuttakeWaitTime),
+            new WaitCommand(kAlgaeOUttakeWaitTime),
             this.stopCommand()
         );
     }
