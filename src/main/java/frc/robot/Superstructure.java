@@ -2,7 +2,6 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -63,7 +62,7 @@ public class Superstructure {
 
     public Command goToReefPosition(Position pos) {
         return Commands.sequence(
-            this.arm.stowCommand(),
+            this.arm.goToPosition(Position.STOW),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
             this.elevator.goToPosition(pos),
             // Commands.waitUntil(() -> this.elevator.inReefSafeZone(pos)),
@@ -81,11 +80,6 @@ public class Superstructure {
     }
 
     public Command stowCommand() {
-        // return Commands.sequence(
-        //     this.arm.stowCommand(),
-        //     Commands.waitUntil(() -> this.arm.inSafeZone()),
-        //     this.elevator.goToPosition(Position.STOW)
-        // );
         return this.goToPosition(Position.STOW);
     }
 

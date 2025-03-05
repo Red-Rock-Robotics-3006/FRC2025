@@ -10,8 +10,6 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import java.util.Map;
-
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -39,7 +37,7 @@ import frc.robot.Superstructure.Position;
 
 public class EndEffector extends SubsystemBase {
     public static final double kCoralOuttakeWaitTime = 0.2;
-    public static final double kAlgaeOUttakeWaitTime = 0.2;
+    public static final double kAlgaeOuttakeWaitTime = 0.2;
 
     private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
     private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
@@ -306,7 +304,7 @@ public class EndEffector extends SubsystemBase {
     public Command outtakeAlgae(){
         return new SequentialCommandGroup(
             new InstantCommand(this::setAlgaeIntakeSpeed, this),
-            new WaitCommand(kAlgaeOUttakeWaitTime),
+            new WaitCommand(kAlgaeOuttakeWaitTime),
             this.stopCommand()
         );
     }
