@@ -54,6 +54,14 @@ public class Superstructure {
         );
     }
 
+    public Command normalizeEFCommand() {
+        return endEffector.normalizeEndEffectorCommand();
+    }
+
+    public Command normalizeECommand() {
+        return elevator.normalizeElevatorCommand();
+    }
+
     public void setRequestedScoringPosition(Position pos) {
         this.requestedScoringPosition = pos;
     }

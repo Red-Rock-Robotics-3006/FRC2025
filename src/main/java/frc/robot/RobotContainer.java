@@ -295,6 +295,10 @@ public class RobotContainer {
         drivestick.a().onTrue(
             Commands.runOnce(() -> Elevator.getInstance().setTarget(), Elevator.getInstance())
         );
+
+        drivestick.b().onTrue(
+            superstructure.normalizeECommand()
+        );
     }
 
     private void configureArmTuning() {
@@ -320,6 +324,9 @@ public class RobotContainer {
 
         drivestick.a().onTrue(
             Commands.runOnce(() -> EndEffector.getInstance().setTarget(), EndEffector.getInstance())
+        );
+        drivestick.b().onTrue(
+            superstructure.normalizeEFCommand()
         );
     }
 

@@ -15,6 +15,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -32,18 +33,18 @@ import frc.robot.Superstructure.Position;
  */
 
 public class Arm extends SubsystemBase {
-    public static final double kCANCoderOffset = 0;
+    public static final double kCANCoderOffset = -0.29052734375;
     public static final double kDiscontinuityPoint = 0.875;
     public static final double kRotorToSensorRatio = 68 / 10 * 68 / 16 * 48 / 9;
     public static final double kSensorToMechRatio = 1;
 
     private final RedRockTalon armMotor = new RedRockTalon(41, "arm-motor", "*");
-    private final CANcoder cancoder = new CANcoder(42);
+    private final CANcoder cancoder = new CANcoder(42, "*");
 
     private SmartDashboardNumber minAngleDegrees = new SmartDashboardNumber("arm/min-angle", 0);
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", 0);
-    private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 0);
-    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0);
+    private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 180);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0.5);
 
     private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", 0);
     private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0);
@@ -71,19 +72,15 @@ public class Arm extends SubsystemBase {
     private Arm(){
         super("Arm");
 
-        this.cancoder.getConfigurator().apply(
-            new MagnetSensorConfigs()
-            .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
-            .withAbsoluteSensorDiscontinuityPoint(kDiscontinuityPoint)
-            .withMagnetOffset(kCANCoderOffset)
-        );
-    
-
-        
+        FeedbackConfigs feedbackConfigs = new FeedbackConfigs()
+        .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+        .withFeedbackRemoteSensorID(cancoder.getDeviceID())
+        .withRotorToSensorRatio(kRotorToSensorRatio)
+        .withSensorToMechanismRatio(kSensorToMechRatio);
 
         this.armMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withInverted(InvertedValue.Clockwise_Positive)
             .withPeakForwardDutyCycle(1d)
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Brake)
@@ -93,21 +90,26 @@ public class Arm extends SubsystemBase {
             .withKA(0)
             .withKS(0)
             .withKV(0)
-            .withKP(0)
+            .withKP(200)
             .withKI(0)
-            .withKD(0)
+            .withKD(5)
+            .withKG(0.45)
             .withGravityType(GravityTypeValue.Arm_Cosine)
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
-            .withMotionMagicAcceleration(0)
-            .withMotionMagicCruiseVelocity(0)
-        ).withFeedbackConfigs(
-            new FeedbackConfigs()
-            .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
-            .withFeedbackRemoteSensorID(cancoder.getDeviceID())
-            .withRotorToSensorRatio(kRotorToSensorRatio)
-            .withSensorToMechanismRatio(kSensorToMechRatio)
+            .withMotionMagicAcceleration(4500)
+            .withMotionMagicCruiseVelocity(45000)
+            .withMotionMagicJerk(20000000)
+        // ).withFeedbackConfigs(
+        //     new FeedbackConfigs()
+        //     .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
+        // ).withFeedbackConfigs(
+        //     new FeedbackConfigs()
+        //     .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
+        //     .withFeedbackRemoteSensorID(cancoder.getDeviceID())
+        //     .withRotorToSensorRatio(kRotorToSensorRatio)
+        //     .withSensorToMechanismRatio(kSensorToMechRatio)
         ).withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
             .withSupplyCurrentLimit(45)
@@ -115,6 +117,16 @@ public class Arm extends SubsystemBase {
             .withStatorCurrentLimit(80)
             .withStatorCurrentLimitEnable(true)
         );
+
+        this.cancoder.getConfigurator().apply(
+            new MagnetSensorConfigs()
+            .withSensorDirection(SensorDirectionValue.CounterClockwise_Positive)
+            .withAbsoluteSensorDiscontinuityPoint(kDiscontinuityPoint)
+            .withMagnetOffset(kCANCoderOffset)
+        );
+
+        this.armMotor.motor.getConfigurator().apply(feedbackConfigs);
+
     }
 
     public void increaseTarget() {
@@ -181,7 +193,7 @@ public class Arm extends SubsystemBase {
      */
     private void goToAngle(double angle)
     {
-        this.setPosition(MathUtil.clamp(minRotation.getNumber(), maxRotation.getNumber(), angleToRotations(angle)));
+        this.setPosition(angleToRotations(angle));
     }
 
     private double angleToRotations(double degrees) {
@@ -192,6 +204,8 @@ public class Arm extends SubsystemBase {
     public void periodic() {
         this.armMotor.update();
         SmartDashboard.putBoolean("arm/arm-in-safe-zone", this.inSafeZone());
+        SmartDashboard.putNumber("arm/arm-closed-loop-error", this.armMotor.motor.getClosedLoopError().getValueAsDouble());
+        // SmartDashboard.putNumber("arm/arm-cancoder-position", this.cancoder.getAbsolutePosition().getValueAsDouble());
     }
 
     /**

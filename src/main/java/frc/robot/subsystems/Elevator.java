@@ -70,18 +70,18 @@ public class Elevator extends SubsystemBase {
             .withNeutralMode(NeutralModeValue.Brake);
 
         Slot0Configs elevatorSlot0Configs = new Slot0Configs()
-            .withKS(0.12)
+            .withKS(0.22)
             .withKA(0)
             .withKV(0)
-            .withKP(2)
+            .withKP(3)
             .withKI(0)
             .withKD(0)
-            .withKG(0.022)
+            .withKG(0.5)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
         MotionMagicConfigs elevatorMotionConfigs = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(40)
-            .withMotionMagicAcceleration(100000)
+            .withMotionMagicCruiseVelocity(150)
+            .withMotionMagicAcceleration(1000)
             .withMotionMagicJerk(1000000);
 
         CurrentLimitsConfigs elevatorCurrentLimitsConfigs = new CurrentLimitsConfigs()
@@ -99,7 +99,7 @@ public class Elevator extends SubsystemBase {
         .withCurrentLimitConfigs(elevatorCurrentLimitsConfigs)
         .withSpikeThreshold(currentThreshold);
         
-        this.m_elevatorLeft
+        this.m_elevatorRight
         .withMotorOutputConfigs(elevatorMotorOutputConfigs)
         .withSlot0Configs(elevatorSlot0Configs)
         .withMotionMagicConfigs(elevatorMotionConfigs)

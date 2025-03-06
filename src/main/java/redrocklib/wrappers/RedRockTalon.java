@@ -21,6 +21,7 @@ public class RedRockTalon {
     private SmartDashboardNumber kP;
     private SmartDashboardNumber kI;
     private SmartDashboardNumber kD;
+    private SmartDashboardNumber kG;
 
     private SmartDashboardNumber motionJerk;
     private SmartDashboardNumber motionAccel;
@@ -143,6 +144,7 @@ public class RedRockTalon {
         this.kP = new SmartDashboardNumber(name + "/" + name + "-kP", slot0Configs.kP);
         this.kI = new SmartDashboardNumber(name + "/" + name + "-kI", slot0Configs.kI);
         this.kD = new SmartDashboardNumber(name + "/" + name + "-kD", slot0Configs.kD);
+        this.kG = new SmartDashboardNumber(name + "/" + name + "-kG", slot0Configs.kG);
 
         this.motor.getConfigurator().apply(slot0Configs);
 
@@ -193,13 +195,15 @@ public class RedRockTalon {
             || kV.hasChanged()
             || kP.hasChanged()
             || kI.hasChanged()
-            || kD.hasChanged()) {
+            || kD.hasChanged()
+            || kG.hasChanged()) {
             slot0Configs.kS = kS.getNumber();
             slot0Configs.kA = kA.getNumber();
             slot0Configs.kV = kV.getNumber();
             slot0Configs.kP = kP.getNumber();
             slot0Configs.kI = kI.getNumber();
             slot0Configs.kD = kD.getNumber();
+            slot0Configs.kG = kG.getNumber();
 
             motor.getConfigurator().apply(slot0Configs);
         }

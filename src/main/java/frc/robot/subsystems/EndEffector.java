@@ -48,12 +48,12 @@ public class EndEffector extends SubsystemBase {
     private final CANrange timeOfFlight = new CANrange(53);
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("endeffector/min-rotation", 0);
-    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 0);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 40);
 
     private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0);
     private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0);
     private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0);
-    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.1);
+    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.03);
     private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.2);
     private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.1);
@@ -117,15 +117,15 @@ public class EndEffector extends SubsystemBase {
             .withKA(0)
             .withKS(0)
             .withKV(0)
-            .withKP(0)
+            .withKP(6)
             .withKI(0)
             .withKD(0)
-            .withGravityType(GravityTypeValue.Arm_Cosine)
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
-            .withMotionMagicAcceleration(0)
-            .withMotionMagicCruiseVelocity(0)
+            .withMotionMagicAcceleration(1000)
+            .withMotionMagicCruiseVelocity(200)
+            .withMotionMagicJerk(10000000)
         )
         .withSpikeThreshold(55)
         .withCurrentLimitConfigs(
@@ -217,7 +217,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public void setNormalizeSpeed() {
-        this.driveMotor.motor.setControl(new DutyCycleOut(this.normalizeSpeed.getNumber()));
+        this.wristMotor.motor.setControl(new DutyCycleOut(this.normalizeSpeed.getNumber()));
     }
 
     public void stop() {
