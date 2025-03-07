@@ -6,12 +6,16 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.SlewRateLimiter;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -35,14 +39,20 @@ public class Intake extends SubsystemBase{
     private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 0);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0);
     
-    private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 0.2);
+    private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 3600);
     private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -0.3);
     private SmartDashboardNumber resetSpeed = new SmartDashboardNumber("intake/reset-speed", -0.3);
+    private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -900);
+    private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("intake/tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("intake/tuning/target", 0);
 
     private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("intake/intake-tof-threshold", 0.1);
+
+    private double veloictyTarget = 0;
+
+    private SlewRateLimiter limiter = new SlewRateLimiter(180);
 
     private Intake() {
         super();
@@ -94,7 +104,38 @@ public class Intake extends SubsystemBase{
             .withMotionMagicAcceleration(0)
             .withMotionMagicCruiseVelocity(0)
         )
-        .withSpikeThreshold(55)
+        .withSpikeThreshold(58)
+        .withCurrentLimitConfigs(
+            new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(45)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimitEnable(true)
+        );       
+                
+        this.intakeMotor.withMotorOutputConfigs(
+            new MotorOutputConfigs()
+            .withInverted(InvertedValue.Clockwise_Positive)
+            .withPeakForwardDutyCycle(1d)
+            .withPeakReverseDutyCycle(-1d)
+            .withNeutralMode(NeutralModeValue.Brake)
+        )
+        .withSlot0Configs(
+            new Slot0Configs()
+            .withKA(0)
+            .withKS(0)
+            .withKV(0)
+            .withKP(0)
+            .withKI(0)
+            .withKD(0)
+            .withGravityType(GravityTypeValue.Arm_Cosine)
+        )
+        .withMotionMagicConfigs(
+            new MotionMagicConfigs()
+            .withMotionMagicAcceleration(0)
+            .withMotionMagicCruiseVelocity(0)
+        )
+        .withSpikeThreshold(58)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
             .withSupplyCurrentLimit(45)
@@ -111,7 +152,7 @@ public class Intake extends SubsystemBase{
     }
 
     public void resetPivot() {
-        this.pivotMotor.motor.setControl(new CoastOut());
+        this.pivotMotor.motor.setControl(new NeutralOut());
         this.pivotMotor.motor.setPosition(0);
     }
 
@@ -136,7 +177,8 @@ public class Intake extends SubsystemBase{
     }
 
     public void setIntakeSpeed(double speed) {
-        this.intakeMotor.motor.setControl(new DutyCycleOut(speed));
+        this.veloictyTarget = speed;
+        this.intakeMotor.setMotionMagicVelocity(speed);
     }
 
     public void setIntakeDeploy() {
@@ -152,17 +194,42 @@ public class Intake extends SubsystemBase{
     }
 
     public void stopIntake() {
-        this.setIntakeSpeed(0);
+        this.veloictyTarget = 0;
+        this.intakeMotor.motor.setControl(new DutyCycleOut(0));
+    }
+
+    public void setTorqueCurrentOuttakeSpeed() {
+        this.veloictyTarget = currentStallOuttakeSpeed.getNumber();
+        this.intakeMotor.motor.setControl(
+            new VelocityVoltage(this.currentStallOuttakeSpeed.getNumber() / 60)
+            .withSlot(0)
+            .withEnableFOC(true)
+            .withOverrideBrakeDurNeutral(true)
+        );
+    }
+
+    public boolean atVelocityTarget() {
+        return Math.abs((this.veloictyTarget / 60) - this.intakeMotor.motor.getVelocity().getValueAsDouble()) < this.velocityTolerance.getNumber();
     }
 
     public boolean coralDetected() {
         return this.caNrange.getDistance().getValueAsDouble() < this.tofThreshold.getNumber();
     }
 
+    public boolean atSlewSpikeThreshold() {
+        return Math.abs(this.getTorqueCurrent()) > this.intakeMotor.getSpikeThreshold();
+    }
+
+    public double getTorqueCurrent() {
+        return limiter.calculate(this.intakeMotor.motor.getTorqueCurrent().getValueAsDouble());
+    }
+
     @Override
     public void periodic() {
         this.intakeMotor.update();
         this.pivotMotor.update();
+        SmartDashboard.putNumber("intake/intake-slew-tq-current", this.getTorqueCurrent());
+        SmartDashboard.putNumber("intake/intake-velo-target", this.veloictyTarget);
     }
 
     public Command resetIntakePivot() {
@@ -193,11 +260,23 @@ public class Intake extends SubsystemBase{
         return Commands.runOnce(this::setOuttakeSpeed, this);
     }
 
-    public Command intakeCoralCommand() {
+    public Command startCurrentStallOuttakeCommand() {
+        return Commands.runOnce(this::setTorqueCurrentOuttakeSpeed, this);
+    }
+
+    public Command spasmIntakeCommand() {
         return Commands.sequence(
             this.startIntakeCommand(),
-            Commands.waitUntil(() -> this.coralDetected()),
-            this.stopIntakeCommand()
+            Commands.waitUntil(() -> this.atSlewSpikeThreshold()),
+            this.startCurrentStallOuttakeCommand(),
+            Commands.waitUntil(() -> this.atVelocityTarget())
+        );
+    }
+
+    public Command intakeCoralAndHoldCommand() {
+        return Commands.deadline(
+            Commands.waitUntil(() -> this.coralDetected()), 
+            this.spasmIntakeCommand()
         );
     }
 

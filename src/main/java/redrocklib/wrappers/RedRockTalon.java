@@ -184,6 +184,10 @@ public class RedRockTalon {
         );
     }
 
+    public double getSpikeThreshold() {
+        return this.spikeThreshold.getNumber();
+    }
+
     /**
      * Updates telemetry, and applies any changed config numbers for the motor
      * 

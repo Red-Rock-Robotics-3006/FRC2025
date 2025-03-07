@@ -351,6 +351,10 @@ public class RobotContainer {
         drivestick.a().onTrue(
             Commands.runOnce(() -> Intake.getInstance().setTarget(), Intake.getInstance())
         );
+
+        drivestick.leftBumper().onTrue(
+            Intake.getInstance().spasmIntakeCommand()
+        ).onFalse(Intake.getInstance().stopIntakeCommand());
     }
 
     private void configurePositionTuning() {
