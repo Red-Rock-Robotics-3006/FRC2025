@@ -12,6 +12,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -26,11 +27,11 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("elevator/min-rotation", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 60);
 
-    private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/position/elevator-l1", 60);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/position/elevator-l2", 56);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/position/elevator-l3", 34);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/position/elevator-l4", 19);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/position/elevator-source", 29);
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/position/elevator-l1", 0);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/position/elevator-l2", 0);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/position/elevator-l3", 20);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/position/elevator-l4", 59);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/position/elevator-source", 4);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/position/elevator-coral-ground", 5);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/position/elevator-algae-ground", 0);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/position/elevator-processor", 0);
@@ -51,10 +52,10 @@ public class Elevator extends SubsystemBase {
     private final RedRockTalon m_elevatorRight = new RedRockTalon(32, "elevator-right", "*");
     
 
-    private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/tuning/delta", 5);
-    private SmartDashboardNumber target = new SmartDashboardNumber("elevator/tuning/target", 0);
-    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tuning/tolerance", 0.2);
-    private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/tuning/normalization-speed", -0.1);
+    private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/elevator-tuning/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("elevator/elevator-tuning/target", 0);
+    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 0.2);
+    private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
 
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
@@ -80,7 +81,7 @@ public class Elevator extends SubsystemBase {
             .withGravityType(GravityTypeValue.Elevator_Static);
 
         MotionMagicConfigs elevatorMotionConfigs = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(150)
+            .withMotionMagicCruiseVelocity(200)
             .withMotionMagicAcceleration(1000)
             .withMotionMagicJerk(1000000);
 
@@ -160,13 +161,13 @@ public class Elevator extends SubsystemBase {
      * @return a Command to do so
      */
     public Command goToPosition(Position pos) {
-        this.targetPosition = pos;
-        return Commands.runOnce(() ->this.setPosition(this.convertPosition(pos)), this);
+        return Commands.runOnce(() ->this.setPosition(pos), this);
     }
-
-    public void setPosition(double rotations) {
-        System.out.println("GOTO: " + rotations);
-        this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(rotations, minRotation.getNumber(), maxRotation.getNumber()));
+    
+    public void setPosition(Position pos) {
+        this.targetPosition = pos;
+        System.out.println("GOTO: " + this.convertPosition(pos));
+        this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(this.convertPosition(pos), minRotation.getNumber(), maxRotation.getNumber()));
     }
 
     @Override
@@ -178,6 +179,11 @@ public class Elevator extends SubsystemBase {
         // SmartDashboard.putNumber("elevator/elevator-right-spike", this.m_elevatorRight.motor.getTorqueCurrent().getValueAsDouble());
         // SmartDashboard.putNumber("elevator/elevator-left-velocity", this.m_elevatorLeft.motor.getVelocity().getValueAsDouble());
         // SmartDashboard.putNumber("elevator/elevator-right-velocity", this.m_elevatorRight.motor.getVelocity().getValueAsDouble());
+
+        SmartDashboard.putNumber("elevator/error", Math.abs(this.convertPosition(this.targetPosition) - this.getPosition()));
+        SmartDashboard.putNumber("elevator/pos", this.getPosition());
+        SmartDashboard.putNumber("elevator/target", this.convertPosition(this.targetPosition));
+        SmartDashboard.putString("elevator/tpos", this.targetPosition.name());
 
         this.m_elevatorLeft.update();
         this.m_elevatorRight.update();
@@ -192,7 +198,7 @@ public class Elevator extends SubsystemBase {
     }
 
     public void setTarget() {
-        this.setPosition(this.target.getNumber());
+        // this.setPosition(this.target.getNumber());
     }
 
     public double getPosition() {
@@ -223,8 +229,8 @@ public class Elevator extends SubsystemBase {
      * @return true if the elevator is on target
      */
     public boolean atTarget(){
-        return this.m_elevatorLeft.motor.getClosedLoopError().getValueAsDouble() < tolerance.getNumber() ||
-        this.m_elevatorRight.motor.getClosedLoopError().getValueAsDouble() < tolerance.getNumber() || 
+        return //Math.abs(this.m_elevatorLeft.motor.getClosedLoopError().getValueAsDouble()) < tolerance.getNumber() ||
+        //this.m_elevatorRight.motor.getClosedLoopError().getValueAsDouble() < tolerance.getNumber() || 
          Math.abs(this.convertPosition(this.targetPosition) - this.getPosition()) < tolerance.getNumber();
     }
 

@@ -54,12 +54,12 @@ public class Superstructure {
         );
     }
 
-    public Command normalizeEFCommand() {
-        return endEffector.normalizeEndEffectorCommand();
+    public Command normalizeEFCommand() { // TODO Temp
+        return this.endEffector.normalizeEndEffectorCommand();
     }
 
-    public Command normalizeECommand() {
-        return elevator.normalizeElevatorCommand();
+    public Command normalizeECommand() { // TODO Temp
+        return this.elevator.normalizeElevatorCommand();
     }
 
     public void setRequestedScoringPosition(Position pos) {
@@ -71,25 +71,27 @@ public class Superstructure {
     }
 
     public Command goToReefPosition(Position pos) {
-        // return Commands.sequence(
-        //     this.arm.goToPosition(Position.STOW),
-        //     Commands.waitUntil(() -> this.arm.inSafeZone()),
-        //     this.elevator.goToPosition(pos),
-        //     // Commands.waitUntil(() -> this.elevator.inReefSafeZone(pos)),
-        //     Commands.waitUntil(() -> this.elevator.atTarget()),
-        //     this.arm.goToPosition(pos)
-        // );
-        return this.goToReefPosition(() -> pos);
-    }
-
-    public Command goToReefPosition(Supplier<Position> pos) {
         return Commands.sequence(
             this.arm.goToPosition(Position.STOW),
-            Commands.waitUntil(() -> this.arm.inSafeZone()),
-            this.elevator.goToPosition(pos.get()),
-            // Commands.waitUntil(() -> this.elevator.inReefSafeZone(pos)),
+            Commands.waitUntil(() -> this.arm.atTarget()),
+            this.elevator.goToPosition(pos),
             Commands.waitUntil(() -> this.elevator.atTarget()),
-            this.arm.goToPosition(pos.get())
+            this.arm.goToPosition(pos),
+            this.endEffector.goToPosition(pos)
+        );
+    }
+
+    /**
+     * Move subsystems to a Position
+     * @param pos the position to move to
+     * @return a Command to do so
+     */
+    public Command goToPosition(Position pos) {
+        return new SequentialCommandGroup(
+            this.arm.goToPosition(pos),
+            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
+            this.elevator.goToPosition(pos),
+            this.endEffector.goToPosition(pos)
         );
     }
 
@@ -98,11 +100,14 @@ public class Superstructure {
     }
 
     public Command goToRequestedPositionCommand() {
-        return this.goToReefPosition(() -> this.getRequestedScoringPosition());
+        return this.goToReefPosition(this.getRequestedScoringPosition());
     }
 
     public Command stowCommand() {
-        return this.goToPosition(Position.STOW);
+        return Commands.sequence(
+            this.goToReefPosition(Position.STOW),
+            this.endEffector.stopCommand()
+        );
     }
 
     public Command goToL4Command() {
@@ -126,20 +131,6 @@ public class Superstructure {
     }
 
     /**
-     * Move subsystems to a Position
-     * @param pos the position to move to
-     * @return a Command to do so
-     */
-    public Command goToPosition(Position pos) {
-        return new SequentialCommandGroup(
-            this.arm.goToPosition(pos),
-            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
-            this.elevator.goToPosition(pos),
-            this.endEffector.goToPosition(pos)
-        );
-    }
-
-    /**
      * Intake Coral to EndEffector
      * @return a Command to do so
      */
@@ -160,7 +151,6 @@ public class Superstructure {
      * @return a Command to do so
      */
     public Command outtakeCoral() {
-        if (requestedScoringPosition == Position.L1) return this.endEffector.outtakeCoral(); //TODO make intake outtake coral from l1
         return this.endEffector.outtakeCoral();
     }
 

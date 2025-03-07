@@ -52,21 +52,21 @@ public class Arm extends SubsystemBase {
 
     private static Arm instance = null;
 
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.15);
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.0139);
 
-    private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 0);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 0);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 0);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 0);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 0);
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 118.8);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 118.8);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 108);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 30);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", 0);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 0);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0);
-    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 0);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 82.8);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0);
 
-    private SmartDashboardNumber delta = new SmartDashboardNumber("arm/tuning/delta", 5);
-    private SmartDashboardNumber target = new SmartDashboardNumber("arm/tuning/target", 0);
+    private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);
     
 
     private Arm(){
@@ -182,14 +182,14 @@ public class Arm extends SubsystemBase {
      * @return true if the arm is on target
      */
     public boolean atTarget(){
-        return this.armMotor.motor.getClosedLoopError().getValueAsDouble() < this.armTolerance.getNumber() ||
-        Math.abs(this.convertPosition(this.targetPosition)
+        return //Math.abs(this.armMotor.motor.getClosedLoopError().getValueAsDouble()) < this.armTolerance.getNumber() ||
+        Math.abs(this.angleToRotations(this.convertPosition(this.targetPosition))
         - this.armMotor.motor.getPosition().getValueAsDouble()) < this.armTolerance.getNumber();
     }
 
     /**
      * Move the arm to a clamped angle
-     * @param angle the angle to mvoe to
+     * @param angle the angle to move to
      */
     private void goToAngle(double angle)
     {
@@ -206,6 +206,7 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putBoolean("arm/arm-in-safe-zone", this.inSafeZone());
         SmartDashboard.putNumber("arm/arm-closed-loop-error", this.armMotor.motor.getClosedLoopError().getValueAsDouble());
         // SmartDashboard.putNumber("arm/arm-cancoder-position", this.cancoder.getAbsolutePosition().getValueAsDouble());
+        SmartDashboard.putNumber("arm/arm-error", Math.abs(this.angleToRotations(this.convertPosition(this.targetPosition)) - this.armMotor.motor.getPosition().getValueAsDouble()));
     }
 
     /**
@@ -231,7 +232,7 @@ public class Arm extends SubsystemBase {
      */
     public boolean inSafeZone() {
         return this.armMotor.motor.getPosition().getValueAsDouble() > this.floorThreshold.getNumber() 
-        && this.armMotor.motor.getPosition().getValueAsDouble() < verticalThreshold.getNumber();
+        && this.armMotor.motor.getPosition().getValueAsDouble() < this.verticalThreshold.getNumber();
     }
 
     public boolean belowFloorThreshold() {

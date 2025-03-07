@@ -88,7 +88,9 @@ public class RobotContainer {
         configureBindings();
         configureSelector();
 
-        configureElevatorTuning();
+        // configurePositionTuning();
+
+        // configureElevatorTuning();
         // configureArmTuning();
         // configureEndEffectorTuning();
     }
@@ -103,7 +105,7 @@ public class RobotContainer {
 
     private void configureBindings() {
         configureDriveBindings();
-        // configureTestBindings();
+        configureTestBindings();
     }
     
     private void configureDriveBindings() {
@@ -175,31 +177,39 @@ public class RobotContainer {
 
         drivestick.leftBumper().onTrue(
             Commands.sequence(
-                superstructure.intakeCoral(),// doohickey.intakeCommand()
-                superstructure.goToSourceIntakePosition()
+                superstructure.intakeCoral()// doohickey.intakeCommand()
+                // superstructure.goToSourceIntakePosition()
+            )
+        );
+
+        drivestick.leftTrigger(0.25).onTrue(
+            Commands.sequence(
+                superstructure.goToSourceIntakePosition(),
+                superstructure.intakeCoral()
             )
         );
 
         drivestick.rightBumper().onTrue(
-            superstructure.outtakeCoral()// doohickey.startOuttakeCommand()
+            this.superstructure.outtakeCoral()// doohickey.startOuttakeCommand()
         ).onFalse(
-            superstructure.stopEndEffector()// doohickey.stopCommand()
+            this.superstructure.stopEndEffector()// doohickey.stopCommand()
         );
 
         drivestick.a().onTrue(
-            superstructure.goToL1Command()
+            this.superstructure.goToL1Command()
         );
 
         drivestick.x().onTrue(
-            superstructure.goToL2Command()
+            this.superstructure.goToL2Command()
         );
 
         drivestick.y().onTrue(
-            superstructure.goToL3Command()
+            this.superstructure.goToL3Command()
         );
 
         drivestick.b().onTrue(
-            superstructure.goToL4Command()
+            // superstructure.goToL4Command()
+            this.superstructure.goToL4Command()
         );
 
         drivestick.povDown().onTrue(
@@ -342,6 +352,42 @@ public class RobotContainer {
             Commands.runOnce(() -> Intake.getInstance().setTarget(), Intake.getInstance())
         );
     }
+
+    private void configurePositionTuning() {
+        drivestick.a().onTrue(
+            Commands.runOnce(() -> Elevator.getInstance().setTarget(), Elevator.getInstance())
+        );
+        drivestick.b().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().setTarget(), Arm.getInstance())
+        );
+        drivestick.x().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().setTarget(), EndEffector.getInstance())
+        );
+
+        drivestick.povRight().onTrue(
+            Elevator.getInstance().normalizeElevatorCommand()
+        );
+        drivestick.povLeft().onTrue(
+            EndEffector.getInstance().normalizeEndEffectorCommand()
+        );
+
+        drivestick.povUp().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().increaseTarget())
+        );
+
+        drivestick.povDown().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().decreaseTarget())
+        );
+
+        drivestick.rightBumper().onTrue(
+            superstructure.outtakeCoral()
+        );
+        
+        drivestick.leftBumper().onTrue(
+            superstructure.intakeCoral()
+        );
+    }
+
 
     // Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
 

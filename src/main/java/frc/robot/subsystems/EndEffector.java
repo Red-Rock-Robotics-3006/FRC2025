@@ -1,11 +1,16 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CANrangeConfiguration;
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.ProximityParamsConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -14,6 +19,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import java.util.Map;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
@@ -45,14 +51,14 @@ public class EndEffector extends SubsystemBase {
 
     private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
     private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
-    private final CANrange timeOfFlight = new CANrange(53);
+    private final CANrange timeOfFlight = new CANrange(53, "*");
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("endeffector/min-rotation", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 40);
 
-    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0);
-    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0);
-    private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0);
+    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0.18);
+    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0.2);
+    private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.15);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.03);
     private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.2);
     private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0);
@@ -63,18 +69,18 @@ public class EndEffector extends SubsystemBase {
     private static EndEffector instance = null;
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 0);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 0);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 0);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 0);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 28.5);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 30);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 20);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 9);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 0);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 0);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 0);
 
-    private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/tuning/delta", 5);
-    private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/tuning/target", 0);
+    private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
 
     
 
@@ -92,7 +98,7 @@ public class EndEffector extends SubsystemBase {
             .withKA(0)
             .withKS(0)
             .withKV(0)
-            .withKP(0)
+            .withKP(0.1)
             .withKI(0)
             .withKD(0)
         )
@@ -127,7 +133,7 @@ public class EndEffector extends SubsystemBase {
             .withMotionMagicCruiseVelocity(200)
             .withMotionMagicJerk(10000000)
         )
-        .withSpikeThreshold(55)
+        .withSpikeThreshold(30)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
             .withSupplyCurrentLimit(45)
@@ -221,11 +227,14 @@ public class EndEffector extends SubsystemBase {
     }
 
     public void stop() {
-        this.driveMotor.motor.setControl(new DutyCycleOut(0));
+        this.driveMotor.motor.setControl(new VelocityVoltage(0)
+        .withEnableFOC(true)
+        .withSlot(0)
+        .withOverrideBrakeDurNeutral(true));
     }
 
     public void resetWrist() {
-        this.wristMotor.motor.setControl(new CoastOut());
+        this.wristMotor.motor.setControl(new NeutralOut());
         this.wristMotor.motor.setPosition(0);
     }
     
@@ -236,7 +245,7 @@ public class EndEffector extends SubsystemBase {
     public boolean atTarget(){
         // return Math.abs(this.convertPosition(this.targetPosition)
         //     - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
-        return this.driveMotor.motor.getClosedLoopError().getValueAsDouble() < this.wristTolerance.getNumber() 
+        return Math.abs(this.driveMotor.motor.getClosedLoopError().getValueAsDouble()) < this.wristTolerance.getNumber() 
             || Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
     }
 
@@ -244,6 +253,7 @@ public class EndEffector extends SubsystemBase {
     public void periodic() {
         this.driveMotor.update();
         this.wristMotor.update();
+        SmartDashboard.putNumber("endeffector/ef-canrange-val", this.timeOfFlight.getDistance().getValueAsDouble());
     }
 
     /**
@@ -330,7 +340,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public Command stopCommand(){
-        return this.runOnce(this::stop);
+        return this.runOnce(() -> this.stop());
     }
 
     /**
