@@ -59,6 +59,8 @@ public class Elevator extends SubsystemBase {
 
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
+
+    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 40);
                                                                                                              
 
     private Elevator() {
@@ -241,6 +243,10 @@ public class Elevator extends SubsystemBase {
      */
     public boolean posBelowThreshold(Position pos) {
         return this.convertPosition(pos) < this.armThreshold.getNumber();
+    }
+
+    public boolean aboveGroundIntakeThreshold() {
+        return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() > this.intakeArmThreshold.getNumber();
     }
     
     /**

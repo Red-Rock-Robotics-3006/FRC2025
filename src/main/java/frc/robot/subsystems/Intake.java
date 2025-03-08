@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -26,6 +27,8 @@ import redrocklib.wrappers.RedRockTalon;
 
 public class Intake extends SubsystemBase{
     private static Intake instance = null;
+    
+    public static final double kStallReverseTime = 0.5;
 
     private SmartDashboardNumber minPivotRotation = new SmartDashboardNumber("min-rotation", 0);
     private SmartDashboardNumber maxPivotRotation = new SmartDashboardNumber("max-rotation", 0);
@@ -179,6 +182,12 @@ public class Intake extends SubsystemBase{
     public void setIntakeSpeed(double speed) {
         this.veloictyTarget = speed;
         this.intakeMotor.setMotionMagicVelocity(speed);
+        // this.intakeMotor.motor.setControl(
+        //     new PositionVoltage(speed / 60)
+        //     .withSlot(0)
+        //     .withEnableFOC(true)
+        //     .withOverrideBrakeDurNeutral(true)
+        // );
     }
 
     public void setIntakeDeploy() {
@@ -265,11 +274,12 @@ public class Intake extends SubsystemBase{
     }
 
     public Command spasmIntakeCommand() {
-        return Commands.sequence(
+        return Commands.repeatingSequence(
             this.startIntakeCommand(),
             Commands.waitUntil(() -> this.atSlewSpikeThreshold()),
             this.startCurrentStallOuttakeCommand(),
             Commands.waitUntil(() -> this.atVelocityTarget())
+            // Commands.waitSeconds(kStallReverseTime)
         );
     }
 

@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.Intake;
 
 /* TODO
  * Tune scoreBarge delays
@@ -20,6 +21,8 @@ public class Superstructure {
     private Elevator elevator = Elevator.getInstance();
     private Arm arm = Arm.getInstance();
     private EndEffector endEffector = EndEffector.getInstance();
+
+    private Intake intake = Intake.getInstance();
     
     private static Superstructure instance = null;
 
@@ -89,9 +92,20 @@ public class Superstructure {
     public Command goToPosition(Position pos) {
         return new SequentialCommandGroup(
             this.arm.goToPosition(pos),
-            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
+            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && !this.arm.inSafeZone())),
             this.elevator.goToPosition(pos),
             this.endEffector.goToPosition(pos)
+        );
+    }
+
+    public Command goToIntakePosition() {
+        return Commands.sequence(
+            this.intake.deployIntakeCommand(),
+            this.endEffector.goToPosition(Position.CORAL_GROUND),
+            this.elevator.goToPosition(Position.CORAL_GROUND),
+            Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
+            this.arm.goToPosition(Position.CORAL_GROUND)
         );
     }
 
