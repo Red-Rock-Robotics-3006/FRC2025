@@ -58,6 +58,7 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
+    private final Intake intake = Intake.getInstance();
 
     private final AutoFactory autoFactory;
     private final AutoRoutines autoRoutines;
@@ -250,14 +251,23 @@ public class RobotContainer {
     private void configureCompBindings() {
         RobotModeTriggers.teleop().onTrue(
             Commands.parallel(
-                superstructure.normalizeCommand()
+                superstructure.normalizeCommand(),
+                intake.resetIntakePivot()
             )
         );
 
         drivestick.leftBumper().onTrue(
-            Commands.waitSeconds(0) //TODO make this the intake deploy
+            Commands.sequence(
+                superstructure.goToIntakePosition(),
+                superstructure.intakeCoral(),
+                intake.spasmIntakeCommand()
+            )
         ).onFalse(
-            Commands.waitSeconds(0) //TODO make this the intake stow
+            Commands.sequence(
+                superstructure.stowCommand(),
+                intake.stopIntakeCommand(),
+                intake.stowIntakeCommand()
+            )
         );
 
         drivestick.rightBumper().onTrue(
@@ -267,30 +277,42 @@ public class RobotContainer {
         );
 
         drivestick.leftTrigger(0.25).onTrue(
-            superstructure.goToPosition(Position.SOURCE) //TODO add swerve thing
-        ).onFalse(
-            superstructure.stowCommand() //TODO add swerve thing
-        );
-
-        drivestick.rightTrigger(0.25).onTrue(
             Commands.sequence(
-                Commands.waitSeconds(0), //TODO make this the intake L1 score thing
-                superstructure.setRequestedScoringPositionCommand(Position.L1)
+                superstructure.goToPosition(Position.SOURCE), //TODO add swerve thing
+                superstructure.intakeCoral()
             )
         ).onFalse(
-            Commands.waitSeconds(0) //TODO make this the intake stow
+            superstructure.stowCommand() //TODO add swerve thing
         );
 
         drivestick.x().onTrue(
             superstructure.outtakeCoral()
         );
-        
+
         drivestick.y().onTrue(
             superstructure.goToRequestedPositionCommand()
         );
 
+        new Trigger(
+            () -> !drivestick.getHID().getRightBumperButton() && !drivestick.getHID().getYButton()
+        ).onTrue(
+            superstructure.stowCommand()
+        );
+
         drivestick.b().onTrue(
             superstructure.stowCommand()
+        );
+
+        mechstick.x().onTrue(
+            superstructure.setRequestedScoringPositionCommand(Position.L2)
+        );
+        
+        mechstick.y().onTrue(
+            superstructure.setRequestedScoringPositionCommand(Position.L3)
+        );
+
+        mechstick.b().onTrue(
+            superstructure.setRequestedScoringPositionCommand(Position.L4)
         );
     }
 

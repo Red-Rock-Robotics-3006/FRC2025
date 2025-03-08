@@ -4,10 +4,8 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.controls.CoastOut;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
-import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.GravityTypeValue;
@@ -19,9 +17,7 @@ import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import redrocklib.logging.SmartDashboardNumber;
 import redrocklib.wrappers.RedRockTalon;
 
@@ -36,8 +32,6 @@ public class Intake extends SubsystemBase{
 
     private RedRockTalon pivotMotor = new RedRockTalon(0, "intake-pivot-motor", "*");
     private RedRockTalon intakeMotor = new RedRockTalon(0, "intake-pivot-motor", "*");
-
-    private CANrange caNrange = new CANrange(0, "*");
 
     private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 0);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0);
@@ -146,8 +140,6 @@ public class Intake extends SubsystemBase{
             .withStatorCurrentLimit(60)
             .withStatorCurrentLimitEnable(true)
         );       
-
-        
     }
 
     public void setPivotResetSpeed() {
@@ -221,10 +213,6 @@ public class Intake extends SubsystemBase{
         return Math.abs((this.veloictyTarget / 60) - this.intakeMotor.motor.getVelocity().getValueAsDouble()) < this.velocityTolerance.getNumber();
     }
 
-    public boolean coralDetected() {
-        return this.caNrange.getDistance().getValueAsDouble() < this.tofThreshold.getNumber();
-    }
-
     public boolean atSlewSpikeThreshold() {
         return Math.abs(this.getTorqueCurrent()) > this.intakeMotor.getSpikeThreshold();
     }
@@ -258,11 +246,11 @@ public class Intake extends SubsystemBase{
     }
 
     public Command startIntakeCommand() {
-        return Commands.runOnce(this::startIntakeCommand, this);
+        return Commands.runOnce(this::startIntake, this);
     }
 
     public Command stopIntakeCommand() {
-        return Commands.runOnce(this::stopIntakeCommand, this);
+        return Commands.runOnce(this::stopIntake, this);
     }
 
     public Command startOutCommand() {
@@ -278,17 +266,11 @@ public class Intake extends SubsystemBase{
             this.startIntakeCommand(),
             Commands.waitUntil(() -> this.atSlewSpikeThreshold()),
             this.startCurrentStallOuttakeCommand(),
-            Commands.waitUntil(() -> this.atVelocityTarget())
-            // Commands.waitSeconds(kStallReverseTime)
+            // Commands.waitUntil(() -> this.atVelocityTarget())
+            Commands.waitSeconds(kStallReverseTime)
         );
     }
 
-    public Command intakeCoralAndHoldCommand() {
-        return Commands.deadline(
-            Commands.waitUntil(() -> this.coralDetected()), 
-            this.spasmIntakeCommand()
-        );
-    }
 
     public static Intake getInstance() {
         if (instance == null) instance = new Intake();
