@@ -102,9 +102,11 @@ public class RobotContainer {
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
 
         m_chooser.addOption("TEST AUTO 1", autos.testAuto1());
-        m_chooser.addOption("testlong1path cmds", autos.testlong1PathsCMD());
-        m_chooser.addOption("testlong1path pid cmds", autos.testlong1PathsPIDCMD());
-        
+        m_chooser.addOption("testlong path cmds", autos.testlongPathsCMD());
+        m_chooser.addOption("testlong path pid cmds", autos.testlongPathsPIDCMD());
+        m_chooser.addOption("testcuts path cmds", autos.testcutsPathsCMD());
+        m_chooser.addOption("testcuts path pid cmds", autos.testcutsPathsPIDCMD());
+            
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
 
