@@ -28,11 +28,11 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 60);
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/position/elevator-l1", 0);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/position/elevator-l2", 0);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/position/elevator-l3", 20);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/position/elevator-l4", 59);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/position/elevator-l2", 1.5);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/position/elevator-l3", 21);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/position/elevator-l4", 57.5);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/position/elevator-source", 4);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/position/elevator-coral-ground", 5);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/position/elevator-coral-ground", 17);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/position/elevator-algae-ground", 0);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/position/elevator-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/position/elevator-stow", 0);
@@ -54,13 +54,13 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/elevator-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("elevator/elevator-tuning/target", 0);
-    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 0.2);
+    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 0.3);
     private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
 
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
 
-    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 40);
+    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 15);
                                                                                                              
 
     private Elevator() {

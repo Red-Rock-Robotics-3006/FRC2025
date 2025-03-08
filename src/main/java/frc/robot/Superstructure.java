@@ -53,7 +53,8 @@ public class Superstructure {
         return new ParallelCommandGroup(
             this.endEffector.normalizeEndEffectorCommand(),
             this.arm.goToPosition(Position.STOW),
-            this.elevator.normalizeElevatorCommand()
+            this.elevator.normalizeElevatorCommand(),
+            this.intake.resetIntakePivot()
         );
     }
 
@@ -76,7 +77,9 @@ public class Superstructure {
     public Command goToReefPosition(Position pos) {
         return Commands.sequence(
             this.arm.goToPosition(Position.STOW),
+            this.endEffector.goToPosition(Position.STOW),
             Commands.waitUntil(() -> this.arm.atTarget()),
+            this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos),
             Commands.waitUntil(() -> this.elevator.atTarget()),
             this.arm.goToPosition(pos),
@@ -94,6 +97,7 @@ public class Superstructure {
             this.arm.goToPosition(pos),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
             new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && !this.arm.inSafeZone())),
+            this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos),
             this.endEffector.goToPosition(pos)
         );
@@ -118,8 +122,14 @@ public class Superstructure {
     }
 
     public Command stowCommand() {
-        return Commands.sequence(
-            this.goToReefPosition(Position.STOW),
+        return new SequentialCommandGroup(
+            this.arm.goToPosition(Position.STOW),
+            this.intake.stopIntakeCommand(),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
+            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
+            this.intake.stowIntakeCommand(),
+            this.elevator.goToPosition(Position.STOW),
+            this.endEffector.goToPosition(Position.STOW),
             this.endEffector.stopCommand()
         );
     }

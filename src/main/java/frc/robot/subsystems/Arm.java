@@ -39,13 +39,13 @@ public class Arm extends SubsystemBase {
     private final RedRockTalon armMotor = new RedRockTalon(41, "arm-motor", "*");
     private final CANcoder cancoder = new CANcoder(42, "*");
 
-    private SmartDashboardNumber minAngleDegrees = new SmartDashboardNumber("arm/min-angle", 0);
-    private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", 0);
-    private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 180);
-    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0.5);
+    private SmartDashboardNumber minAngleDegrees = new SmartDashboardNumber("arm/min-angle", -90);
+    private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", -0.25);
+    private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 225);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0.625);
 
-    private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", 0);
-    private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0);
+    private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", 0.15);
+    private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0.25);
     private Position targetPosition = Position.STOW;
 
     private static Arm instance = null;
@@ -57,10 +57,10 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 108);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 30);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", 0);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -70);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 0);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0);
-    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 82.8);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 73);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);

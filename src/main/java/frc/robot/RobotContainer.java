@@ -94,6 +94,7 @@ public class RobotContainer {
         // configureElevatorTuning();
         // configureArmTuning();
         // configureEndEffectorTuning();
+        // configureIntakeTuning();
     }
 
     public void configureSelector(){
@@ -171,8 +172,9 @@ public class RobotContainer {
     public void configureTestBindings() {
         
         RobotModeTriggers.teleop().onTrue(
-            Commands.parallel(
-                superstructure.normalizeCommand()// elevator.normalizeElevatorCommand()
+            Commands.sequence(
+                intake.stopIntakeCommand(),
+                superstructure.normalizeCommand()// elevator.normalizeElevatorCommand(),
             )
         );
 
@@ -245,6 +247,18 @@ public class RobotContainer {
 
         drivestick.leftStick().onTrue(
             Commands.runOnce(() ->drivetrain.disablePositionTargeting())
+        );
+
+        drivestick.rightTrigger(0.25).onTrue(
+            Commands.sequence(
+                superstructure.goToIntakePosition(),
+                Commands.deadline(
+                    superstructure.intakeCoral(),
+                    intake.spasmIntakeCommand()
+                )
+            )
+        ).onFalse(
+            superstructure.stowCommand()
         );
     }
 
@@ -377,6 +391,10 @@ public class RobotContainer {
         drivestick.leftBumper().onTrue(
             Intake.getInstance().spasmIntakeCommand()
         ).onFalse(Intake.getInstance().stopIntakeCommand());
+
+        drivestick.rightBumper().onTrue(
+            Intake.getInstance().resetIntakePivot()
+        );
     }
 
     private void configurePositionTuning() {
