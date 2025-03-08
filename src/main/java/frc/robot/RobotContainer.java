@@ -264,6 +264,12 @@ public class RobotContainer {
         ).onFalse(
             superstructure.stowCommand()
         );
+
+        drivestick.povUp().onTrue(
+            intake.goL1OuttakeCommand()
+        ).onFalse(
+            superstructure.stowCommand()
+        );
     }
 
     private void configureCompBindings() {
