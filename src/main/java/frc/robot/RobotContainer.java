@@ -61,8 +61,8 @@ public class RobotContainer {
     private final Intake intake = Intake.getInstance();
 
     private final AutoFactory autoFactory;
-    private final AutoRoutines autoRoutines;
-    private final AutoChooser autoChooser = new AutoChooser();
+    private final Autos autos;
+    // private final AutoChooser autoChooser = new AutoChooser();
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
 
@@ -73,18 +73,18 @@ public class RobotContainer {
         drivetrain.setSwerveRequest(this.driveFacingAngle);
 
         autoFactory = drivetrain.createAutoFactory();
-        autoRoutines = new AutoRoutines(autoFactory);
+        autos = new Autos(autoFactory);
 
-        // autoChooser.addRoutine("TestPath2 Auto", autoRoutines::testpath2Auto);
+        // autoChooser.addRoutine("TestPath2 Auto", autos::testpath2Auto);
 
-        autoChooser.addRoutine("testlong1Auto Auto", autoRoutines::testlong1Auto);
-        autoChooser.addRoutine("testlong1Paths Auto", autoRoutines::testlong1Paths);
-        autoChooser.addRoutine("testlong1PathsPID Auto", autoRoutines::testlong1PathsPID);
-        autoChooser.addRoutine("testcuts1Auto Auto", autoRoutines::testcuts1Auto);
-        autoChooser.addRoutine("testcuts1Paths Auto", autoRoutines::testcuts1Paths);
-        autoChooser.addRoutine("testcuts1PathsPID Auto", autoRoutines::testcuts1PathsPID);
+        // autoChooser.addRoutine("testlong1Auto Auto", autos::testlong1Auto);
+        // autoChooser.addRoutine("testlong1Paths Auto", autos::testlong1Paths);
+        // autoChooser.addRoutine("testlong1PathsPID Auto", autos::testlong1PathsPID);
+        // autoChooser.addRoutine("testcuts1Auto Auto", autos::testcuts1Auto);
+        // autoChooser.addRoutine("testcuts1Paths Auto", autos::testcuts1Paths);
+        // autoChooser.addRoutine("testcuts1PathsPID Auto", autos::testcuts1PathsPID);
 
-        SmartDashboard.putData("Auto Chooser", autoChooser);
+        // SmartDashboard.putData("Auto Chooser", autoChooser);
 
         configureBindings();
         configureSelector();
@@ -100,7 +100,9 @@ public class RobotContainer {
     public void configureSelector(){
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
 
-        m_chooser.addOption("TEST AUTO 1", autoRoutines.testAuto1());
+        m_chooser.addOption("TEST AUTO 1", autos.testAuto1());
+        m_chooser.addOption("testlong1path cmds", autos.testlong1PathsCMD());
+        m_chooser.addOption("testlong1path pid cmds", autos.testlong1PathsPIDCMD());
         
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
@@ -450,7 +452,7 @@ public class RobotContainer {
     public Command getAutonomousCommand() {
         /* Run the routine selected from the auto chooser */
         // return m_chooser.getSelected();
-        return autoChooser.selectedCommand();
+        return m_chooser.getSelected();
     }
 
     
