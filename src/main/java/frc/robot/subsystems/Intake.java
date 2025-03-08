@@ -26,7 +26,7 @@ import redrocklib.wrappers.RedRockTalon;
 public class Intake extends SubsystemBase{
     private static Intake instance = null;
     
-    public static final double kStallForwardTime = 0.5;
+    public static final double kStallForwardTime = 1;
     public static final double kStallReverseTime = 0.5;
 
     private SmartDashboardNumber minPivotRotation = new SmartDashboardNumber("intake/intake-min-rotation", 0.2);
@@ -39,10 +39,12 @@ public class Intake extends SubsystemBase{
     private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 22.5);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0.2);
 
-    private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 3);
+    private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 6.5);
+
+    private SmartDashboardNumber intakeAlgaeStowPosition = new SmartDashboardNumber("intake/intake-algae-stow", 3);
     
     private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 3600);
-    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -0.3);
+    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1300);
     private SmartDashboardNumber resetSpeed = new SmartDashboardNumber("intake/reset-speed", -0.05);
     private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -900);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
@@ -147,6 +149,10 @@ public class Intake extends SubsystemBase{
         target.putNumber(target.getNumber() - delta.getNumber());
     }
 
+    public void setAlgaeStow() {
+        this.setPosition(intakeAlgaeStowPosition.getNumber());
+    }
+
     public void setTarget() {
         this.setPosition(this.target.getNumber());
     }
@@ -164,6 +170,10 @@ public class Intake extends SubsystemBase{
             .withEnableFOC(true)
             .withOverrideBrakeDurNeutral(true)
         );
+    }
+
+    public void setAlgaeOuttaekSpeed() {
+        this.setIntakeSpeed(-outtakeSpeed.getNumber());
     }
 
     public void setIntakeDeploy() {
@@ -188,7 +198,8 @@ public class Intake extends SubsystemBase{
 
     public void stopIntake() {
         this.veloictyTarget = 0;
-        this.intakeMotor.motor.setControl(new DutyCycleOut(0));
+        // this.intakeMotor.motor.setControl(new DutyCycleOut(0));
+        this.setIntakeSpeed(0);
     }
 
     public void setTorqueCurrentOuttakeSpeed() {

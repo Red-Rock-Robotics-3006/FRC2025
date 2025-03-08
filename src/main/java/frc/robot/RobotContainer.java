@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -180,6 +181,8 @@ public class RobotContainer {
             )
         );
 
+        mechstick.povDown().onTrue(Commands.runOnce(() -> drivetrain.toggleHeadingPID()));
+
         drivestick.leftBumper().onTrue(
             Commands.sequence(
                 superstructure.intakeCoral()// doohickey.intakeCommand()
@@ -263,10 +266,49 @@ public class RobotContainer {
             superstructure.stowCommand()
         );
 
-        drivestick.povUp().onTrue(
+        mechstick.leftBumper().onTrue(
+            Commands.sequence(
+                drivetrain.goToPoseCommand(),
+                Commands.waitUntil(() -> drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting()),
+                Commands.print("MMMMMMM TARGET POSE REACHED")
+            )
+        );
+
+        mechstick.rightBumper().onTrue(
+            Commands.sequence(
+                drivetrain.goToPoseCommand(),
+                // Commands.waitUntil(() -> drivetrain.settled()),
+                superstructure.goToL2Command(),
+                Commands.deadline(
+                    new WaitCommand(2.5),
+                    Commands.waitUntil(() -> superstructure.atTargets())
+                ),
+
+                // Commands.waitSeconds(5),
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting()),
+                Commands.print("MMMMMMM TARGET POSE REACHED")
+            )
+        );
+
+        mechstick.povUp().onTrue(
             intake.goL1OuttakeCommand()
         ).onFalse(
             superstructure.stowCommand()
+        );
+
+        mechstick.y().onTrue(
+            Commands.runOnce(
+                () -> intake.setAlgaeStow(), intake)
+        ).onFalse(
+            Commands.runOnce(
+                () -> intake.setIntakeL1(), intake)
+        );
+
+        mechstick.b().onTrue(
+            Commands.runOnce(() -> intake.setAlgaeOuttaekSpeed(), intake)
+        ).onFalse(
+            intake.stopIntakeCommand()
         );
     }
 

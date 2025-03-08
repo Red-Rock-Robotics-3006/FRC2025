@@ -75,16 +75,39 @@ public class Superstructure {
     }
 
     public Command goToReefPosition(Position pos) {
+        // return Commands.sequence(
+        //     this.arm.goToPosition(Position.STOW),
+        //     this.endEffector.goToPosition(Position.STOW),
+        //     Commands.waitUntil(() -> this.arm.atTarget()),
+        //     this.intake.stowIntakeCommand(),
+        //     this.elevator.goToPosition(pos),
+        //     Commands.waitUntil(() -> this.elevator.atTarget()),
+        //     this.arm.goToPosition(pos),
+        //     this.endEffector.goToPosition(pos)
+        // );
+        return this.goToReefPosition(() -> pos);
+    }
+
+    public Command goToReefPosition(Supplier<Position> pos) {
         return Commands.sequence(
+            Commands.print(pos.get().toString()),
             this.arm.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
             Commands.waitUntil(() -> this.arm.atTarget()),
             this.intake.stowIntakeCommand(),
-            this.elevator.goToPosition(pos),
+            this.elevator.goToPosition(pos.get()),
             Commands.waitUntil(() -> this.elevator.atTarget()),
-            this.arm.goToPosition(pos),
-            this.endEffector.goToPosition(pos)
+            this.arm.goToPosition(pos.get()),
+            this.endEffector.goToPosition(pos.get())
         );
+    }
+
+    public Command setRequestedScoringPositionCommand(Position pos) {
+        return Commands.runOnce(() -> this.setRequestedScoringPosition(pos));
+    }
+
+    public Command goToRequestedPositionCommand() {
+        return this.goToReefPosition(() -> this.getRequestedScoringPosition());
     }
 
     /**
@@ -113,13 +136,6 @@ public class Superstructure {
         );
     }
 
-    public Command setRequestedScoringPositionCommand(Position pos) {
-        return Commands.runOnce(() -> this.setRequestedScoringPosition(pos));
-    }
-
-    public Command goToRequestedPositionCommand() {
-        return this.goToReefPosition(this.getRequestedScoringPosition());
-    }
 
     public Command stowCommand() {
         return new SequentialCommandGroup(

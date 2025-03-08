@@ -70,7 +70,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.05);
     private SmartDashboardNumber headingPIDTolerance = new SmartDashboardNumber("dt/dt-heading-pid-tolerance", 1.5);
 
-    private boolean enableHeadingPID = false;
+    private boolean enableHeadingPID = true;
     private boolean inPositionTargeting = false;
 
     private boolean usingSingleAxisDrive = false;
@@ -125,8 +125,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterX;
     private SlewRateLimiter positionRateLimiterY;
 
-    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.5);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.1); // 15
+    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.1);
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.12); // 15
     private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.3);
 
@@ -134,7 +134,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3);
 
-    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.73);
+    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.8);
     private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.83);
     private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
 
@@ -147,7 +147,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final PIDController m_pathYController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
     private final PIDController m_pathThetaController = new PIDController(rotateP.getNumber(), rotateI.getNumber(), rotateD.getNumber());
 
-    private SmartDashboardNumber pidMaxVelo = new SmartDashboardNumber("dt/dt-max-pid-velo", 0.8);
+    private SmartDashboardNumber pidMaxVelo = new SmartDashboardNumber("dt/dt-max-pid-velo", 1.7);
   
     private DriverStation.Alliance alliance = Alliance.Blue;
 
@@ -462,11 +462,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         {
             this.positionControllerX.setI(0);
             this.positionControllerX.reset();
+            System.out.println("reset integral");
         }
         if(this.positionControllerY.atSetpoint()) 
         {
             this.positionControllerY.setI(0);
             this.positionControllerY.reset();
+            System.out.println("reset integral");
         }
 
         
@@ -521,7 +523,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public boolean settled()
     {
-        return this.isTargetingPosition() && this.atTargetPose() && this.atTargetVelocity();
+        return this.atTargetPose() && this.atTargetVelocity();
     }
 
     private void setFieldCentricOffset(Rotation2d offset) {
@@ -576,6 +578,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             () -> {}, 
             (interrupted) -> System.out.println("@@@@@#@#@#@$U@#%(*&#(*%&@#(*$)))"), 
             () -> SmartDashboard.getBoolean("dt/dt-settled", false)
+            // () -> true
         );
     }
 
@@ -663,6 +666,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void setTargetPose(Pose2d pose) {
+        this.positionControllerX.reset();
+        this.positionControllerY.reset();
         this.targetPose2d = pose;
         this.setTargetHeadingDegrees(pose.getRotation().getDegrees());
     }
@@ -690,6 +695,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public boolean atTargetVelocity() {
+        SmartDashboard.putNumber("dt/velo-x-method", this.positionControllerX.getErrorDerivative());
+        SmartDashboard.putNumber("dt/velo-y-method", this.positionControllerY.getErrorDerivative());
         // return true;
         return Math.abs(this.positionControllerX.getErrorDerivative()) < this.velocityTolerance.getNumber() && Math.abs(this.positionControllerY.getErrorDerivative()) < this.velocityTolerance.getNumber();
     }
