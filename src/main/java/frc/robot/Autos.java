@@ -111,10 +111,10 @@ public class Autos {
         return routine;
     }
 
-    public Command testlong1PathsCMD() {
+    public Command testlongPathsCMD() {
         return Commands.sequence(
             factory.trajectoryCmd("testlong1"),
-            factory.trajectoryCmd("testleavefromscore")
+            factory.trajectoryCmd("testlong2")
         );
     }
 
@@ -135,12 +135,12 @@ public class Autos {
         return routine;
     }
 
-    public Command testlong1PathsPIDCMD() {
+    public Command testlongPathsPIDCMD() {
         return Commands.sequence(
             factory.trajectoryCmd("testlong1"),
-            Commands.runOnce(() -> drivetrain.setTargetPose(new Pose2d(5.73, 3.83, new Rotation2d(0)))),
+            Commands.runOnce(() -> drivetrain.setTargetPose(new Pose2d(5.8, 3.83, new Rotation2d(0)))),
             drivetrain.pidToPoseUntilCommand(() -> drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-            factory.trajectoryCmd("testleavefromscore")
+            factory.trajectoryCmd("testlong2")
         );
     }
 
@@ -182,6 +182,13 @@ public class Autos {
         return routine;
     }
 
+    public Command testcutsPathsCMD() {
+        return Commands.sequence(
+            factory.trajectoryCmd("testcuts1"),
+            factory.trajectoryCmd("testcuts2")
+        );
+    }
+
     public AutoRoutine testcuts1PathsPID() {
         final AutoRoutine routine = factory.newRoutine("Test Cuts 1 Auto Paths + PID");
         final AutoTrajectory path1 = routine.trajectory("testcuts1");
@@ -197,5 +204,14 @@ public class Autos {
             )
         );
         return routine;
+    }
+
+    public Command testcutsPathsPIDCMD() {
+        return Commands.sequence(
+            factory.trajectoryCmd("testcuts1"),
+            Commands.runOnce(() -> drivetrain.setTargetPose(new Pose2d(5.8, 3.83, new Rotation2d(0)))),
+            drivetrain.pidToPoseUntilCommand(() -> drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+            factory.trajectoryCmd("testcuts2")
+        );
     }
 }
