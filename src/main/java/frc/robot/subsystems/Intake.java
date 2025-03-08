@@ -26,7 +26,8 @@ import redrocklib.wrappers.RedRockTalon;
 public class Intake extends SubsystemBase{
     private static Intake instance = null;
     
-    public static final double kStallReverseTime = 0.6;
+    public static final double kStallForwardTime = 0.5;
+    public static final double kStallReverseTime = 0.5;
 
     private SmartDashboardNumber minPivotRotation = new SmartDashboardNumber("intake/intake-min-rotation", 0.2);
     private SmartDashboardNumber maxPivotRotation = new SmartDashboardNumber("intake/intake-max-rotation", 23);
@@ -37,12 +38,15 @@ public class Intake extends SubsystemBase{
 
     private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 22.5);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0.2);
+
+    private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 3);
     
     private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 3600);
     private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -0.3);
     private SmartDashboardNumber resetSpeed = new SmartDashboardNumber("intake/reset-speed", -0.05);
     private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -900);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
+    private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("intake/intake-position-tolerance", 0.4);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("intake/tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("intake/tuning/target", 0);
@@ -174,6 +178,14 @@ public class Intake extends SubsystemBase{
         this.setIntakeSpeed(intakeSpeed.getNumber());
     }
 
+    public void setIntakeL1() {
+        this.setPosition(intakel1position.getNumber());
+    }
+
+    public void setl1OuttakeSpeed() {
+        this.setIntakeSpeed(outtakeSpeed.getNumber());
+    }
+
     public void stopIntake() {
         this.veloictyTarget = 0;
         this.intakeMotor.motor.setControl(new DutyCycleOut(0));
@@ -191,6 +203,10 @@ public class Intake extends SubsystemBase{
 
     public boolean atVelocityTarget() {
         return Math.abs((this.veloictyTarget / 60) - this.intakeMotor.motor.getVelocity().getValueAsDouble()) < this.velocityTolerance.getNumber();
+    }
+
+    public boolean atPositionTarget() {
+        return Math.abs(this.pivotMotor.motor.getPosition().getValueAsDouble()) < positionTolerance.getNumber();
     }
 
     public boolean atSlewSpikeThreshold() {
@@ -241,14 +257,22 @@ public class Intake extends SubsystemBase{
         return Commands.runOnce(this::setTorqueCurrentOuttakeSpeed, this);
     }
 
+    public Command goL1OuttakeCommand() {
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setIntakeL1(), this),
+            Commands.waitUntil(() -> this.atPositionTarget()),
+            Commands.runOnce(() -> this.setl1OuttakeSpeed(), this)
+        );
+    }
+
     public Command spasmIntakeCommand() {
         return Commands.repeatingSequence(
             this.startIntakeCommand(),
-            Commands.waitSeconds(kStallReverseTime),
+            Commands.waitSeconds(kStallForwardTime),
             Commands.waitUntil(() -> this.atSlewSpikeThreshold()),
             this.startCurrentStallOuttakeCommand(),
-            Commands.waitUntil(() -> this.atVelocityTarget())
-            // Commands.waitSeconds(kStallReverseTime)
+            // Commands.waitUntil(() -> this.atVelocityTarget())
+            Commands.waitSeconds(kStallReverseTime)
         );
     }
 
