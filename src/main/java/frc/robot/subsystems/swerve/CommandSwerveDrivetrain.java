@@ -156,10 +156,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public static enum ScorePose {A, B, C, D, E, F, G, H, I, J, K, L}
 
-    private Pose2d[][] scorePosesBlue = new Pose2d[12][2], scorePosesRed = new Pose2d[12][2];
+    private Pose2d[][] scorePosesBlue = new Pose2d[6][2], scorePosesRed = new Pose2d[6][2];
 
-    private Map<ScorePose, Pose2d> blueReefPoseMap;
-    private Map<ScorePose, Pose2d> redReefPose;
 
     private Pose2d blueCenter = new Pose2d(4.4958, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.0175, 4.0259, new Rotation2d());
@@ -342,11 +340,30 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         Pose2d blueSeedCW = add(this.blueCenter, this.seedOffsetCW);
         Pose2d redSeedCCW = add(this.redCenter, this.seedOffsetCCW);
         Pose2d redSeedCW = add(this.redCenter, this.seedOffsetCW);
+
+        System.out.println(blueSeedCCW);
+        System.out.println(redSeedCCW);
         for (int i = 0; i < 6; i++) {
             scorePosesBlue[i][0] = rotatePose(blueSeedCW, Rotation2d.fromDegrees(i * 60), blueCenter);
             scorePosesBlue[i][1] = rotatePose(blueSeedCCW, Rotation2d.fromDegrees(i * 60), blueCenter);
             scorePosesRed[i][0] = rotatePose(redSeedCW, Rotation2d.fromDegrees(i * 60), redCenter);
             scorePosesRed[i][1] = rotatePose(redSeedCCW, Rotation2d.fromDegrees(i * 60), redCenter);
+        }
+
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(scorePosesBlue[i][j]);
+            }
+            System.out.println();
+        }
+
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(scorePosesRed[i][j]);
+            }
+            System.out.println();
         }
     }
 
@@ -521,6 +538,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("dt/dt-position-y", this.getPose().getY());
 
         SmartDashboard.putBoolean("dt/dt-using-single-axis", this.usingSingleAxisDrive);
+
+        SmartDashboard.putNumber("dt/dt-closest-side", getClosestReefSide((this.alliance == Alliance.Blue) ? blueCenter : redCenter, this.getPose()));
+        SmartDashboard.putNumber("dt/dt-choose-side", this.reefClockSide);
 
         this.field2d.setRobotPose(this.targetPose2d);
         SmartDashboard.putData("dt/dt-target-pose", this.field2d);
@@ -825,8 +845,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public static Pose2d rotatePose(Pose2d pose, Rotation2d theta, Pose2d center) {
-        double dx = center.getX() - pose.getX();
-        double dy = center.getY() - pose.getY();
+        double dx = pose.getX() - center.getX();
+        double dy = pose.getY() - center.getY();
 
         return new Pose2d(
             center.getX() + dx * theta.getCos() - dy * theta.getSin(),

@@ -114,7 +114,8 @@ public class RobotContainer {
 
     private void configureBindings() {
         configureDriveBindings();
-        configureTestBindings();
+        // configureTestBindings();
+        configureCompBindings();
     }
     
     private void configureDriveBindings() {
@@ -340,7 +341,7 @@ public class RobotContainer {
         drivestick.rightBumper().onTrue(
             Commands.sequence(
                 drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                this.rumbleControllerCommand()
+                this.rumbleControllerCommand(1, 0.15)
             )
         ).onFalse(
             Commands.sequence(
@@ -542,8 +543,12 @@ public class RobotContainer {
         return m_chooser.getSelected();
     }
 
-    public Command rumbleControllerCommand() {
-        return Commands.print("rumble");
+    public Command rumbleControllerCommand(double strength, double timeout) {
+        // return Commands.print("rumble");
+        return Commands.startEnd(
+            () -> this.drivestick.getHID().setRumble(RumbleType.kBothRumble, strength), 
+            () -> this.drivestick.getHID().setRumble(RumbleType.kBothRumble, 0)
+        ).withTimeout(timeout);
     }
 
     
