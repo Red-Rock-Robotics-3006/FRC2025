@@ -28,6 +28,7 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardBoolean;
@@ -60,6 +61,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
     private final Intake intake = Intake.getInstance();
+    private final LED leds = LED.getInstance();
 
     private final AutoFactory autoFactory;
     private final Autos autos;
