@@ -405,6 +405,18 @@ public class RobotContainer {
         mechstick.b().onTrue(
             superstructure.setRequestedScoringPositionCommand(Position.L4)
         );
+
+        mechstick.a().onTrue(
+            superstructure.setRequestedScoringPositionCommand(Position.L1)
+        );
+
+        mechstick.povLeft().onTrue(
+            Commands.runOnce(() -> drivetrain.setReefSide(0), drivetrain)
+        );
+
+        mechstick.povRight().onTrue(
+            Commands.runOnce(() -> drivetrain.setReefSide(1), drivetrain)
+        );
     }
 
     private void configureElevatorTuning() {
