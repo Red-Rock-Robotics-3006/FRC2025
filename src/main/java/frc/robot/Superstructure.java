@@ -210,6 +210,13 @@ public class Superstructure {
         return this.endEffector.stopCommand();
     }
 
+    public Command goToIntakeL1Position() {
+        return Commands.sequence(
+            Commands.runOnce(() -> intake.setIntakeL1(), intake),
+            Commands.waitUntil(() -> intake.atPositionTarget())
+        );
+    }
+
     /**
      * Abstracted full Barge scoring
      * @return a Command to do so

@@ -268,6 +268,14 @@ public class Intake extends SubsystemBase{
         return Commands.runOnce(this::setTorqueCurrentOuttakeSpeed, this);
     }
 
+    public Command intakel1andHoldCommand() {
+        return Commands.sequence(
+            this.startIntakeCommand(),
+            Commands.waitUntil(() -> this.atSlewSpikeThreshold()),
+            this.stopIntakeCommand()
+        );
+    }
+
     public Command goL1OuttakeCommand() {
         return Commands.sequence(
             Commands.runOnce(() -> this.setIntakeL1(), this),

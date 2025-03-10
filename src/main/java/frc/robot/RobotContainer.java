@@ -319,29 +319,34 @@ public class RobotContainer {
     private void configureCompBindings() {
         RobotModeTriggers.teleop().onTrue(
             Commands.parallel(
-                superstructure.normalizeCommand(),
-                intake.resetIntakePivot()
+                superstructure.normalizeCommand()
             )
         );
 
         drivestick.leftBumper().onTrue(
             Commands.sequence(
                 superstructure.goToIntakePosition(),
-                superstructure.intakeCoral(),
-                intake.spasmIntakeCommand()
+                Commands.deadline(
+                    superstructure.intakeCoral(),
+                    intake.spasmIntakeCommand()
+                )
             )
         ).onFalse(
             Commands.sequence(
-                superstructure.stowCommand(),
-                intake.stopIntakeCommand(),
-                intake.stowIntakeCommand()
+                superstructure.stowCommand()
             )
         );
 
         drivestick.rightBumper().onTrue(
-            superstructure.goToRequestedPositionCommand() //TODO add swerve thing
+            Commands.sequence(
+                drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                this.rumbleControllerCommand()
+            )
         ).onFalse(
-            superstructure.stowCommand() //TODO add swerve thing
+            Commands.sequence(
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
+                superstructure.stowCommand()
+            )
         );
 
         drivestick.leftTrigger(0.25).onTrue(
@@ -353,8 +358,26 @@ public class RobotContainer {
             superstructure.stowCommand() //TODO add swerve thing
         );
 
-        drivestick.x().onTrue(
+        drivestick.rightTrigger(0.25).onTrue(
+            Commands.sequence(
+                superstructure.goToIntakeL1Position(),
+                intake.intakel1andHoldCommand(),
+                superstructure.stowCommand()
+            )
+        ).onFalse(
+            superstructure.stowCommand()
+        );
+
+        drivestick.rightTrigger(0.25).and(drivestick.x()).onTrue(
+            intake.goL1OuttakeCommand()
+        ).onFalse(
+            superstructure.stowCommand()
+        );
+
+        drivestick.x().and(new Trigger(() -> drivestick.getHID().getRightTriggerAxis() < 0.25)).onTrue(
             superstructure.outtakeCoral()
+        ).onFalse(
+            superstructure.stowCommand()
         );
 
         drivestick.y().onTrue(
@@ -505,6 +528,10 @@ public class RobotContainer {
         /* Run the routine selected from the auto chooser */
         // return m_chooser.getSelected();
         return m_chooser.getSelected();
+    }
+
+    public Command rumbleControllerCommand() {
+        return Commands.print("rumble");
     }
 
     

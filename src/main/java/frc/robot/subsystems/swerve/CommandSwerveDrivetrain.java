@@ -713,7 +713,20 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void toggleUsingSingleAxis() {
         usingSingleAxisDrive = !usingSingleAxisDrive;
+    }
 
+    public void setNearestRequestedReefPoseTarget() {
+
+    }
+
+    public Command setNearestRequestedReefPoseTargetCommand() {
+        return new FunctionalCommand(
+            () -> {this.setNearestRequestedReefPoseTarget(); this.enablePositionTargeting();}, 
+            () -> {}, 
+            (interrupted) -> System.out.println("@@@@@#@#@#@$U@#%(*&#(*%&@#(*$)))"), 
+            () -> SmartDashboard.getBoolean("dt/dt-settled", false)
+            // () -> true
+        );
     }
 
     public double getPIDScale() {
