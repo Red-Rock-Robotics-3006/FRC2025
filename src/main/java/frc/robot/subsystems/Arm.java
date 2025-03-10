@@ -36,6 +36,9 @@ public class Arm extends SubsystemBase {
     public static final double kRotorToSensorRatio = 68 / 10 * 68 / 16 * 48 / 9;
     public static final double kSensorToMechRatio = 1;
 
+    private static final boolean kEnableMotorTuning = true;
+    private static final boolean kEnablePositionTuning = true;
+
     private final RedRockTalon armMotor = new RedRockTalon(41, "arm-motor", "*");
     private final CANcoder cancoder = new CANcoder(42, "*");
 
@@ -52,16 +55,16 @@ public class Arm extends SubsystemBase {
 
     private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.0139);
 
-    private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 118.8);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 118.8);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 108);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 30);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -70);
-    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 0);
-    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0);
-    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 73);
-    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0);
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 118.8).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 118.8).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 108).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 30).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -70).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 73).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);

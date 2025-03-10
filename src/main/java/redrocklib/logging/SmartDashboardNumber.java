@@ -6,30 +6,39 @@ public class SmartDashboardNumber {
     private double defaultValue;
     private double lastValue;
     private String key;
+    private boolean tuningEnabled = true;
 
     public SmartDashboardNumber(String key, double defaultValue){
+        this(key, defaultValue, true);
+    }
+
+    public SmartDashboardNumber(String key, double defaultValue, boolean tunable){
         this.key = key;
         this.defaultValue = defaultValue;
         this.lastValue = defaultValue;
+        this.tuningEnabled = tunable;
 
         SmartDashboard.putNumber(this.key, this.defaultValue);
     }
 
+    public SmartDashboardNumber withTuningEnabled(boolean enabled) {
+        this.tuningEnabled = enabled;
+        return this;
+    }
+    
     public void putNumber(double val){
+        this.defaultValue = val;
         SmartDashboard.putNumber(this.key, val);
     }
 
-    public void setDefaultValue(double val){
-        this.defaultValue = val;
-    }
-
     public double getNumber(){
-        this.lastValue = SmartDashboard.getNumber(this.key, this.defaultValue);
-
+        if (tuningEnabled) this.lastValue = SmartDashboard.getNumber(this.key, this.defaultValue);
+        else this.lastValue = this.defaultValue;
         return this.lastValue;
     }
 
     public boolean hasChanged(){
+        if (!tuningEnabled) return false;
         return Double.compare(this.lastValue, this.getNumber()) != 0;
     }
 }

@@ -23,20 +23,23 @@ import frc.robot.Superstructure.Position;
 
 public class Elevator extends SubsystemBase {
     private static Elevator instance = null;
+    private static boolean kEnableMotorTuning = false;
+
+    private static boolean kEnablePositionTuning = true;
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("elevator/min-rotation", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 60);
 
-    private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/position/elevator-l1", 0);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/position/elevator-l2", 1.5);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/position/elevator-l3", 21);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/position/elevator-l4", 57.5);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/position/elevator-source", 4);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/position/elevator-coral-ground", 17);
-    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/position/elevator-algae-ground", 0);
-    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/position/elevator-processor", 0);
-    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/position/elevator-stow", 0);
-    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("elevator/position/elevator-barge", 60);
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l1", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2", 1.5).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3", 21).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 57.5).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-source", 4).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 17).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-algae-ground", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-processor", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-stow", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-barge", 60).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber l1min = new SmartDashboardNumber("elevator/reef-safe-zones/l1-min", 0);
     private SmartDashboardNumber l1max = new SmartDashboardNumber("elevator/reef-safe-zones/l1-max", 0);
@@ -100,16 +103,18 @@ public class Elevator extends SubsystemBase {
         .withSlot0Configs(elevatorSlot0Configs)
         .withMotionMagicConfigs(elevatorMotionConfigs)
         .withCurrentLimitConfigs(elevatorCurrentLimitsConfigs)
-        .withSpikeThreshold(currentThreshold);
+        .withSpikeThreshold(currentThreshold)
+        .withTuningEnabled(kEnableMotorTuning);
         
         this.m_elevatorRight
         .withMotorOutputConfigs(elevatorMotorOutputConfigs)
         .withSlot0Configs(elevatorSlot0Configs)
         .withMotionMagicConfigs(elevatorMotionConfigs)
         .withCurrentLimitConfigs(elevatorCurrentLimitsConfigs)
-        .withSpikeThreshold(currentThreshold);
+        .withSpikeThreshold(currentThreshold)
+        .withTuningEnabled(kEnableMotorTuning);
 
-        this.m_elevatorRight.motor.setControl(new Follower(31, true)); // update
+        this.m_elevatorRight.motor.setControl(new Follower(m_elevatorLeft.motor.getDeviceID(), true)); // update
 
         this.m_elevatorLeft.motor.setPosition(0);
         this.m_elevatorRight.motor.setPosition(0);

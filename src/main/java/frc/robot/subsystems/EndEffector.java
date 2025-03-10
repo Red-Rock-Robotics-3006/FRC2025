@@ -42,6 +42,8 @@ public class EndEffector extends SubsystemBase {
     public static final double kCoralOuttakeWaitTime = 0.2;
     public static final double kAlgaeOUttakeWaitTime = 0.2;
 
+    public static boolean kEnableMotorTuning = false;
+
     private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
     private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
     private final CANrange timeOfFlight = new CANrange(53, "*");
@@ -133,7 +135,8 @@ public class EndEffector extends SubsystemBase {
             .withSupplyCurrentLimitEnable(true)
             .withStatorCurrentLimit(60)
             .withStatorCurrentLimitEnable(true)
-        );       
+        )
+        .withTuningEnabled(kEnableMotorTuning);
     }
 
     public void increaseTarget() {
