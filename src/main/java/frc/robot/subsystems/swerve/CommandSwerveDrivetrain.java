@@ -16,6 +16,7 @@ import com.ctre.phoenix6.swerve.utility.PhoenixPIDController;
 import choreo.Choreo.TrajectoryLogger;
 import choreo.auto.AutoFactory;
 import choreo.trajectory.SwerveSample;
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.epilogue.Logged;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
@@ -140,7 +141,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
 
 
-
+    private Field2d field2d = new Field2d();
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02);
 
@@ -155,6 +156,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private final SwerveRequest.ApplyRobotSpeeds m_pathApplyRobotSpeeds = new SwerveRequest.ApplyRobotSpeeds();
 
     public static enum ScorePose {A, B, C, D, E, F, G, H, I, J, K, L}
+
+    private Pose2d[][] scorePosesBlue = new Pose2d[6][2], scorePosesRed = new Pose2d[6][2];
+
+
+    private Pose2d blueCenter = new Pose2d(4.4958, 4.0259, new Rotation2d());
+    private Pose2d redCenter = new Pose2d(13.0175, 4.0259, new Rotation2d());
+
+    private Pose2d seedOffsetCW = new Pose2d(5.8 - 4.4958, -4.0259 + 3.83, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.8 - 4.4958, 4.0259 - 3.83, Rotation2d.kZero);
+
+    private int reefClockSide = 0;
     
     ScorePose scorePose = ScorePose.A;
 
@@ -322,6 +334,44 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         m_pathXController.setTolerance(0.001);
         m_pathYController.setTolerance(0.001);
         m_pathThetaController.setTolerance(0.1);
+
+        initializeReefPoses();
+    }
+
+    private void initializeReefPoses() {
+        Pose2d blueSeedCCW = add(this.blueCenter, this.seedOffsetCCW);
+        Pose2d blueSeedCW = add(this.blueCenter, this.seedOffsetCW);
+        Pose2d redSeedCCW = add(this.redCenter, this.seedOffsetCCW);
+        Pose2d redSeedCW = add(this.redCenter, this.seedOffsetCW);
+
+        System.out.println(blueSeedCCW);
+        System.out.println(redSeedCCW);
+        for (int i = 0; i < 6; i++) {
+            scorePosesBlue[i][0] = rotatePose(blueSeedCW, Rotation2d.fromDegrees(i * 60), blueCenter);
+            scorePosesBlue[i][1] = rotatePose(blueSeedCCW, Rotation2d.fromDegrees(i * 60), blueCenter);
+            scorePosesRed[i][0] = rotatePose(redSeedCW, Rotation2d.fromDegrees(i * 60), redCenter);
+            scorePosesRed[i][1] = rotatePose(redSeedCCW, Rotation2d.fromDegrees(i * 60), redCenter);
+        }
+
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(scorePosesBlue[i][j]);
+            }
+            System.out.println();
+        }
+
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(scorePosesRed[i][j]);
+            }
+            System.out.println();
+        }
+    }
+
+    public static Pose2d add(Pose2d a, Pose2d b) {
+        return new Pose2d(a.getX() + b.getX(), a.getY() + b.getY(), a.getRotation().plus(b.getRotation()));
     }
 
     /**
@@ -491,6 +541,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("dt/dt-position-y", this.getPose().getY());
 
         SmartDashboard.putBoolean("dt/dt-using-single-axis", this.usingSingleAxisDrive);
+
+        SmartDashboard.putNumber("dt/dt-closest-side", getClosestReefSide((this.alliance == Alliance.Blue) ? blueCenter : redCenter, this.getPose()));
+        SmartDashboard.putNumber("dt/dt-choose-side", this.reefClockSide);
+
+        this.field2d.setRobotPose(this.targetPose2d);
+        SmartDashboard.putData("dt/dt-target-pose", this.field2d);
 
         this.xVelocity.putNumber(this.positionControllerX.getErrorDerivative());
         this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
@@ -718,8 +774,23 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         usingSingleAxisDrive = !usingSingleAxisDrive;
     }
 
-    public void setNearestRequestedReefPoseTarget() {
+    /**
+     * 
+     * @param reefSide 0 for clockwise, 1 for counter clockwise
+     */
+    public void setReefSide(int reefSide) {
+        this.reefClockSide = MathUtil.clamp(reefSide, 0, 1);
+    }
 
+    public void setNearestRequestedReefPoseTarget() {
+        boolean onBlue = (this.alliance == Alliance.Blue);
+        int i = getClosestReefSide((onBlue) ? blueCenter : redCenter, this.getPose());
+        if (onBlue) {
+            this.setTargetPose(scorePosesBlue[i][this.reefClockSide]);
+        }
+        else {
+            this.setTargetPose(scorePosesRed[i][this.reefClockSide]);
+        }
     }
 
     public Command setNearestRequestedReefPoseTargetCommand() {
@@ -777,8 +848,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public static Pose2d rotatePose(Pose2d pose, Rotation2d theta, Pose2d center) {
-        double dx = center.getX() - pose.getX();
-        double dy = center.getY() - pose.getY();
+        double dx = pose.getX() - center.getX();
+        double dy = pose.getY() - center.getY();
 
         return new Pose2d(
             center.getX() + dx * theta.getCos() - dy * theta.getSin(),
