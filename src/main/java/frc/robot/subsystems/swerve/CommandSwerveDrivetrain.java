@@ -43,6 +43,7 @@ import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.Position;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import frc.robot.subsystems.swerve.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants2;
@@ -156,6 +157,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public static enum ScorePose {A, B, C, D, E, F, G, H, I, J, K, L}
     
     ScorePose scorePose = ScorePose.A;
+
+    private Climber climber = Climber.getInstance();
 
     
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */

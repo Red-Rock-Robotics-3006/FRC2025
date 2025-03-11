@@ -295,6 +295,26 @@ public class RobotContainer {
             )
         );
 
+        mechstick.x().onTrue(
+            Commands.sequence(
+                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.goToL2RemoveCommand()
+            )
+        );
+
+        mechstick.y().onTrue(
+            Commands.sequence(
+                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.goToL3RemoveCommand()
+            )
+        );
+
+        // mechstick.a().onTrue(
+            
+        // );
+
+
+
         mechstick.povUp().onTrue(
             intake.goL1OuttakeCommand()
         ).onFalse(

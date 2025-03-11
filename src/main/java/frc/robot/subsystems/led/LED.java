@@ -12,7 +12,7 @@ public class LED extends SubsystemBase{
     private static LED instance = null;
 
     private AddressableLED control = new AddressableLED(9);
-    private AddressableLEDBuffer buffer = new AddressableLEDBuffer(720);
+    private AddressableLEDBuffer buffer = new AddressableLEDBuffer(212);
     private AddressableLEDBufferView elevatorView = this.buffer.createView(0, 0);
     private AddressableLEDBufferView intakeView = this.buffer.createView(0, 0);
 
@@ -25,7 +25,7 @@ public class LED extends SubsystemBase{
     private final Color OFF = new Color(0, 0, 0);
 
     private Star[] stars = new Star[this.buffer.getLength()];
-    private final float starFreq = 0.003f;
+    private final float starFreq = 0.002f;
     // private final Color starColor = new Color(255, 40, 0);
     private final float starLowTemp = 800f;
     private final float starHighTemp = 5800f;
@@ -35,7 +35,7 @@ public class LED extends SubsystemBase{
     private LED() {
         super("LED");
         this.control.setLength(this.buffer.getLength());
-        // this.control.setColorOrder(AddressableLED.ColorOrder.kRGB);
+        this.control.setColorOrder(AddressableLED.ColorOrder.kRGB);
 
         this.setLights(INIT_YELLOW);
         this.control.setData(buffer);

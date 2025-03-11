@@ -65,6 +65,8 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 73).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("arm/position/arm-l2-algae", 145).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("arm/position/arm-l3-algae", 145).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);
@@ -175,6 +177,10 @@ public class Arm extends SubsystemBase {
                 return this.stowPosition.getNumber();
             case BARGE:
                 return this.bargePosition.getNumber();
+            case L2_ALGAE:
+                return this.l2AlgaePosition.getNumber();
+            case L3_ALGAE:
+                return this.l3AlgaePosition.getNumber();
         }
     }
 

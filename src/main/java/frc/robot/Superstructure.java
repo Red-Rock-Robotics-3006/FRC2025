@@ -38,7 +38,9 @@ public class Superstructure {
         ALGAE_GROUND,
         PROCESSOR,
         STOW,
-        BARGE
+        BARGE,
+        L2_ALGAE,
+        L3_ALGAE
     }
 
     private Superstructure() {
@@ -53,8 +55,8 @@ public class Superstructure {
         return new ParallelCommandGroup(
             this.endEffector.normalizeEndEffectorCommand(),
             this.arm.goToPosition(Position.STOW),
-            this.elevator.normalizeElevatorCommand(),
-            this.intake.resetIntakePivot()
+            this.elevator.normalizeElevatorCommand()
+            // this.intake.resetIntakePivot()
         );
     }
 
@@ -94,7 +96,7 @@ public class Superstructure {
             this.arm.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
             Commands.waitUntil(() -> this.arm.atTarget()),
-            this.intake.stowIntakeCommand(),
+            // this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos.get()),
             Commands.waitUntil(() -> this.elevator.atTarget()),
             this.arm.goToPosition(pos.get()),
@@ -120,7 +122,7 @@ public class Superstructure {
             this.arm.goToPosition(pos),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
             new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && !this.arm.inSafeZone())),
-            this.intake.stowIntakeCommand(),
+            // this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos),
             this.endEffector.goToPosition(pos)
         );
@@ -140,10 +142,10 @@ public class Superstructure {
     public Command stowCommand() {
         return new SequentialCommandGroup(
             this.arm.goToPosition(Position.STOW),
-            this.intake.stopIntakeCommand(),
+            // this.intake.stopIntakeCommand(),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
-            this.intake.stowIntakeCommand(),
+            // this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
             this.endEffector.stopCommand()
@@ -168,6 +170,14 @@ public class Superstructure {
 
     public Command goToSourceIntakePosition() {
         return this.goToPosition(Position.SOURCE);
+    }
+
+    public Command goToL2RemoveCommand() {
+        return this.goToReefPosition(Position.L2_ALGAE);
+    }
+
+    public Command goToL3RemoveCommand() {
+        return this.goToReefPosition(Position.L3_ALGAE);
     }
 
     /**
@@ -208,6 +218,10 @@ public class Superstructure {
      */
     public Command stopEndEffector() {
         return this.endEffector.stopCommand();
+    }
+
+    public Command setEndEfffectorAlgaeRemovalSpeedCommand() {
+        return this.endEffector.setAlgaeRemovalSpeedCommand();
     }
 
     public Command goToIntakeL1Position() {

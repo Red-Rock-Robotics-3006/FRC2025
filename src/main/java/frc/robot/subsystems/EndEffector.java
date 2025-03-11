@@ -57,6 +57,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.03);
     private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.2);
     private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0);
+    private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.1);
     
     private Position targetPosition = Position.STOW;
@@ -73,6 +74,8 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 0);
+    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 35.5);
+    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 35.5);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
@@ -189,6 +192,10 @@ public class EndEffector extends SubsystemBase {
                 return this.stowPosition.getNumber();
             case BARGE:
                 return this.bargePosition.getNumber();
+            case L2_ALGAE:
+                return this.l2AlgaePosition.getNumber();
+            case L3_ALGAE:
+                return this.l3AlgaePosition.getNumber();
         }
     }
 
@@ -216,6 +223,10 @@ public class EndEffector extends SubsystemBase {
 
     public void setAlgaeOuttakeSpeed() {
         this.setSpeed(this.algaeOuttakeSpeed.getNumber());
+    }
+
+    public void setAlgaeRemoveSpeed() {
+        this.setSpeed(this.algaeRemovalSpeed.getNumber());
     }
 
     public void setNormalizeSpeed() {
@@ -280,6 +291,10 @@ public class EndEffector extends SubsystemBase {
      */
     private boolean coralDetected(){
         return this.timeOfFlight.getDistance().getValueAsDouble() < this.tofThreshold.getNumber();
+    }
+
+    public Command setAlgaeRemovalSpeedCommand() {
+        return Commands.runOnce(() -> this.setAlgaeRemoveSpeed());
     }
 
     /**

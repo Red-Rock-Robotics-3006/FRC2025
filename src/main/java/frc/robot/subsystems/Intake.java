@@ -33,8 +33,8 @@ public class Intake extends SubsystemBase{
     private SmartDashboardNumber maxPivotRotation = new SmartDashboardNumber("intake/intake-max-rotation", 23);
 
 
-    private RedRockTalon pivotMotor = new RedRockTalon(62, "intake-pivot-motor", "*");
-    private RedRockTalon intakeMotor = new RedRockTalon(61, "intake-drive-motor", "*");
+    private RedRockTalon pivotMotor = new RedRockTalon(22, "intake-pivot-motor", "*");
+    private RedRockTalon intakeMotor = new RedRockTalon(21, "intake-drive-motor", "*");
 
     private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 22.5);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0.2);
