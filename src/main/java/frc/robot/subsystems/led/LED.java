@@ -12,7 +12,7 @@ public class LED extends SubsystemBase{
     private static LED instance = null;
 
     private AddressableLED control = new AddressableLED(9);
-    private AddressableLEDBuffer buffer = new AddressableLEDBuffer(212);
+    private AddressableLEDBuffer buffer = new AddressableLEDBuffer(299);
     private AddressableLEDBufferView elevatorView = this.buffer.createView(0, 0);
     private AddressableLEDBufferView intakeView = this.buffer.createView(0, 0);
 

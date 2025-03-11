@@ -5,6 +5,7 @@ import choreo.auto.AutoRoutine;
 import choreo.auto.AutoTrajectory;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -66,49 +67,22 @@ public class Autos {
         );
     }
 
-    public AutoRoutine testlong1Auto() {
-        final AutoRoutine routine = factory.newRoutine("Test Long 1 Auto Full");
-        final AutoTrajectory path1 = routine.trajectory("testlong1");
-        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
-
-        routine.active().onTrue(
-            Commands.sequence(
-                factory.resetOdometry("testlong1"),
-                path1.cmd(),
-                drivetrain.goToPoseCommand(),
-                superstructure.goToPosition(Position.L3),// elevator.goToPosition(Position.L3),
-                new WaitUntilCommand(() -> superstructure.atTargets()),//elevator.withinTargetRotation(Position.L3)),
-                // doohickey.startOuttakeCommand(),
-                new WaitCommand(1),
-                // doohickey.stopCommand(),
-                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
-                superstructure.goToPosition(Position.SOURCE),// elevator.goToPosition(Position.SOURCE),
-                path2.cmd()
-            )
+    public Command testlong1AutoCMD() {
+        return Commands.sequence(
+            factory.trajectoryCmd("testlong1"),
+            Commands.runOnce(() -> {drivetrain.setTargetPose(new Pose2d(5.8, 3.83, Rotation2d.kZero)); drivetrain.enablePositionTargeting();}, drivetrain),
+            drivetrain.setNearestRequestedReefPoseTargetCommand(),
+            superstructure.goToL4Command(),
+            Commands.deadline(
+                Commands.waitSeconds(2), 
+                Commands.waitUntil(() -> superstructure.atTargets())
+            ),
+            superstructure.outtakeCoral(),
+            superstructure.stowCommand(),
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
+            Commands.waitUntil(() -> superstructure.atTargets()),
+            factory.trajectoryCmd("testcuts2")
         );
-        return routine;
-    }
-
-    // public Command testlong1Auto() {
-    //     return Commands.sequence(
-    //         factory.trajectoryCmd("testlong1"),
-
-    //     );
-    // }
-
-    public AutoRoutine testlong1Paths() {
-        final AutoRoutine routine = factory.newRoutine("Test Long 1 Auto Paths");
-        final AutoTrajectory path1 = routine.trajectory("testlong1");
-        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
-
-        routine.active().onTrue(
-            Commands.sequence(
-                factory.resetOdometry("testlong1"),
-                path1.cmd(),
-                path2.cmd()
-            )
-        );
-        return routine;
     }
 
     public Command testlongPathsCMD() {
@@ -116,23 +90,6 @@ public class Autos {
             factory.trajectoryCmd("testlong1"),
             factory.trajectoryCmd("testlong2")
         );
-    }
-
-    public AutoRoutine testlong1PathsPID() {
-        final AutoRoutine routine = factory.newRoutine("Test Long 1 Auto Paths + PID");
-        final AutoTrajectory path1 = routine.trajectory("testlong1");
-        final AutoTrajectory path2 = routine.trajectory("testleavefromscore");
-
-        routine.active().onTrue(
-            Commands.sequence(
-                factory.resetOdometry("testlong1"),
-                path1.cmd(),
-                drivetrain.goToPoseCommand(),
-                new InstantCommand(() -> drivetrain.disablePositionTargeting()),
-                path2.cmd()
-            )
-        );
-        return routine;
     }
 
     public Command testlongPathsPIDCMD() {

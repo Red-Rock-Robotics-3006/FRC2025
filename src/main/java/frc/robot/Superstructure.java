@@ -2,6 +2,7 @@ package frc.robot;
 
 import java.util.function.Supplier;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
@@ -55,8 +56,8 @@ public class Superstructure {
         return new ParallelCommandGroup(
             this.endEffector.normalizeEndEffectorCommand(),
             this.arm.goToPosition(Position.STOW),
-            this.elevator.normalizeElevatorCommand()
-            // this.intake.resetIntakePivot()
+            this.elevator.normalizeElevatorCommand(),
+            this.intake.resetIntakePivot()
         );
     }
 
@@ -142,10 +143,10 @@ public class Superstructure {
     public Command stowCommand() {
         return new SequentialCommandGroup(
             this.arm.goToPosition(Position.STOW),
-            // this.intake.stopIntakeCommand(),
-            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
+            this.intake.stopIntakeCommand(),
+            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
-            // this.intake.stowIntakeCommand(),
+            this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
             this.endEffector.stopCommand()
@@ -226,7 +227,7 @@ public class Superstructure {
 
     public Command goToIntakeL1Position() {
         return Commands.sequence(
-            Commands.runOnce(() -> intake.setIntakeL1(), intake),
+            Commands.runOnce(() -> intake.setIntakeDeploy(), intake),
             Commands.waitUntil(() -> intake.atPositionTarget())
         );
     }
@@ -279,6 +280,10 @@ public class Superstructure {
             this.endEffector.outtakeAlgae(),
             this.goToPosition(Position.STOW)
         );
+    }
+
+    public void update() {
+        SmartDashboard.putString("requested-position", this.requestedScoringPosition.toString());
     }
     
     /**

@@ -6,6 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.Map;
+
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
@@ -25,6 +27,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.Arm;
+import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Intake;
@@ -61,6 +64,7 @@ public class RobotContainer {
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
     private final Intake intake = Intake.getInstance();
+    private final Climber climber = Climber.getInstance();
     private final LED leds = LED.getInstance();
 
     private final AutoFactory autoFactory;
@@ -103,7 +107,7 @@ public class RobotContainer {
     public void configureSelector(){
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
 
-        m_chooser.addOption("TEST AUTO 1", autos.testAuto1());
+        m_chooser.addOption("TEST AUTO 1", autos.testlong1AutoCMD());
         m_chooser.addOption("testlong path cmds", autos.testlongPathsCMD());
         m_chooser.addOption("testlong path pid cmds", autos.testlongPathsPIDCMD());
         m_chooser.addOption("testcuts path cmds", autos.testcutsPathsCMD());
@@ -256,20 +260,20 @@ public class RobotContainer {
         );
 
         drivestick.leftStick().onTrue(
-            Commands.runOnce(() ->drivetrain.disablePositionTargeting())
+            Commands.runOnce(() ->drivetrain.disablePositionTargeting(), drivetrain)
         );
 
-        drivestick.rightTrigger(0.25).onTrue(
-            Commands.sequence(
-                superstructure.goToIntakePosition(),
-                Commands.deadline(
-                    superstructure.intakeCoral(),
-                    intake.spasmIntakeCommand()
-                )
-            )
-        ).onFalse(
-            superstructure.stowCommand()
-        );
+        // drivestick.rightTrigger(0.25).onTrue(
+        //     Commands.sequence(
+        //         superstructure.goToIntakePosition(),
+        //         Commands.deadline(
+        //             superstructure.intakeCoral(),
+        //             intake.spasmIntakeCommand()
+        //         )
+        //     )
+        // ).onFalse(
+        //     superstructure.stowCommand()
+        // );
 
         mechstick.leftBumper().onTrue(
             Commands.sequence(
@@ -339,8 +343,9 @@ public class RobotContainer {
 
     private void configureCompBindings() {
         RobotModeTriggers.teleop().onTrue(
-            Commands.parallel(
-                superstructure.normalizeCommand()
+            Commands.sequence(
+                superstructure.normalizeCommand(),
+                intake.stopIntakeCommand()
             )
         );
 
@@ -360,6 +365,7 @@ public class RobotContainer {
 
         drivestick.rightBumper().onTrue(
             Commands.sequence(
+                Commands.runOnce(() -> {drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
                 drivetrain.setNearestRequestedReefPoseTargetCommand(),
                 this.rumbleControllerCommand(1, 0.15)
             )
@@ -402,13 +408,16 @@ public class RobotContainer {
         );
 
         drivestick.y().onTrue(
-            superstructure.goToRequestedPositionCommand()
-        );
-
-        new Trigger(
-            () -> !drivestick.getHID().getRightBumperButton() && !drivestick.getHID().getYButton()
-        ).onTrue(
-            superstructure.stowCommand()
+            Commands.select(
+                Map.ofEntries(
+                    Map.entry(Position.STOW, superstructure.stowCommand()),
+                    Map.entry(Position.L1, superstructure.goToL1Command()),
+                    Map.entry(Position.L2, superstructure.goToL2Command()),
+                    Map.entry(Position.L3, superstructure.goToL3Command()),
+                    Map.entry(Position.L4, superstructure.goToL4Command())
+                ),
+                () -> superstructure.getRequestedScoringPosition())
+            // superstructure.goToRequestedPositionCommand()
         );
 
         drivestick.b().onTrue(
@@ -437,6 +446,39 @@ public class RobotContainer {
 
         mechstick.povRight().onTrue(
             Commands.runOnce(() -> drivetrain.setReefSide(1), drivetrain)
+        );
+
+        mechstick.povDown().onTrue(
+            Commands.sequence(
+                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.goToL2RemoveCommand()
+            )
+        ).onFalse(
+            superstructure.stowCommand()
+        );
+
+        mechstick.povUp().onTrue(
+            Commands.sequence(
+                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.goToL3RemoveCommand()
+            )
+        ).onFalse(
+            superstructure.stowCommand()
+        );
+
+        mechstick.leftBumper().onTrue(
+            Commands.sequence(
+                Commands.runOnce(() -> Arm.getInstance().setClimbPosition(), Arm.getInstance()),
+                Commands.runOnce(() -> climber.setStowSpeed(), climber)
+            )
+        ).onFalse(
+            Commands.runOnce(() -> climber.stopClimb(), climber)
+        );
+
+        mechstick.rightBumper().onTrue(
+            Commands.runOnce(() -> climber.setDeploySpeed(), climber)
+        ).onFalse(
+            Commands.runOnce(() -> climber.stopClimb(), climber)
         );
     }
 
@@ -555,6 +597,8 @@ public class RobotContainer {
         driveFacingAngle.Deadband = drivetrain.getDriveDeadBand();
         driveFacingAngle.RotationalDeadband = drivetrain.getTurnDeadBand();
         driveFacingAngle.HeadingController.setTolerance(Math.toRadians(drivetrain.getRequestedHeadingPIDTolerance()));
+
+        superstructure.update();
     }
 
     public Command getAutonomousCommand() {

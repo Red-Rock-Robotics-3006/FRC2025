@@ -68,6 +68,8 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("arm/position/arm-l2-algae", 145).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("arm/position/arm-l3-algae", 145).withTuningEnabled(kEnablePositionTuning);
 
+    private SmartDashboardNumber climbPosition = new SmartDashboardNumber("arm/position/arm-climb", 105);
+
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);
     
@@ -119,7 +121,7 @@ public class Arm extends SubsystemBase {
             .withSupplyCurrentLimitEnable(true)
             .withStatorCurrentLimit(80)
             .withStatorCurrentLimitEnable(true)
-        );
+        ).withTuningEnabled(false);
 
         this.cancoder.getConfigurator().apply(
             new MagnetSensorConfigs()
@@ -146,6 +148,10 @@ public class Arm extends SubsystemBase {
 
     public void setPosition(double rotation) {
         this.armMotor.setMotionMagicPosition(MathUtil.clamp(rotation, minRotation.getNumber(), maxRotation.getNumber()));
+    }
+
+    public void setClimbPosition() {
+        this.goToAngle(this.climbPosition.getNumber());
     }
 
     /**

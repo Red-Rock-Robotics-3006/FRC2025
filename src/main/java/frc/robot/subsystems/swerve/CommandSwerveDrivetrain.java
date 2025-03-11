@@ -127,10 +127,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterX;
     private SlewRateLimiter positionRateLimiterY;
 
-    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.1);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.12); // 15
+    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.55);
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.89); // 15
     private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
-    private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.3);
+    private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
     private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
     private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
@@ -164,13 +164,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d redCenter = new Pose2d(13.0175, 4.0259, new Rotation2d());
 
     private Pose2d seedOffsetCW = new Pose2d(5.8 - 4.4958, -4.0259 + 3.83, Rotation2d.kZero);
-    private Pose2d seedOffsetCCW = new Pose2d(5.8 - 4.4958, 4.0259 - 3.83, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.8 - 4.4958, 4.0259 - 3.83 - 0.035, Rotation2d.kZero);
 
     private int reefClockSide = 0;
     
     ScorePose scorePose = ScorePose.A;
 
-    private Climber climber = Climber.getInstance();
 
     
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
@@ -515,13 +514,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         {
             this.positionControllerX.setI(0);
             this.positionControllerX.reset();
-            System.out.println("reset integral");
+            // System.out.println("reset integral");
         }
         if(this.positionControllerY.atSetpoint()) 
         {
             this.positionControllerY.setI(0);
             this.positionControllerY.reset();
-            System.out.println("reset integral");
+            // System.out.println("reset integral");
         }
 
         
@@ -530,12 +529,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putBoolean("dt/dt-settled", this.settled());
         SmartDashboard.putBoolean("dt/using heading pid", this.enableHeadingPID);
         SmartDashboard.putBoolean("dt/dt-is-targeting-pose", this.isTargetingPosition());
-        SmartDashboard.putNumber("dt/current heading", this.getHeadingDegrees());
-        SmartDashboard.putNumber("dt/target heading", this.getTargetHeadingDegrees());
+        // SmartDashboard.putNumber("dt/current heading", this.getHeadingDegrees());
+        // SmartDashboard.putNumber("dt/target heading", this.getTargetHeadingDegrees());
 
-        SmartDashboard.putBoolean("dt/heading-pid-at-setpoint", angleRequest.HeadingController.atSetpoint());
-        SmartDashboard.putNumber("dt/heading-pid-actual-tolerance", angleRequest.HeadingController.getPositionTolerance());
-        SmartDashboard.putNumber("dt/heading-pid-error", angleRequest.HeadingController.getPositionError());
+        // SmartDashboard.putBoolean("dt/heading-pid-at-setpoint", angleRequest.HeadingController.atSetpoint());
+        // SmartDashboard.putNumber("dt/heading-pid-actual-tolerance", angleRequest.HeadingController.getPositionTolerance());
+        // SmartDashboard.putNumber("dt/heading-pid-error", angleRequest.HeadingController.getPositionError());
 
         SmartDashboard.putNumber("dt/dt-position-x", this.getPose().getX());
         SmartDashboard.putNumber("dt/dt-position-y", this.getPose().getY());
@@ -794,13 +793,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public Command setNearestRequestedReefPoseTargetCommand() {
-        return new FunctionalCommand(
-            () -> {this.setNearestRequestedReefPoseTarget(); this.enablePositionTargeting();}, 
-            () -> {}, 
+        return Commands.deadline(
+            new FunctionalCommand(
+            () -> {},
+            () -> {System.out.println("yalalallalalalala");}, 
             (interrupted) -> System.out.println("@@@@@#@#@#@$U@#%(*&#(*%&@#(*$)))"), 
             () -> SmartDashboard.getBoolean("dt/dt-settled", false)
             // () -> true
-        );
+        ), 
+        this.pidToPoseContinuousCommand());
     }
 
     public double getPIDScale() {

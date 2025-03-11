@@ -26,8 +26,8 @@ import redrocklib.wrappers.RedRockTalon;
 public class Intake extends SubsystemBase{
     private static Intake instance = null;
     
-    public static final double kStallForwardTime = 1;
-    public static final double kStallReverseTime = 0.5;
+    public static final double kStallForwardTime = 0.5;
+    public static final double kStallReverseTime = 0.15;
 
     private SmartDashboardNumber minPivotRotation = new SmartDashboardNumber("intake/intake-min-rotation", 0.2);
     private SmartDashboardNumber maxPivotRotation = new SmartDashboardNumber("intake/intake-max-rotation", 23);
@@ -43,10 +43,10 @@ public class Intake extends SubsystemBase{
 
     private SmartDashboardNumber intakeAlgaeStowPosition = new SmartDashboardNumber("intake/intake-algae-stow", 3);
     
-    private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 3600);
+    private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 5000);
     private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1300);
     private SmartDashboardNumber resetSpeed = new SmartDashboardNumber("intake/reset-speed", -0.05);
-    private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -900);
+    private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -1200);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("intake/intake-position-tolerance", 0.4);
 
@@ -55,7 +55,7 @@ public class Intake extends SubsystemBase{
 
     private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("intake/intake-tof-threshold", 0.1);
 
-    private SmartDashboardBoolean usingMotionMagic = new SmartDashboardBoolean("intake/intake-using-mm", true);
+    private SmartDashboardBoolean usingMotionMagic = new SmartDashboardBoolean("intake/intake-using-mm", false);
 
     private double veloictyTarget = 0;
 
@@ -94,7 +94,7 @@ public class Intake extends SubsystemBase{
             .withSupplyCurrentLimitEnable(true)
             .withStatorCurrentLimit(60)
             .withStatorCurrentLimitEnable(true)
-        );       
+        ).withTuningEnabled(false);
                 
         this.intakeMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
@@ -108,7 +108,7 @@ public class Intake extends SubsystemBase{
             .withKA(0)
             .withKS(0)
             .withKV(0)
-            .withKP(0.4)
+            .withKP(0.37)
             .withKI(0)
             .withKD(0)
             .withGravityType(GravityTypeValue.Arm_Cosine)
