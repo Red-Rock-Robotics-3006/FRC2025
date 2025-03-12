@@ -33,32 +33,6 @@ public class Autos {
         drivetrain.setTargetPose(drivetrain.constructTestTargetPose());
     }
 
-    public Command testAuto1() {
-        // return factory.trajectoryCmd("New Path");
-        Command testpath2Command = factory.trajectoryCmd("testpath2");
-        return Commands.sequence(
-            factory.resetOdometry("testpath2"),
-            new InstantCommand(() -> System.out.println("hi")),
-            factory.trajectoryCmd("testpath2"),
-            testpath2Command
-        );
-    }
-
-    // public AutoRoutine testpath2Auto() {
-    //     final AutoRoutine routine = factory.newRoutine("testpath2 Auto");
-    //     final AutoTrajectory simplePath = routine.trajectory("testpath2");
-
-    //     routine.active().onTrue(
-    //         Commands.sequence(
-    //             factory.resetOdometry("testpath2"),
-    //             Commands.print("MMMMMMMMMMMMM"),
-    //             simplePath.cmd(),
-    //             Commands.print("MMMMMMMMMMMMM")
-    //         )
-    //     );
-    //     return routine;
-    // }
-
     public Command testpath2Auto() {
         return Commands.sequence(
             Commands.print("MMMMMMMMMMMMMMMM"),
@@ -67,10 +41,84 @@ public class Autos {
         );
     }
 
+    public Command leftOneL4Auto() {
+        return Commands.sequence(
+            factory.trajectoryCmd("BBML-J"),
+            Commands.parallel(
+                Commands.sequence(
+                    superstructure.goToL4Command(),
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitSeconds(0.2),
+                    Commands.print("hi")
+                ),
+                Commands.sequence(
+                    Commands.runOnce(() -> {drivetrain.setTargetPose(new Pose2d(5.03, 5.25, Rotation2d.fromDegrees(60))); drivetrain.enablePositionTargeting();}, drivetrain),
+                    drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                    Commands.deadline(
+                        Commands.waitSeconds(0.5), 
+                        drivetrain.pidToPoseContinuousCommand()
+                    ),
+                    Commands.print("by")
+                )
+            ),
+            superstructure.outtakeCoral(),
+            superstructure.stowCommand(),
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
+            Commands.waitUntil(() -> superstructure.atTargets())
+            // factory.trajectoryCmd("testlong2")
+        );
+    }
+
+    public Command middleOneL4Auto() {
+        return Commands.sequence(
+            factory.trajectoryCmd("CL-H"),
+            Commands.parallel(
+                Commands.sequence(
+                    superstructure.goToL4Command(),
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitSeconds(0.2),
+                    Commands.print("hi")
+                ),
+                Commands.sequence(
+                    Commands.runOnce(() -> {drivetrain.setTargetPose(new Pose2d(5.755, 4.18, Rotation2d.fromDegrees(0))); drivetrain.enablePositionTargeting();}, drivetrain),
+                    drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                    Commands.deadline(
+                        Commands.waitSeconds(0.5), 
+                        drivetrain.pidToPoseContinuousCommand()
+                    ),
+                    Commands.print("by")
+                )
+            ),
+            superstructure.outtakeCoral(),
+            superstructure.stowCommand(),
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
+            Commands.waitUntil(() -> superstructure.atTargets())
+            // factory.trajectoryCmd("testlong2")
+        );
+    }
+
+    public Command rightOneL4Auto() {
+        return Commands.sequence(
+            factory.trajectoryCmd("RBML-F"),
+            Commands.runOnce(() -> {drivetrain.setTargetPose(new Pose2d(5.27, 2.97, Rotation2d.fromDegrees(-60))); drivetrain.enablePositionTargeting();}, drivetrain),
+            drivetrain.setNearestRequestedReefPoseTargetCommand(),
+            superstructure.goToL4Command(),
+            Commands.deadline(
+                Commands.waitSeconds(2), 
+                Commands.waitUntil(() -> superstructure.atTargets())
+            ),
+            superstructure.outtakeCoral(),
+            superstructure.stowCommand(),
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
+            Commands.waitUntil(() -> superstructure.atTargets())
+            // factory.trajectoryCmd("testlong2")
+        );
+    }
+
     public Command testlong1AutoCMD() {
         return Commands.sequence(
             factory.trajectoryCmd("testlong1"),
-            Commands.runOnce(() -> {drivetrain.setTargetPose(new Pose2d(5.8, 3.83, Rotation2d.kZero)); drivetrain.enablePositionTargeting();}, drivetrain),
+            Commands.runOnce(() -> {drivetrain.setTargetPose(new Pose2d(5.785, 3.83, Rotation2d.kZero)); drivetrain.enablePositionTargeting();}, drivetrain),
             drivetrain.setNearestRequestedReefPoseTargetCommand(),
             superstructure.goToL4Command(),
             Commands.deadline(
@@ -81,7 +129,7 @@ public class Autos {
             superstructure.stowCommand(),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
             Commands.waitUntil(() -> superstructure.atTargets()),
-            factory.trajectoryCmd("testcuts2")
+            factory.trajectoryCmd("testlong2")
         );
     }
 

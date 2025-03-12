@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.EndEffector;
 
 public class LED extends SubsystemBase{
 
@@ -90,10 +91,19 @@ public class LED extends SubsystemBase{
     private void rainbow() {
         for (var i = 0; i < buffer.getLength(); i++) {
           final var hue = (huething + (i * 180 / buffer.getLength())) % 180;
-          buffer.setHSV(i, hue, 255, 128);
+          buffer.setHSV(i, hue, 255, 32);
         }
         huething += huethingcontrol;
         huething %= 180;
+    }
+
+    private void off() {
+        for (var i = 0; i < buffer.getLength(); i++) {
+        //   final var hue = (huething + (i * 180 / buffer.getLength())) % 180;
+          buffer.setHSV(i, 0, 0, 0);
+        }
+        // huething += huethingcontrol;
+        // huething %= 180;
     }
 
     private void initStars() {
@@ -108,15 +118,12 @@ public class LED extends SubsystemBase{
         }
     }
 
-      public void increaseHueControl() {huethingcontrol++;SmartDashboard.putNumber("huecontrol", huethingcontrol);}
-      public void decreaseHueControl() {huethingcontrol--;SmartDashboard.putNumber("huecontrol", huethingcontrol);}
+    public void increaseHueControl() {huethingcontrol++;SmartDashboard.putNumber("huecontrol", huethingcontrol);}
+    public void decreaseHueControl() {huethingcontrol--;SmartDashboard.putNumber("huecontrol", huethingcontrol);}
 
-    int blinkControl = 0;
 
     public void periodic() {
-        
         rainbow();
-        // processStars();
         this.control.setData(buffer);
     }
 

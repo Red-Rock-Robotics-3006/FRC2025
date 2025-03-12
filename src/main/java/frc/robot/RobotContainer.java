@@ -30,7 +30,7 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Climber;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
-import frc.robot.subsystems.Intake;
+// import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
@@ -63,8 +63,9 @@ public class RobotContainer {
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
-    private final Intake intake = Intake.getInstance();
+    // private final Intake intake = Intake.getInstance();
     private final Climber climber = Climber.getInstance();
+    private final EndEffector effector = EndEffector.getInstance();
     private final LED leds = LED.getInstance();
 
     private final AutoFactory autoFactory;
@@ -106,6 +107,10 @@ public class RobotContainer {
 
     public void configureSelector(){
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
+
+        m_chooser.addOption("Left 1 L4", autos.leftOneL4Auto());
+        m_chooser.addOption("Middle 1 L4", autos.middleOneL4Auto());
+        m_chooser.addOption("Right 1 L4", autos.rightOneL4Auto());
 
         m_chooser.addOption("TEST AUTO 1", autos.testlong1AutoCMD());
         m_chooser.addOption("testlong path cmds", autos.testlongPathsCMD());
@@ -185,7 +190,7 @@ public class RobotContainer {
         
         RobotModeTriggers.teleop().onTrue(
             Commands.sequence(
-                intake.stopIntakeCommand(),
+                // intake.stopIntakeCommand(),
                 superstructure.normalizeCommand()// elevator.normalizeElevatorCommand(),
             )
         );
@@ -320,48 +325,48 @@ public class RobotContainer {
 
 
 
-        mechstick.povUp().onTrue(
-            intake.goL1OuttakeCommand()
-        ).onFalse(
-            superstructure.stowCommand()
-        );
+        // mechstick.povUp().onTrue(
+        //     intake.goL1OuttakeCommand()
+        // ).onFalse(
+        //     superstructure.stowCommand()
+        // );
 
-        mechstick.y().onTrue(
-            Commands.runOnce(
-                () -> intake.setAlgaeStow(), intake)
-        ).onFalse(
-            Commands.runOnce(
-                () -> intake.setIntakeL1(), intake)
-        );
+        // mechstick.y().onTrue(
+        //     Commands.runOnce(
+        //         () -> intake.setAlgaeStow(), intake)
+        // ).onFalse(
+        //     Commands.runOnce(
+        //         () -> intake.setIntakeL1(), intake)
+        // );
 
-        mechstick.b().onTrue(
-            Commands.runOnce(() -> intake.setAlgaeOuttaekSpeed(), intake)
-        ).onFalse(
-            intake.stopIntakeCommand()
-        );
+        // mechstick.b().onTrue(
+        //     Commands.runOnce(() -> intake.setAlgaeOuttaekSpeed(), intake)
+        // ).onFalse(
+        //     intake.stopIntakeCommand()
+        // );
     }
 
     private void configureCompBindings() {
         RobotModeTriggers.teleop().onTrue(
             Commands.sequence(
-                superstructure.normalizeCommand(),
-                intake.stopIntakeCommand()
+                superstructure.normalizeCommand()
+                // intake.stopIntakeCommand()
             )
         );
 
-        drivestick.leftBumper().onTrue(
-            Commands.sequence(
-                superstructure.goToIntakePosition(),
-                Commands.deadline(
-                    superstructure.intakeCoral(),
-                    intake.spasmIntakeCommand()
-                )
-            )
-        ).onFalse(
-            Commands.sequence(
-                superstructure.stowCommand()
-            )
-        );
+        // drivestick.leftTrigger(0.25).onTrue(
+        //     Commands.sequence(
+        //         superstructure.goToIntakePosition(),
+        //         Commands.deadline(
+        //             superstructure.intakeCoral(),
+        //             intake.spasmIntakeCommand()
+        //         )
+        //     )
+        // ).onFalse(
+        //     Commands.sequence(
+        //         superstructure.stowCommand()
+        //     )
+        // );
 
         drivestick.rightBumper().onTrue(
             Commands.sequence(
@@ -376,30 +381,40 @@ public class RobotContainer {
             )
         );
 
-        drivestick.leftTrigger(0.25).onTrue(
-            Commands.sequence(
-                superstructure.goToPosition(Position.SOURCE), //TODO add swerve thing
-                superstructure.intakeCoral()
+        drivestick.leftBumper().onTrue(
+            Commands.parallel(
+                Commands.sequence(
+                    Commands.runOnce(() -> {drivetrain.setBlueRightSourceTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                    drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                    this.rumbleControllerCommand(1, 0.15)
+                ),
+                Commands.sequence(
+                    superstructure.goToSourceIntakePosition(), //TODO add swerve thing
+                    superstructure.intakeCoral()
+                )
             )
         ).onFalse(
-            superstructure.stowCommand() //TODO add swerve thing
-        );
-
-        drivestick.rightTrigger(0.25).onTrue(
             Commands.sequence(
-                superstructure.goToIntakeL1Position(),
-                intake.intakel1andHoldCommand(),
-                superstructure.stowCommand()
+                superstructure.stowCommand(), //TODO add swerve thing
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
             )
-        ).onFalse(
-            superstructure.stowCommand()
         );
 
-        drivestick.rightTrigger(0.25).and(drivestick.x()).onTrue(
-            intake.goL1OuttakeCommand()
-        ).onFalse(
-            superstructure.stowCommand()
-        );
+        // drivestick.rightTrigger(0.25).onTrue(
+        //     Commands.sequence(
+        //         superstructure.goToIntakeL1Position(),
+        //         intake.intakel1andHoldCommand(),
+        //         superstructure.stowCommand()
+        //     )
+        // ).onFalse(
+        //     superstructure.stowCommand()
+        // );
+
+        // drivestick.rightTrigger(0.25).and(drivestick.x()).onTrue(
+        //     intake.goL1OuttakeCommand()
+        // ).onFalse(
+        //     superstructure.stowCommand()
+        // );
 
         drivestick.x().and(new Trigger(() -> drivestick.getHID().getRightTriggerAxis() < 0.25)).onTrue(
             superstructure.outtakeCoral()
@@ -480,6 +495,20 @@ public class RobotContainer {
         ).onFalse(
             Commands.runOnce(() -> climber.stopClimb(), climber)
         );
+
+        mechstick.leftTrigger(0.25).onTrue(
+            // intake.intakeAlgaeAndHoldCommand()
+            superstructure.intakeAlgaeGroundCommand()
+        ).onFalse(
+            superstructure.stowCommand()
+        );
+
+        mechstick.rightTrigger(0.25).onTrue(
+            // intake.outtakeAlgaeCommand()
+            superstructure.outtakeAlgaeWithArm()
+        ).onFalse(
+            superstructure.stowCommand()
+        );
     }
 
     private void configureElevatorTuning() {
@@ -528,26 +557,26 @@ public class RobotContainer {
         );
     }
 
-    private void configureIntakeTuning() {
-        drivestick.povUp().onTrue(
-            Commands.runOnce(() -> Intake.getInstance().increaseTarget(), Intake.getInstance())
-        );
-        drivestick.povDown().onTrue(
-            Commands.runOnce(() -> Intake.getInstance().decreaseTarget(), Intake.getInstance())
-        );
+    // private void configureIntakeTuning() {
+    //     drivestick.povUp().onTrue(
+    //         Commands.runOnce(() -> Intake.getInstance().increaseTarget(), Intake.getInstance())
+    //     );
+    //     drivestick.povDown().onTrue(
+    //         Commands.runOnce(() -> Intake.getInstance().decreaseTarget(), Intake.getInstance())
+    //     );
 
-        drivestick.a().onTrue(
-            Commands.runOnce(() -> Intake.getInstance().setTarget(), Intake.getInstance())
-        );
+    //     drivestick.a().onTrue(
+    //         Commands.runOnce(() -> Intake.getInstance().setTarget(), Intake.getInstance())
+    //     );
 
-        drivestick.leftBumper().onTrue(
-            Intake.getInstance().spasmIntakeCommand()
-        ).onFalse(Intake.getInstance().stopIntakeCommand());
+    //     drivestick.leftBumper().onTrue(
+    //         Intake.getInstance().spasmIntakeCommand()
+    //     ).onFalse(Intake.getInstance().stopIntakeCommand());
 
-        drivestick.rightBumper().onTrue(
-            Intake.getInstance().resetIntakePivot()
-        );
-    }
+    //     drivestick.rightBumper().onTrue(
+    //         Intake.getInstance().resetIntakePivot()
+    //     );
+    // }
 
     private void configurePositionTuning() {
         drivestick.a().onTrue(

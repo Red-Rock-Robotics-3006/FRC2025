@@ -55,10 +55,11 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0.2);
     private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.15);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.03);
-    private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.2);
-    private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0);
+    private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.35);
+    private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0.45);
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
-    private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.1);
+    private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.5);
+    private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold-speed", 0);
     
     private Position targetPosition = Position.STOW;
 
@@ -67,15 +68,17 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 28.5);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 30);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 20);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 21);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 9);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 5);
-    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 0);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.1);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 0);
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 35.5);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 35.5);
+
+    private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("endeffector/algae-outtake-position", 17);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
@@ -100,12 +103,12 @@ public class EndEffector extends SubsystemBase {
             .withKI(0)
             .withKD(0)
         )
-        .withSpikeThreshold(55)
+        .withSpikeThreshold(45)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
             .withSupplyCurrentLimit(25)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(40)
+            .withStatorCurrentLimit(60)
             .withStatorCurrentLimitEnable(true)
         );
                 
@@ -229,6 +232,14 @@ public class EndEffector extends SubsystemBase {
         this.setSpeed(this.algaeRemovalSpeed.getNumber());
     }
 
+    public void setAlgaeHoldSpeed() {
+        this.setSpeed(this.algaeHoldSpeed.getNumber());
+    }
+
+    public void setAlgaeOuttakePosition() {
+        this.setPosition(algaeOuttakePosition.getNumber());
+    }
+
     public void setNormalizeSpeed() {
         this.wristMotor.motor.setControl(new DutyCycleOut(this.normalizeSpeed.getNumber()));
     }
@@ -256,11 +267,16 @@ public class EndEffector extends SubsystemBase {
             || Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
     }
 
+    public boolean currentSpike() {
+        return this.driveMotor.aboveSpikeThreshold();
+    }
+
     @Override
     public void periodic() {
         this.driveMotor.update();
         this.wristMotor.update();
         SmartDashboard.putNumber("endeffector/ef-canrange-val", this.timeOfFlight.getDistance().getValueAsDouble());
+        SmartDashboard.putBoolean("endeffector/coral-detected", this.coralDetected());
     }
 
     /**
@@ -289,7 +305,7 @@ public class EndEffector extends SubsystemBase {
      * Detect if Coral is present in the endeffector
      * @return true if coral is present
      */
-    private boolean coralDetected(){
+    public boolean coralDetected(){
         return this.timeOfFlight.getDistance().getValueAsDouble() < this.tofThreshold.getNumber();
     }
 

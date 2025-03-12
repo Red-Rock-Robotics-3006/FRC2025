@@ -128,7 +128,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterY;
 
     private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.55);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.89); // 15
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.7); // 15
     private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
@@ -163,8 +163,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d blueCenter = new Pose2d(4.4958, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.0175, 4.0259, new Rotation2d());
 
-    private Pose2d seedOffsetCW = new Pose2d(5.8 - 4.4958, -4.0259 + 3.83, Rotation2d.kZero);
-    private Pose2d seedOffsetCCW = new Pose2d(5.8 - 4.4958, 4.0259 - 3.83 - 0.035, Rotation2d.kZero);
+    private Pose2d blueSourceLeft = new Pose2d(1.133, 7.158, Rotation2d.fromDegrees(-54));
+    private Pose2d blueSourceRight = new Pose2d(1.133, 1.01, Rotation2d.fromDegrees(-126));
+    private Pose2d redSourceLeft = new Pose2d(16.3493, 0.8938, Rotation2d.fromDegrees(180 - 54));
+    private Pose2d redSourceRight = new Pose2d(16.3493, 7.158, Rotation2d.fromDegrees(180 + 54));
+
+    private Pose2d sourceOffset = new Pose2d(0.953, 1.131, Rotation2d.kZero);
+
+    private Pose2d fieldCenter = new Pose2d(8.75665, 4.0259, Rotation2d.kZero);
+
+    private Pose2d seedOffsetCW = new Pose2d(5.76 - 4.4958, -4.0259 + 3.83, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.76 - 4.4958, 4.0259 - 3.83 - 0.05, Rotation2d.kZero);
 
     private int reefClockSide = 0;
     
@@ -335,6 +344,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         m_pathThetaController.setTolerance(0.1);
 
         initializeReefPoses();
+        
     }
 
     private void initializeReefPoses() {
@@ -706,6 +716,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
 
     // TODO Remove stuff I added
+
+    public void setBlueRightSourceTarget() {
+        this.setTargetPose(blueSourceRight);
+    }
     
 
     public double getRotationRateDegrees() {

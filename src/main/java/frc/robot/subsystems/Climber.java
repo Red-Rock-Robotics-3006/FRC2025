@@ -21,8 +21,8 @@ public class Climber extends SubsystemBase{
 
     private RedRockTalon climbMotor = new RedRockTalon(61, "climb-motor", "*");
 
-    private SmartDashboardNumber climbSpeed = new SmartDashboardNumber("climber/climb-speed", 0.6);
-    private SmartDashboardNumber deploySpeed = new SmartDashboardNumber("climber/climb-deploy", -0.6);
+    private SmartDashboardNumber climbSpeed = new SmartDashboardNumber("climber/climb-speed", 0.75);
+    private SmartDashboardNumber deploySpeed = new SmartDashboardNumber("climber/climb-deploy", -0.75);
 
 
     private Climber() {
@@ -57,7 +57,7 @@ public class Climber extends SubsystemBase{
             .withStatorCurrentLimit(80)
             .withStatorCurrentLimitEnable(true)
         ).withSpikeThreshold(55)
-        .withTuningEnabled(true);
+        .withTuningEnabled(false);
     }
 
     public void resetClimb() {

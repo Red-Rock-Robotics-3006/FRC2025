@@ -38,14 +38,15 @@ public class Arm extends SubsystemBase {
 
     private static final boolean kEnableMotorTuning = true;
     private static final boolean kEnablePositionTuning = true;
+    private static final boolean kEnableLimitsTuning = false;
 
     private final RedRockTalon armMotor = new RedRockTalon(41, "arm-motor", "*");
     private final CANcoder cancoder = new CANcoder(42, "*");
 
-    private SmartDashboardNumber minAngleDegrees = new SmartDashboardNumber("arm/min-angle", -90);
-    private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", -0.25);
-    private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 225);
-    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0.625);
+    private SmartDashboardNumber minAngleDegrees = new SmartDashboardNumber("arm/min-angle", -90).withTuningEnabled(kEnableLimitsTuning);
+    private SmartDashboardNumber minRotation = new SmartDashboardNumber("arm/minRotation", -0.25).withTuningEnabled(kEnableLimitsTuning);
+    private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 225).withTuningEnabled(kEnableLimitsTuning);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0.625).withTuningEnabled(kEnableLimitsTuning);
 
     private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", 0.15);
     private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0.25);
@@ -53,15 +54,15 @@ public class Arm extends SubsystemBase {
 
     private static Arm instance = null;
 
-    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.0139);
+    private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.025);
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 118.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 118.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 108).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 114).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 30).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -70).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 155).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 73).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0).withTuningEnabled(kEnablePositionTuning);
@@ -69,6 +70,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("arm/position/arm-l3-algae", 145).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber climbPosition = new SmartDashboardNumber("arm/position/arm-climb", 105);
+    private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("arm/position/arm-algae-outtake", 150);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);
@@ -97,8 +99,8 @@ public class Arm extends SubsystemBase {
             .withKV(0)
             .withKP(200)
             .withKI(0)
-            .withKD(5)
-            .withKG(0.45)
+            .withKD(2)
+            .withKG(0.4)
             .withGravityType(GravityTypeValue.Arm_Cosine)
         )
         .withMotionMagicConfigs(
@@ -132,6 +134,10 @@ public class Arm extends SubsystemBase {
 
         this.armMotor.motor.getConfigurator().apply(feedbackConfigs);
 
+    }
+
+    public void setAlgaeOuttakePosition() {
+        this.goToAngle(this.algaeOuttakePosition.getNumber());
     }
 
     public void increaseTarget() {
