@@ -5,6 +5,8 @@ import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.AddressableLEDBufferView;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.EndEffector;
 
@@ -14,16 +16,21 @@ public class LED extends SubsystemBase{
 
     private AddressableLED control = new AddressableLED(9);
     private AddressableLEDBuffer buffer = new AddressableLEDBuffer(299);
-    private AddressableLEDBufferView elevatorView = this.buffer.createView(0, 0);
+    private AddressableLEDBufferView elevatorLeftView = this.buffer.createView(0, 0);
+    private AddressableLEDBufferView elevatorRightView = this.buffer.createView(0, 0);
     private AddressableLEDBufferView intakeView = this.buffer.createView(0, 0);
 
     private final Color INIT_YELLOW = new Color(255, 165, 0);
+    private final Color NOTE_ORANGE = new Color(255, 15, 0);
     private final Color WHITE = new Color(255, 255, 255);
     private final Color GREEN = new Color(0, 255, 0);
     private final Color BLUE = new Color(0, 0, 255);
     private final Color RED = new Color(255, 0, 0);
     private final Color MAGENTA = new Color(255, 0, 255);
     private final Color OFF = new Color(0, 0, 0);
+
+    private int blinkControl = 0;
+    private boolean swerveIsHoming = false;
 
     private Star[] stars = new Star[this.buffer.getLength()];
     private final float starFreq = 0.002f;
@@ -47,6 +54,24 @@ public class LED extends SubsystemBase{
         initStars();
     }
 
+    public enum LEDState {
+        SOURCE_INTAKE_HOMING,
+        SOURCE_INTAKE_READY,
+        REEF_HOMING,
+        REEF_READY,
+        HAS_CORAL,
+        IDLE
+    }
+
+    private LEDState state = LEDState.IDLE;
+
+    public void setState(LEDState s) {
+        state = s;
+    }
+
+    public Command setLEDStateCommand(LEDState s) {
+        return Commands.runOnce(() -> this.setState(s));
+    }
 
     public void setLights(int r, int g, int b) {
         if (r > 255 || g > 255 || b > 255) {
@@ -91,19 +116,10 @@ public class LED extends SubsystemBase{
     private void rainbow() {
         for (var i = 0; i < buffer.getLength(); i++) {
           final var hue = (huething + (i * 180 / buffer.getLength())) % 180;
-          buffer.setHSV(i, hue, 255, 32);
+          buffer.setHSV(i, hue, 255, 50);
         }
         huething += huethingcontrol;
         huething %= 180;
-    }
-
-    private void off() {
-        for (var i = 0; i < buffer.getLength(); i++) {
-        //   final var hue = (huething + (i * 180 / buffer.getLength())) % 180;
-          buffer.setHSV(i, 0, 0, 0);
-        }
-        // huething += huethingcontrol;
-        // huething %= 180;
     }
 
     private void initStars() {
@@ -121,9 +137,44 @@ public class LED extends SubsystemBase{
     public void increaseHueControl() {huethingcontrol++;SmartDashboard.putNumber("huecontrol", huethingcontrol);}
     public void decreaseHueControl() {huethingcontrol--;SmartDashboard.putNumber("huecontrol", huethingcontrol);}
 
+    public void blink(Color c, int freq) {
+        if (blinkControl % freq * 2 < freq) this.setLights(c);
+        else this.setLights(OFF);
+    }
+    
+    public void setSwerveIsHoming(boolean b) {
+        swerveIsHoming = b;
+    }
 
     public void periodic() {
-        rainbow();
+        blinkControl++;
+
+        if (SmartDashboard.getBoolean("dt/dt-at-target-pose", false) && swerveIsHoming && state == LEDState.SOURCE_INTAKE_HOMING) setState(LEDState.SOURCE_INTAKE_READY);
+        else if (SmartDashboard.getBoolean("dt/dt-settled", false) && swerveIsHoming && state == LEDState.REEF_HOMING) setState(LEDState.REEF_READY);
+        else if (EndEffector.getInstance().coralDetected()) setState(LEDState.HAS_CORAL);
+        else setState(LEDState.IDLE);
+
+        switch(state) {
+            case SOURCE_INTAKE_HOMING:
+                blink(BLUE, 3);
+                break;
+            case SOURCE_INTAKE_READY:
+                setLights(BLUE);
+                break;
+            case REEF_HOMING:
+                blink(GREEN, 3);
+                break;
+            case REEF_READY:
+                setLights(GREEN);
+                break;
+            case HAS_CORAL:
+                blink(NOTE_ORANGE, 7);
+                break;
+            case IDLE:
+                rainbow();
+                break;
+        }
+
         this.control.setData(buffer);
     }
 

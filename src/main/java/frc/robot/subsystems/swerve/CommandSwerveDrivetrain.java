@@ -45,6 +45,8 @@ import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.Climber;
+import frc.robot.subsystems.led.LED;
+import frc.robot.subsystems.led.LED.LEDState;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import frc.robot.subsystems.swerve.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants2;
@@ -178,6 +180,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private int reefClockSide = 0;
     
     ScorePose scorePose = ScorePose.A;
+
+    private final LED leds = LED.getInstance();
 
 
     
@@ -719,8 +723,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setBlueRightSourceTarget() {
         this.setTargetPose(blueSourceRight);
+        leds.setState(LEDState.SOURCE_INTAKE_HOMING);
     }
-    
 
     public double getRotationRateDegrees() {
         return this.getPigeon2().getRate();
@@ -772,10 +776,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void enablePositionTargeting() {
         this.inPositionTargeting = true;
+        leds.setSwerveIsHoming(true);
     }
 
     public void disablePositionTargeting() {
         this.inPositionTargeting = false;
+        leds.setSwerveIsHoming(false);
     }
 
     public double getSingleAxisMultiplier() {
@@ -804,6 +810,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         else {
             this.setTargetPose(scorePosesRed[i][this.reefClockSide]);
         }
+        leds.setState(LEDState.REEF_HOMING);
     }
 
     public Command setNearestRequestedReefPoseTargetCommand() {

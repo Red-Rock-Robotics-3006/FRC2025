@@ -11,7 +11,6 @@ import java.util.Map;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
-import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -28,9 +27,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.EndEffector;
-// import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
@@ -65,12 +61,10 @@ public class RobotContainer {
     private final Superstructure superstructure = Superstructure.getInstance();
     // private final Intake intake = Intake.getInstance();
     private final Climber climber = Climber.getInstance();
-    private final EndEffector effector = EndEffector.getInstance();
     private final LED leds = LED.getInstance();
 
     private final AutoFactory autoFactory;
     private final Autos autos;
-    // private final AutoChooser autoChooser = new AutoChooser();
 
     private SendableChooser<Command> m_chooser = new SendableChooser<>();
 
@@ -83,26 +77,8 @@ public class RobotContainer {
         autoFactory = drivetrain.createAutoFactory();
         autos = new Autos(autoFactory);
 
-        // autoChooser.addRoutine("TestPath2 Auto", autos::testpath2Auto);
-
-        // autoChooser.addRoutine("testlong1Auto Auto", autos::testlong1Auto);
-        // autoChooser.addRoutine("testlong1Paths Auto", autos::testlong1Paths);
-        // autoChooser.addRoutine("testlong1PathsPID Auto", autos::testlong1PathsPID);
-        // autoChooser.addRoutine("testcuts1Auto Auto", autos::testcuts1Auto);
-        // autoChooser.addRoutine("testcuts1Paths Auto", autos::testcuts1Paths);
-        // autoChooser.addRoutine("testcuts1PathsPID Auto", autos::testcuts1PathsPID);
-
-        // SmartDashboard.putData("Auto Chooser", autoChooser);
-
         configureBindings();
         configureSelector();
-
-        // configurePositionTuning();
-
-        // configureElevatorTuning();
-        // configureArmTuning();
-        // configureEndEffectorTuning();
-        // configureIntakeTuning();
     }
 
     public void configureSelector(){
@@ -111,12 +87,6 @@ public class RobotContainer {
         m_chooser.addOption("Left 1 L4", autos.leftOneL4Auto());
         m_chooser.addOption("Middle 1 L4", autos.middleOneL4Auto());
         m_chooser.addOption("Right 1 L4", autos.rightOneL4Auto());
-
-        m_chooser.addOption("TEST AUTO 1", autos.testlong1AutoCMD());
-        m_chooser.addOption("testlong path cmds", autos.testlongPathsCMD());
-        m_chooser.addOption("testlong path pid cmds", autos.testlongPathsPIDCMD());
-        m_chooser.addOption("testcuts path cmds", autos.testcutsPathsCMD());
-        m_chooser.addOption("testcuts path pid cmds", autos.testcutsPathsPIDCMD());
             
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
@@ -184,166 +154,6 @@ public class RobotContainer {
         drivestick.start().and(drivestick.back()).onTrue(drivetrain.resetHeadingCommand());
 
         drivetrain.registerTelemetry(logger::telemeterize);
-    }
-
-    public void configureTestBindings() {
-        
-        RobotModeTriggers.teleop().onTrue(
-            Commands.sequence(
-                // intake.stopIntakeCommand(),
-                superstructure.normalizeCommand()// elevator.normalizeElevatorCommand(),
-            )
-        );
-
-        mechstick.povDown().onTrue(Commands.runOnce(() -> drivetrain.toggleHeadingPID()));
-
-        drivestick.leftBumper().onTrue(
-            Commands.sequence(
-                superstructure.intakeCoral()// doohickey.intakeCommand()
-                // superstructure.goToSourceIntakePosition()
-            )
-        );
-
-        drivestick.leftTrigger(0.25).onTrue(
-            Commands.sequence(
-                superstructure.goToSourceIntakePosition(),
-                superstructure.intakeCoral()
-            )
-        );
-
-        drivestick.rightBumper().onTrue(
-            this.superstructure.outtakeCoral()// doohickey.startOuttakeCommand()
-        ).onFalse(
-            this.superstructure.stopEndEffector()// doohickey.stopCommand()
-        );
-
-        drivestick.a().onTrue(
-            this.superstructure.goToL1Command()
-        );
-
-        drivestick.x().onTrue(
-            this.superstructure.goToL2Command()
-        );
-
-        drivestick.y().onTrue(
-            this.superstructure.goToL3Command()
-        );
-
-        drivestick.b().onTrue(
-            // superstructure.goToL4Command()
-            this.superstructure.goToL4Command()
-        );
-
-        drivestick.povDown().onTrue(
-            superstructure.stowCommand()
-        );
-
-        drivestick.back().and(drivestick.povLeft()).onTrue(
-            superstructure.autoScoreCoral(Position.L3)
-        );
-
-        drivestick.back().and(drivestick.povRight()).onTrue(
-            new SequentialCommandGroup(
-                
-                // new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
-                // new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-                drivetrain.goToPoseCommand(),
-                Commands.print("@@@@@@@@@@@@@@@@@@@@@@@@"),
-                superstructure.autoScoreCoral(Position.L3),
-                // elevator.setL3Command(),
-                // new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
-                // doohickey.startOuttakeCommand(),
-                // new WaitCommand(1),
-                // doohickey.stopCommand(),
-                // elevator.setSourceCommand(),
-                new InstantCommand(() -> drivetrain.disablePositionTargeting())
-            )
-        );
-
-        drivestick.rightStick().onTrue(
-            superstructure.normalizeCommand()// elevator.normalizeElevatorCommand()
-        );
-
-        drivestick.leftStick().onTrue(
-            Commands.runOnce(() ->drivetrain.disablePositionTargeting(), drivetrain)
-        );
-
-        // drivestick.rightTrigger(0.25).onTrue(
-        //     Commands.sequence(
-        //         superstructure.goToIntakePosition(),
-        //         Commands.deadline(
-        //             superstructure.intakeCoral(),
-        //             intake.spasmIntakeCommand()
-        //         )
-        //     )
-        // ).onFalse(
-        //     superstructure.stowCommand()
-        // );
-
-        mechstick.leftBumper().onTrue(
-            Commands.sequence(
-                drivetrain.goToPoseCommand(),
-                Commands.waitUntil(() -> drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-                Commands.runOnce(() -> drivetrain.disablePositionTargeting()),
-                Commands.print("MMMMMMM TARGET POSE REACHED")
-            )
-        );
-
-        mechstick.rightBumper().onTrue(
-            Commands.sequence(
-                drivetrain.goToPoseCommand(),
-                // Commands.waitUntil(() -> drivetrain.settled()),
-                superstructure.goToL2Command(),
-                Commands.deadline(
-                    new WaitCommand(2.5),
-                    Commands.waitUntil(() -> superstructure.atTargets())
-                ),
-
-                // Commands.waitSeconds(5),
-                Commands.runOnce(() -> drivetrain.disablePositionTargeting()),
-                Commands.print("MMMMMMM TARGET POSE REACHED")
-            )
-        );
-
-        mechstick.x().onTrue(
-            Commands.sequence(
-                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
-                superstructure.goToL2RemoveCommand()
-            )
-        );
-
-        mechstick.y().onTrue(
-            Commands.sequence(
-                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
-                superstructure.goToL3RemoveCommand()
-            )
-        );
-
-        // mechstick.a().onTrue(
-            
-        // );
-
-
-
-        // mechstick.povUp().onTrue(
-        //     intake.goL1OuttakeCommand()
-        // ).onFalse(
-        //     superstructure.stowCommand()
-        // );
-
-        // mechstick.y().onTrue(
-        //     Commands.runOnce(
-        //         () -> intake.setAlgaeStow(), intake)
-        // ).onFalse(
-        //     Commands.runOnce(
-        //         () -> intake.setIntakeL1(), intake)
-        // );
-
-        // mechstick.b().onTrue(
-        //     Commands.runOnce(() -> intake.setAlgaeOuttaekSpeed(), intake)
-        // ).onFalse(
-        //     intake.stopIntakeCommand()
-        // );
     }
 
     private void configureCompBindings() {
@@ -511,108 +321,165 @@ public class RobotContainer {
         );
     }
 
-    private void configureElevatorTuning() {
-        drivestick.povUp().onTrue(
-            Commands.runOnce(() -> Elevator.getInstance().increaseTarget(), Elevator.getInstance())
-        );
-        drivestick.povDown().onTrue(
-            Commands.runOnce(() -> Elevator.getInstance().decreaseTarget(), Elevator.getInstance())
-        );
-
-        drivestick.a().onTrue(
-            Commands.runOnce(() -> Elevator.getInstance().setTarget(), Elevator.getInstance())
+    public void configureTestBindings() {
+        
+        RobotModeTriggers.teleop().onTrue(
+            Commands.sequence(
+                // intake.stopIntakeCommand(),
+                superstructure.normalizeCommand()// elevator.normalizeElevatorCommand(),
+            )
         );
 
-        drivestick.b().onTrue(
-            superstructure.normalizeECommand()
-        );
-    }
+        mechstick.povDown().onTrue(Commands.runOnce(() -> drivetrain.toggleHeadingPID()));
 
-    private void configureArmTuning() {
-        drivestick.povUp().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().increaseTarget(), Arm.getInstance())
-        );
-        drivestick.povDown().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().decreaseTarget(), Arm.getInstance())
+        drivestick.leftBumper().onTrue(
+            Commands.sequence(
+                superstructure.intakeCoral()// doohickey.intakeCommand()
+                // superstructure.goToSourceIntakePosition()
+            )
         );
 
-        drivestick.a().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().setTarget(), Arm.getInstance())
-        );
-    }
-
-    private void configureEndEffectorTuning() {
-        drivestick.povUp().onTrue(
-            Commands.runOnce(() -> EndEffector.getInstance().increaseTarget(), EndEffector.getInstance())
-        );
-        drivestick.povDown().onTrue(
-            Commands.runOnce(() -> EndEffector.getInstance().decreaseTarget(), EndEffector.getInstance())
-        );
-
-        drivestick.a().onTrue(
-            Commands.runOnce(() -> EndEffector.getInstance().setTarget(), EndEffector.getInstance())
-        );
-        drivestick.b().onTrue(
-            superstructure.normalizeEFCommand()
-        );
-    }
-
-    // private void configureIntakeTuning() {
-    //     drivestick.povUp().onTrue(
-    //         Commands.runOnce(() -> Intake.getInstance().increaseTarget(), Intake.getInstance())
-    //     );
-    //     drivestick.povDown().onTrue(
-    //         Commands.runOnce(() -> Intake.getInstance().decreaseTarget(), Intake.getInstance())
-    //     );
-
-    //     drivestick.a().onTrue(
-    //         Commands.runOnce(() -> Intake.getInstance().setTarget(), Intake.getInstance())
-    //     );
-
-    //     drivestick.leftBumper().onTrue(
-    //         Intake.getInstance().spasmIntakeCommand()
-    //     ).onFalse(Intake.getInstance().stopIntakeCommand());
-
-    //     drivestick.rightBumper().onTrue(
-    //         Intake.getInstance().resetIntakePivot()
-    //     );
-    // }
-
-    private void configurePositionTuning() {
-        drivestick.a().onTrue(
-            Commands.runOnce(() -> Elevator.getInstance().setTarget(), Elevator.getInstance())
-        );
-        drivestick.b().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().setTarget(), Arm.getInstance())
-        );
-        drivestick.x().onTrue(
-            Commands.runOnce(() -> EndEffector.getInstance().setTarget(), EndEffector.getInstance())
-        );
-
-        drivestick.povRight().onTrue(
-            Elevator.getInstance().normalizeElevatorCommand()
-        );
-        drivestick.povLeft().onTrue(
-            EndEffector.getInstance().normalizeEndEffectorCommand()
-        );
-
-        drivestick.povUp().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().increaseTarget())
-        );
-
-        drivestick.povDown().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().decreaseTarget())
+        drivestick.leftTrigger(0.25).onTrue(
+            Commands.sequence(
+                superstructure.goToSourceIntakePosition(),
+                superstructure.intakeCoral()
+            )
         );
 
         drivestick.rightBumper().onTrue(
-            superstructure.outtakeCoral()
+            this.superstructure.outtakeCoral()// doohickey.startOuttakeCommand()
+        ).onFalse(
+            this.superstructure.stopEndEffector()// doohickey.stopCommand()
         );
-        
-        drivestick.leftBumper().onTrue(
-            superstructure.intakeCoral()
-        );
-    }
 
+        drivestick.a().onTrue(
+            this.superstructure.goToL1Command()
+        );
+
+        drivestick.x().onTrue(
+            this.superstructure.goToL2Command()
+        );
+
+        drivestick.y().onTrue(
+            this.superstructure.goToL3Command()
+        );
+
+        drivestick.b().onTrue(
+            // superstructure.goToL4Command()
+            this.superstructure.goToL4Command()
+        );
+
+        drivestick.povDown().onTrue(
+            superstructure.stowCommand()
+        );
+
+        drivestick.back().and(drivestick.povLeft()).onTrue(
+            superstructure.autoScoreCoral(Position.L3)
+        );
+
+        drivestick.back().and(drivestick.povRight()).onTrue(
+            new SequentialCommandGroup(
+                
+                // new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
+                // new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                drivetrain.goToPoseCommand(),
+                Commands.print("@@@@@@@@@@@@@@@@@@@@@@@@"),
+                superstructure.autoScoreCoral(Position.L3),
+                // elevator.setL3Command(),
+                // new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
+                // doohickey.startOuttakeCommand(),
+                // new WaitCommand(1),
+                // doohickey.stopCommand(),
+                // elevator.setSourceCommand(),
+                new InstantCommand(() -> drivetrain.disablePositionTargeting())
+            )
+        );
+
+        drivestick.rightStick().onTrue(
+            superstructure.normalizeCommand()// elevator.normalizeElevatorCommand()
+        );
+
+        drivestick.leftStick().onTrue(
+            Commands.runOnce(() ->drivetrain.disablePositionTargeting(), drivetrain)
+        );
+
+        // drivestick.rightTrigger(0.25).onTrue(
+        //     Commands.sequence(
+        //         superstructure.goToIntakePosition(),
+        //         Commands.deadline(
+        //             superstructure.intakeCoral(),
+        //             intake.spasmIntakeCommand()
+        //         )
+        //     )
+        // ).onFalse(
+        //     superstructure.stowCommand()
+        // );
+
+        mechstick.leftBumper().onTrue(
+            Commands.sequence(
+                drivetrain.goToPoseCommand(),
+                Commands.waitUntil(() -> drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting()),
+                Commands.print("MMMMMMM TARGET POSE REACHED")
+            )
+        );
+
+        mechstick.rightBumper().onTrue(
+            Commands.sequence(
+                drivetrain.goToPoseCommand(),
+                // Commands.waitUntil(() -> drivetrain.settled()),
+                superstructure.goToL2Command(),
+                Commands.deadline(
+                    new WaitCommand(2.5),
+                    Commands.waitUntil(() -> superstructure.atTargets())
+                ),
+
+                // Commands.waitSeconds(5),
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting()),
+                Commands.print("MMMMMMM TARGET POSE REACHED")
+            )
+        );
+
+        mechstick.x().onTrue(
+            Commands.sequence(
+                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.goToL2RemoveCommand()
+            )
+        );
+
+        mechstick.y().onTrue(
+            Commands.sequence(
+                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.goToL3RemoveCommand()
+            )
+        );
+
+        // mechstick.a().onTrue(
+            
+        // );
+
+
+
+        // mechstick.povUp().onTrue(
+        //     intake.goL1OuttakeCommand()
+        // ).onFalse(
+        //     superstructure.stowCommand()
+        // );
+
+        // mechstick.y().onTrue(
+        //     Commands.runOnce(
+        //         () -> intake.setAlgaeStow(), intake)
+        // ).onFalse(
+        //     Commands.runOnce(
+        //         () -> intake.setIntakeL1(), intake)
+        // );
+
+        // mechstick.b().onTrue(
+        //     Commands.runOnce(() -> intake.setAlgaeOuttaekSpeed(), intake)
+        // ).onFalse(
+        //     intake.stopIntakeCommand()
+        // );
+    }
 
     // Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
 
@@ -644,11 +511,6 @@ public class RobotContainer {
         ).withTimeout(timeout);
     }
 
-    
-
-    private void drivetrainSetTargetPoseConstruct() {
-        drivetrain.setTargetPose(drivetrain.constructTestTargetPose());
-    }
     /* Puts a progressive response curve on a normalized analog input
        by raising input to exponent while preserving the sign 
     */
