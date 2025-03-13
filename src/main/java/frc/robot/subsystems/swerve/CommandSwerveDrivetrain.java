@@ -2,6 +2,8 @@ package frc.robot.subsystems.swerve;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -44,9 +46,6 @@ import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Superstructure.Position;
-import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.led.LED;
-import frc.robot.subsystems.led.LED.LEDState;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import frc.robot.subsystems.swerve.generated.TunerConstants.TunerSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants2;
@@ -76,6 +75,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private boolean enableHeadingPID = true;
     private boolean inPositionTargeting = false;
+    private boolean isTargetingReef = true; //true is reef, false is source
 
     private boolean usingSingleAxisDrive = false;
 
@@ -165,12 +165,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d blueCenter = new Pose2d(4.4958, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.0175, 4.0259, new Rotation2d());
 
-    private Pose2d blueSourceLeft = new Pose2d(1.133, 7.158, Rotation2d.fromDegrees(-54));
-    private Pose2d blueSourceRight = new Pose2d(1.133, 1.01, Rotation2d.fromDegrees(-126));
-    private Pose2d redSourceLeft = new Pose2d(16.3493, 0.8938, Rotation2d.fromDegrees(180 - 54));
-    private Pose2d redSourceRight = new Pose2d(16.3493, 7.158, Rotation2d.fromDegrees(180 + 54));
+    private Pose2d blueSourceLeft = new Pose2d(1.133, 7.0218, Rotation2d.fromDegrees(126));
+    private Pose2d blueSourceRight = new Pose2d(1.133, 1.03, Rotation2d.fromDegrees(-126));
+    private Pose2d redSourceLeft = new Pose2d(16.421, 1.03, Rotation2d.fromDegrees(-54));
+    private Pose2d redSourceRight = new Pose2d(16.413, 7.0218, Rotation2d.fromDegrees(54));
 
-    private Pose2d sourceOffset = new Pose2d(0.953, 1.131, Rotation2d.kZero);
+    private ArrayList<Pose2d> sourcePoses = new ArrayList<>();
+
+    private Pose2d sourceOffset = new Pose2d(1.133-0.953, 1.131-1.03, Rotation2d.kZero);
 
     private Pose2d fieldCenter = new Pose2d(8.75665, 4.0259, Rotation2d.kZero);
 
@@ -180,9 +182,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private int reefClockSide = 0;
     
     ScorePose scorePose = ScorePose.A;
-
-    private final LED leds = LED.getInstance();
-
 
     
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
@@ -381,6 +380,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
             System.out.println();
         }
+
+        sourcePoses.add(blueSourceLeft);
+        sourcePoses.add(blueSourceRight);
+        sourcePoses.add(redSourceLeft);
+        sourcePoses.add(redSourceRight);
     }
 
     public static Pose2d add(Pose2d a, Pose2d b) {
@@ -723,7 +727,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setBlueRightSourceTarget() {
         this.setTargetPose(blueSourceRight);
-        leds.setState(LEDState.SOURCE_INTAKE_HOMING);
+    }
+
+    public void setBlueLeftSourceTarget() {
+        this.setTargetPose(blueSourceLeft);
+    }
+
+    public void setNearestSourcePose() {
+        this.setTargetPose(this.getClosestSourcePose(this.getPose()));
+        this.isTargetingReef = false;
     }
 
     public double getRotationRateDegrees() {
@@ -776,12 +788,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void enablePositionTargeting() {
         this.inPositionTargeting = true;
-        leds.setSwerveIsHoming(true);
     }
 
     public void disablePositionTargeting() {
         this.inPositionTargeting = false;
-        leds.setSwerveIsHoming(false);
+    }
+
+    public boolean getPositionTargeting() {
+        return this.inPositionTargeting;
     }
 
     public double getSingleAxisMultiplier() {
@@ -810,7 +824,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         else {
             this.setTargetPose(scorePosesRed[i][this.reefClockSide]);
         }
-        leds.setState(LEDState.REEF_HOMING);
+        this.isTargetingReef = true;
+    }
+
+    public boolean getTargetingReef() {
+        return this.isTargetingReef;
     }
 
     public Command setNearestRequestedReefPoseTargetCommand() {
@@ -827,6 +845,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public double getPIDScale() {
         return pidScaleVelo.getNumber();
+    }
+
+    public Pose2d getClosestSourcePose(Pose2d robotPose) {
+        return robotPose.nearest(
+            this.sourcePoses
+        );
     }
 
     private Pose2d getClosestReefSideCenter() {

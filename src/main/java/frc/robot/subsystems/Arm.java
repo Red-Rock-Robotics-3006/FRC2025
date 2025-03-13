@@ -60,7 +60,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 118.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 114).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 30).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 28).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -70).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 155).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0).withTuningEnabled(kEnablePositionTuning);
@@ -70,7 +70,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("arm/position/arm-l3-algae", 145).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber climbPosition = new SmartDashboardNumber("arm/position/arm-climb", 105);
-    private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("arm/position/arm-algae-outtake", 150);
+    private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("arm/position/arm-algae-outtake", 155);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);

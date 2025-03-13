@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 
 public class LED extends SubsystemBase{
 
@@ -19,6 +20,8 @@ public class LED extends SubsystemBase{
     private AddressableLEDBufferView elevatorLeftView = this.buffer.createView(0, 0);
     private AddressableLEDBufferView elevatorRightView = this.buffer.createView(0, 0);
     private AddressableLEDBufferView intakeView = this.buffer.createView(0, 0);
+
+    private CommandSwerveDrivetrain swerve = CommandSwerveDrivetrain.getInstance();
 
     private final Color INIT_YELLOW = new Color(255, 165, 0);
     private final Color NOTE_ORANGE = new Color(255, 15, 0);
@@ -65,13 +68,13 @@ public class LED extends SubsystemBase{
 
     private LEDState state = LEDState.IDLE;
 
-    public void setState(LEDState s) {
-        state = s;
-    }
+    // public void setState(LEDState s) {
+    //     state = s;
+    // }
 
-    public Command setLEDStateCommand(LEDState s) {
-        return Commands.runOnce(() -> this.setState(s));
-    }
+    // public Command setLEDStateCommand(LEDState s) {
+    //     return Commands.runOnce(() -> this.setState(s));
+    // }
 
     public void setLights(int r, int g, int b) {
         if (r > 255 || g > 255 || b > 255) {
@@ -142,33 +145,33 @@ public class LED extends SubsystemBase{
         else this.setLights(OFF);
     }
     
-    public void setSwerveIsHoming(boolean b) {
-        swerveIsHoming = b;
-    }
+    // public void setSwerveIsHoming(boolean b) {
+    //     swerveIsHoming = b;
+    // }
 
     public void periodic() {
         blinkControl++;
 
-        if (SmartDashboard.getBoolean("dt/dt-at-target-pose", false) && swerveIsHoming && state == LEDState.SOURCE_INTAKE_HOMING) setState(LEDState.SOURCE_INTAKE_READY);
-        else if (SmartDashboard.getBoolean("dt/dt-settled", false) && swerveIsHoming && state == LEDState.REEF_HOMING) setState(LEDState.REEF_READY);
-        else if (EndEffector.getInstance().coralDetected()) setState(LEDState.HAS_CORAL);
-        else setState(LEDState.IDLE);
+        if (swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.REEF_HOMING;
+        else if (EndEffector.getInstance().coralDetected()) state = LEDState.HAS_CORAL;
+        else if (!swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.SOURCE_INTAKE_HOMING;
+        else state = LEDState.IDLE;
 
         switch(state) {
             case SOURCE_INTAKE_HOMING:
-                blink(BLUE, 3);
+                blink(BLUE, 7);
                 break;
             case SOURCE_INTAKE_READY:
                 setLights(BLUE);
                 break;
             case REEF_HOMING:
-                blink(GREEN, 3);
+                blink(GREEN, 7);
                 break;
             case REEF_READY:
                 setLights(GREEN);
                 break;
             case HAS_CORAL:
-                blink(NOTE_ORANGE, 7);
+                blink(NOTE_ORANGE, 14);
                 break;
             case IDLE:
                 rainbow();

@@ -13,8 +13,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
-// import frc.robot.subsystems.Intake;
-import frc.robot.subsystems.led.LED;
+import frc.robot.subsystems.Intake;
 
 /* TODO
  * Tune scoreBarge delays
@@ -25,7 +24,7 @@ public class Superstructure {
     private Arm arm = Arm.getInstance();
     private EndEffector endEffector = EndEffector.getInstance();
 
-    // private Intake intake = Intake.getInstance();
+    private Intake intake = Intake.getInstance();
     
     private static Superstructure instance = null;
 
@@ -58,8 +57,8 @@ public class Superstructure {
         return new ParallelCommandGroup(
             this.endEffector.normalizeEndEffectorCommand(),
             this.arm.goToPosition(Position.STOW),
-            this.elevator.normalizeElevatorCommand()
-            // this.intake.resetIntakePivot()
+            this.elevator.normalizeElevatorCommand(),
+            this.intake.resetIntakePivot()
         );
     }
 
@@ -99,7 +98,7 @@ public class Superstructure {
             this.arm.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
             Commands.waitUntil(() -> this.arm.atTarget()),
-            // this.intake.stowIntakeCommand(),
+            this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos.get()),
             Commands.waitUntil(() -> this.elevator.atTarget()),
             this.arm.goToPosition(pos.get()),
@@ -153,24 +152,24 @@ public class Superstructure {
         );
     }
 
-    // public Command goToIntakePosition() {
-    //     return Commands.sequence(
-    //         this.intake.deployIntakeCommand(),
-    //         this.endEffector.goToPosition(Position.CORAL_GROUND),
-    //         this.elevator.goToPosition(Position.CORAL_GROUND),
-    //         Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
-    //         this.arm.goToPosition(Position.CORAL_GROUND)
-    //     );
-    // }
+    public Command goToIntakePosition() {
+        return Commands.sequence(
+            this.intake.deployIntakeCommand(),
+            this.endEffector.goToPosition(Position.CORAL_GROUND),
+            this.elevator.goToPosition(Position.CORAL_GROUND),
+            Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
+            this.arm.goToPosition(Position.CORAL_GROUND)
+        );
+    }
 
 
     public Command stowCommand() {
         return new SequentialCommandGroup(
             this.arm.goToPosition(Position.STOW),
-            // this.intake.stopIntakeCommand(),
+            this.intake.stopIntakeCommand(),
             new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
-            // this.intake.stowIntakeCommand(),
+            this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
             this.endEffector.stopCommand()
@@ -249,12 +248,12 @@ public class Superstructure {
         return this.endEffector.setAlgaeRemovalSpeedCommand();
     }
 
-    // public Command goToIntakeL1Position() {
-    //     return Commands.sequence(
-    //         Commands.runOnce(() -> intake.setIntakeDeploy(), intake),
-    //         Commands.waitUntil(() -> intake.atPositionTarget())
-    //     );
-    // }
+    public Command goToIntakeL1Position() {
+        return Commands.sequence(
+            Commands.runOnce(() -> intake.setIntakeDeploy(), intake)
+            // Commands.waitUntil(() -> intake.atPositionTarget())
+        );
+    }
 
     /**
      * Abstracted full Barge scoring

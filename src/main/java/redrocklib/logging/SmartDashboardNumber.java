@@ -3,6 +3,8 @@ package redrocklib.logging;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class SmartDashboardNumber {
+    public static final boolean kEnableDashboardTuning = true;
+
     private double defaultValue;
     private double lastValue;
     private String key;
@@ -16,13 +18,13 @@ public class SmartDashboardNumber {
         this.key = key;
         this.defaultValue = defaultValue;
         this.lastValue = defaultValue;
-        this.tuningEnabled = tunable;
+        this.withTuningEnabled(tunable);
 
         SmartDashboard.putNumber(this.key, this.defaultValue);
     }
 
     public SmartDashboardNumber withTuningEnabled(boolean enabled) {
-        this.tuningEnabled = enabled;
+        this.tuningEnabled = kEnableDashboardTuning && enabled;
         return this;
     }
     
