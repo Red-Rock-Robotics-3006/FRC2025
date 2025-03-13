@@ -25,12 +25,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Superstructure.Position;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.*;
 import frc.robot.subsystems.led.LED;
-import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardBoolean;
@@ -153,9 +149,9 @@ public class RobotContainer {
             new InstantCommand(drivetrain::toggleHeadingPID, drivetrain)
         );
 
-        drivestick.rightStick().onTrue(
-            new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
-        );
+        // drivestick.rightStick().onTrue(
+        //     new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
+        // );
 
         // drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
@@ -342,6 +338,10 @@ public class RobotContainer {
         ).onFalse(
             superstructure.stowCommand()
         );
+
+        // mechstick.back().onTrue(
+        //     Commands.runOnce(() -> drivetrain.togglePositionTargetOverride(), drivetrain)
+        // );
     }
 
     public void configureTestBindings() {

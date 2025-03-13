@@ -76,6 +76,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private boolean enableHeadingPID = true;
     private boolean inPositionTargeting = false;
     private boolean isTargetingReef = true; //true is reef, false is source
+    private boolean positionTargetOverride = false;
 
     private boolean usingSingleAxisDrive = false;
 
@@ -558,6 +559,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         SmartDashboard.putNumber("dt/dt-position-y", this.getPose().getY());
 
         SmartDashboard.putBoolean("dt/dt-using-single-axis", this.usingSingleAxisDrive);
+        SmartDashboard.putBoolean("dt/dt-position-target-override", this.positionTargetOverride);
 
         SmartDashboard.putNumber("dt/dt-closest-side", getClosestReefSide((this.alliance == Alliance.Blue) ? blueCenter : redCenter, this.getPose()));
         SmartDashboard.putNumber("dt/dt-choose-side", this.reefClockSide);
@@ -706,6 +708,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.enableHeadingPID = !this.enableHeadingPID;
     }
 
+    public void togglePositionTargetOverride() {
+        this.positionTargetOverride = !this.positionTargetOverride;
+    }
+
     /**
      * Returns drivetrain heading PID coefficients in the form of a double array with array.length == 3
      * 
@@ -787,7 +793,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void enablePositionTargeting() {
-        this.inPositionTargeting = true;
+        this.inPositionTargeting = !positionTargetOverride;
     }
 
     public void disablePositionTargeting() {

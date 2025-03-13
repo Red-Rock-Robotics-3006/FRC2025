@@ -15,8 +15,6 @@ public class Autos {
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
 
-    private ChoreoAllianceFlipUtil.Flipper flipper = ChoreoAllianceFlipUtil.Flipper.MIRRORED;
-
     public Autos(AutoFactory f) {
         factory = f;
     }
