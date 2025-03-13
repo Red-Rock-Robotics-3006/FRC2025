@@ -366,21 +366,21 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             scorePosesRed[i][1] = rotatePose(redSeedCCW, Rotation2d.fromDegrees(i * 60), redCenter);
         }
 
-        for (int i = 0; i < 6; i++) {
-            System.out.println(i);
-            for (int j = 0; j < 2; j++) {
-                System.out.println(scorePosesBlue[i][j]);
-            }
-            System.out.println();
-        }
+        // for (int i = 0; i < 6; i++) {
+        //     System.out.println(i);
+        //     for (int j = 0; j < 2; j++) {
+        //         System.out.println(scorePosesBlue[i][j]);
+        //     }
+        //     System.out.println();                                      jnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+        // }
 
-        for (int i = 0; i < 6; i++) {
-            System.out.println(i);
-            for (int j = 0; j < 2; j++) {
-                System.out.println(scorePosesRed[i][j]);
-            }
-            System.out.println();
-        }
+        // for (int i = 0; i < 6; i++) {
+        //     System.out.println(i);
+        //     for (int j = 0; j < 2; j++) {
+        //         System.out.println(scorePosesRed[i][j]);
+        //     }
+        //     System.out.println();
+        // }
 
         sourcePoses.add(blueSourceLeft);
         sourcePoses.add(blueSourceRight);

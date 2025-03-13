@@ -187,7 +187,8 @@ public class RobotContainer {
                 Commands.deadline(
                     superstructure.intakeCoral(),
                     intake.spasmIntakeCommand()
-                )
+                ),
+                this.rumbleControllerCommand(1, 0.6)
             )
         ).onFalse(
             Commands.sequence(
@@ -339,9 +340,13 @@ public class RobotContainer {
             superstructure.stowCommand()
         );
 
-        // mechstick.back().onTrue(
-        //     Commands.runOnce(() -> drivetrain.togglePositionTargetOverride(), drivetrain)
-        // );
+        mechstick.back().onTrue(
+            Commands.runOnce(() -> drivetrain.togglePositionTargetOverride(), drivetrain)
+        );
+
+        mechstick.start().onTrue(
+            Commands.runOnce(() -> leds.resetLEDs(), leds)
+        );
     }
 
     public void configureTestBindings() {
