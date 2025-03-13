@@ -1,6 +1,8 @@
 package frc.robot;
 
+import choreo.Choreo;
 import choreo.auto.AutoFactory;
+import choreo.util.ChoreoAllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -12,6 +14,8 @@ public class Autos {
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
+
+    private ChoreoAllianceFlipUtil.Flipper flipper = ChoreoAllianceFlipUtil.Flipper.MIRRORED;
 
     public Autos(AutoFactory f) {
         factory = f;
@@ -78,7 +82,7 @@ public class Autos {
 
             factory.resetOdometry("CL-G"),
             factory.trajectoryCmd("CL-G"),
-            goToScoreAutoCommand(new Pose2d(5.755, 3.83, Rotation2d.fromDegrees(0))),
+            goToScoreAutoCommand(new Pose2d(5.755, 3.84, Rotation2d.fromDegrees(0))),
             superstructure.outtakeCoral(),
             superstructure.stowCommand(),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
@@ -129,38 +133,6 @@ public class Autos {
             factory.trajectoryCmd("EL-RSM"),
             factory.resetOdometry("RSML-D"),
             factory.trajectoryCmd("RSML-D")
-        );
-    }
-
-    public Command testSource1Auto() {
-        return Commands.sequence(
-            factory.resetOdometry("testtosource1"),
-            factory.trajectoryCmd("testtosource1"),
-            goToIntakeAutoCommand()
-        );
-    }
-
-    public Command testSource2Auto() {
-        return Commands.sequence(
-            factory.resetOdometry("testtosource2"),
-            factory.trajectoryCmd("testtosource2"),
-            goToIntakeAutoCommand()
-        );
-    }
-
-    public Command testSource3Auto() {
-        return Commands.sequence(
-            factory.resetOdometry("testtosource3"),
-            factory.trajectoryCmd("testtosource3"),
-            goToIntakeAutoCommand()
-        );
-    }
-
-    public Command testSource4Auto() {
-        return Commands.sequence(
-            factory.resetOdometry("testtosource4"),
-            factory.trajectoryCmd("testtosource4"),
-            goToIntakeAutoCommand()
         );
     }
 

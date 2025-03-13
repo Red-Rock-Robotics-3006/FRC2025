@@ -95,11 +95,6 @@ public class RobotContainer {
 
         m_chooser.addOption("Middle 2 L4 Paths", autos.middleTwoL4Paths());
         m_chooser.addOption("JustGiveItAName Paths", autos.justGiveItANamePaths());
-
-        m_chooser.addOption("Source 1", autos.testSource1Auto());
-        m_chooser.addOption("Source 2", autos.testSource2Auto());
-        m_chooser.addOption("Source 3", autos.testSource3Auto());
-        m_chooser.addOption("Source 4", autos.testSource4Auto());
             
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
