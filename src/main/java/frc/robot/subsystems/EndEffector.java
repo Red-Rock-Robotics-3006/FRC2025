@@ -1,0 +1,402 @@
+package frc.robot.subsystems;
+
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.ToFParamsConfigs;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.VelocityVoltage;
+import com.ctre.phoenix6.hardware.CANrange;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.FunctionalCommand;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+import redrocklib.wrappers.RedRockTalon;
+import redrocklib.logging.SmartDashboardNumber;
+import frc.robot.Superstructure.Position;
+
+/* TODO
+ * Tune speeds
+ * Tune tolerance
+ * Find positions & combine accordingly
+ * Tune Slot0s
+ * Tune MMs
+ * Tune spikeThresholds
+ * Tune outtake delays
+ * Tune scoreBarge
+ * Implement double-jointed Slot0 angle sensing (How?)
+ */
+
+public class EndEffector extends SubsystemBase {
+    public static final double kCoralOuttakeWaitTime = 0.2;
+    public static final double kAlgaeOUttakeWaitTime = 0.2;
+
+    public static boolean kEnableMotorTuning = false;
+
+    private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
+    private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
+    private final CANrange timeOfFlight = new CANrange(53, "*");
+
+    private SmartDashboardNumber minRotation = new SmartDashboardNumber("endeffector/min-rotation", 0);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 40);
+
+    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0.25);
+    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0.2);
+    private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.09);
+    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.03);
+    private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.35);
+    private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0.45);
+    private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
+    private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.5);
+    private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold-speed", 0);
+    
+    private Position targetPosition = Position.STOW;
+
+    private static EndEffector instance = null;
+
+    private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 28.5);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 30);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 21);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 9);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 5);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.1);
+    private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 0);
+    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 35.5);
+    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 35.5);
+
+    private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("endeffector/algae-outtake-position", 17);
+
+    private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
+    private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
+
+    
+
+    private EndEffector(){
+        super("End Effector");
+        this.driveMotor.withMotorOutputConfigs(
+            new MotorOutputConfigs()
+            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withPeakForwardDutyCycle(1d)
+            .withPeakReverseDutyCycle(-1d)
+            .withNeutralMode(NeutralModeValue.Brake)
+        )
+        .withSlot0Configs(
+            new Slot0Configs()
+            .withKA(0)
+            .withKS(0)
+            .withKV(0)
+            .withKP(0.1)
+            .withKI(0)
+            .withKD(0)
+        )
+        .withSpikeThreshold(40)
+        .withCurrentLimitConfigs(
+            new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(25)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimitEnable(true)
+        );
+                
+        this.wristMotor.withMotorOutputConfigs(
+            new MotorOutputConfigs()
+            .withInverted(InvertedValue.Clockwise_Positive)
+            .withPeakForwardDutyCycle(1d)
+            .withPeakReverseDutyCycle(-1d)
+            .withNeutralMode(NeutralModeValue.Brake)
+        )
+        .withSlot0Configs(
+            new Slot0Configs()
+            .withKA(0)
+            .withKS(0)
+            .withKV(0)
+            .withKP(6)
+            .withKI(0)
+            .withKD(0)
+        )
+        .withMotionMagicConfigs(
+            new MotionMagicConfigs()
+            .withMotionMagicAcceleration(1000)
+            .withMotionMagicCruiseVelocity(200)
+            .withMotionMagicJerk(10000000)
+        )
+        .withSpikeThreshold(30)
+        .withCurrentLimitConfigs(
+            new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(45)
+            .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimitEnable(true)
+        )
+        .withTuningEnabled(kEnableMotorTuning);
+    }
+
+    public void increaseTarget() {
+        target.putNumber(target.getNumber() + delta.getNumber());
+      }
+    
+    public void decreaseTarget() {
+        target.putNumber(target.getNumber() - delta.getNumber());
+    }
+
+    public void setTarget() {
+        this.setPosition(this.target.getNumber());
+    }
+
+    public void setPosition(double rotation) {
+        this.wristMotor.setMotionMagicPosition(MathUtil.clamp(rotation, minRotation.getNumber(), maxRotation.getNumber()));
+    }
+
+    public void setPosition(Position pos) {
+        this.targetPosition = pos;
+        this.wristMotor.setMotionMagicPosition(convertPosition(pos));
+    }
+
+    /**
+     * Converts a Position to its corresponding value
+     * @param pos the Position to convert
+     * @return the numerical value
+     */
+    private double convertPosition(Position pos)
+    {
+        switch (pos) {
+            case L1:
+                return this.l1Position.getNumber();
+            case L2:
+                return this.l2Position.getNumber();
+            case L3:
+                return this.l3Position.getNumber();
+            case L4:
+                return this.l4Position.getNumber();
+            case SOURCE:
+                return this.sourcePosition.getNumber();
+            case CORAL_GROUND:
+                return this.coralGroundPosition.getNumber();
+            case ALGAE_GROUND:
+                return this.algaeGroundPosition.getNumber();
+            case PROCESSOR:
+                return this.processorPosition.getNumber();
+            default: // Unreachable; Just to keep the compiler from complaining
+            case STOW:
+                return this.stowPosition.getNumber();
+            case BARGE:
+                return this.bargePosition.getNumber();
+            case L2_ALGAE:
+                return this.l2AlgaePosition.getNumber();
+            case L3_ALGAE:
+                return this.l3AlgaePosition.getNumber();
+        }
+    }
+
+    /**
+     * Set the drive speed to a specified power
+     * @param speed the power to drive at
+     */
+    private void setSpeed(double speed){
+        this.driveMotor.motor.setControl(
+            new DutyCycleOut(speed)
+        );
+    }
+
+    public void setCoralIntakeSpeed() {
+        this.setSpeed(this.coralIntakeSpeed.getNumber());
+    }
+
+    public void setCoralOuttakeSpeed() {
+        this.setSpeed(this.coralOuttakeSpeed.getNumber());
+    }
+
+    public void setAlgaeIntakeSpeed() {
+        this.setSpeed(this.algaeIntakeSpeed.getNumber());
+    }
+
+    public void setAlgaeOuttakeSpeed() {
+        this.setSpeed(this.algaeOuttakeSpeed.getNumber());
+    }
+
+    public void setAlgaeRemoveSpeed() {
+        this.setSpeed(this.algaeRemovalSpeed.getNumber());
+    }
+
+    public void setAlgaeHoldSpeed() {
+        this.setSpeed(this.algaeHoldSpeed.getNumber());
+    }
+
+    public void setAlgaeOuttakePosition() {
+        this.setPosition(algaeOuttakePosition.getNumber());
+    }
+
+    public void setNormalizeSpeed() {
+        this.wristMotor.motor.setControl(new DutyCycleOut(this.normalizeSpeed.getNumber()));
+    }
+
+    public void stop() {
+        this.driveMotor.motor.setControl(new VelocityVoltage(0)
+        .withEnableFOC(true)
+        .withSlot(0)
+        .withOverrideBrakeDurNeutral(true));
+    }
+
+    public void resetWrist() {
+        this.wristMotor.motor.setControl(new NeutralOut());
+        this.wristMotor.motor.setPosition(0);
+    }
+    
+    /**
+     * Check if the endeffector is at target position
+     * @return true if the endeffector is on target
+     */
+    public boolean atTarget(){
+        // return Math.abs(this.convertPosition(this.targetPosition)
+        //     - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
+        return Math.abs(this.driveMotor.motor.getClosedLoopError().getValueAsDouble()) < this.wristTolerance.getNumber() 
+            || Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
+    }
+
+    public boolean currentSpike() {
+        return this.driveMotor.aboveSpikeThreshold();
+    }
+
+    @Override
+    public void periodic() {
+        this.driveMotor.update();
+        this.wristMotor.update();
+        SmartDashboard.putNumber("endeffector/ef-canrange-val", this.timeOfFlight.getDistance().getValueAsDouble());
+        SmartDashboard.putBoolean("endeffector/coral-detected", this.coralDetected());
+    }
+
+    /**
+     * Move the endeffector to a Position
+     * @param pos the Position to move to
+     * @return a Command to do so
+     */
+    public Command goToPosition(Position pos){
+        return Commands.runOnce(
+            () -> this.setPosition(convertPosition(pos)),
+            this);
+    }
+
+    /**
+     * Dispense Algae with momentum into the Barge
+     * @return
+     */
+    public Command scoreBarge(){
+        return new ParallelCommandGroup(
+            this.goToPosition(Position.PROCESSOR), // Should open up algae
+            this.outtakeAlgae()
+        ); // Will have to be tuned experimentally
+    };
+
+    /**
+     * Detect if Coral is present in the endeffector
+     * @return true if coral is present
+     */
+    public boolean coralDetected(){
+        return this.timeOfFlight.getDistance().getValueAsDouble() < this.tofThreshold.getNumber();
+    }
+
+    public Command setAlgaeRemovalSpeedCommand() {
+        return Commands.runOnce(() -> this.setAlgaeRemoveSpeed());
+    }
+
+    /**
+     * Auto intake Coral
+     * @return a Command to do so
+     */
+    public Command intakeCoral(){
+        return new FunctionalCommand(
+            () -> this.setCoralIntakeSpeed(),
+            () -> {},
+            (interrupted) -> this.stop(),
+            () -> this.coralDetected(),
+            this
+        );
+    }
+
+    /**
+     * Auto intake Algae
+     * @return a Command to do so
+     */
+    public Command intakeAlgae(){
+        return new FunctionalCommand(
+            () -> this.setSpeed(this.algaeIntakeSpeed.getNumber()),
+            () -> {},
+            (interrupted) -> this.stop(),
+            () -> this.driveMotor.aboveSpikeThreshold(),
+            this
+        );
+    }
+
+    /**
+     * Auto dispense Coral
+     * @return a Command to do so
+     */
+    public Command outtakeCoral(){
+        return new SequentialCommandGroup(
+            new InstantCommand(this::setCoralOuttakeSpeed, this),
+            new WaitUntilCommand(() -> !this.coralDetected()),
+            new WaitCommand(kCoralOuttakeWaitTime),
+            this.stopCommand()
+        );
+    }
+
+    /**
+     * Auto dispense Algae
+     * @return a Command to do so
+     */
+    public Command outtakeAlgae(){
+        return new SequentialCommandGroup(
+            new InstantCommand(this::setAlgaeIntakeSpeed, this),
+            new WaitCommand(kAlgaeOUttakeWaitTime),
+            this.stopCommand()
+        );
+    }
+
+    public Command stopCommand(){
+        return this.runOnce(() -> this.stop());
+    }
+
+    /**
+     * Move the endeffector to a normal position and zero it
+     * @return a Command to do so
+     */
+    public Command normalizeEndEffectorCommand(){
+        return new SequentialCommandGroup(
+            new FunctionalCommand(
+                () -> this.setNormalizeSpeed(),
+                () -> {},
+                (interrupted) -> this.resetWrist(),
+                () -> this.wristMotor.aboveSpikeThreshold(),
+                this
+            )
+            // ,
+            // this.goToPosition(this.targetPosition)
+        );
+    }
+
+    /**
+     * Get singleton instance
+     * @return the EndEffector
+     */
+    public static EndEffector getInstance()
+    {
+        if(instance == null)
+            instance = new EndEffector();
+        return instance;
+    }
+}
