@@ -73,6 +73,7 @@ public class RobotContainer {
     public RobotContainer() {
         drivetrain.setSwerveRequest(this.driveFacingAngle);
         drivetrain.setDriveController(this.drivestick);
+        drivetrain.setDriveRequest(this.drive);
 
         autoFactory = drivetrain.createAutoFactory();
         autos = new Autos(autoFactory);
@@ -215,16 +216,20 @@ public class RobotContainer {
 
         drivestick.leftBumper().onTrue(
             Commands.parallel(
+                // Commands.sequence(
+                //     Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
+                //     Commands.either(
+                //         drivetrain.pidToPoseContinuousCommand(), 
+                //         drivetrain.driveFacingAngleContinuousCommand(), 
+                //         () -> drivetrain.getPositionTargeting()
+                //     )
+                //     // drivetrain.pidToPoseContinuousCommand()
+                //     // drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                //     // this.rumbleControllerCommand(1, 0.15)
+                // ),
                 Commands.sequence(
-                    Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    Commands.either(
-                        drivetrain.pidToPoseContinuousCommand(), 
-                        drivetrain.driveFacingAngleContinuousCommand(), 
-                        () -> drivetrain.getPositionTargeting()
-                    )
-                    // drivetrain.pidToPoseContinuousCommand()
-                    // drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                    // this.rumbleControllerCommand(1, 0.15)
+                    Commands.runOnce(() -> drivetrain.setNearestSourcePoseTargetHeading(), drivetrain),
+                    drivetrain.driveFacingAngleContinuousCommand()
                 ),
                 Commands.sequence(
                     superstructure.goToSourceIntakePosition(), //TODO add swerve thing

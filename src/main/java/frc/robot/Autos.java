@@ -235,22 +235,24 @@ public class Autos {
     }
 
     public Command goToScoreAutoCommand(int reefSide) {
-        return Commands.parallel(
-            Commands.sequence(
-                superstructure.goToL4Command(),
-                Commands.waitUntil(() -> superstructure.atTargets()),
-                Commands.waitSeconds(0.8)
+        return Commands.sequence(
+            Commands.deadline(
+                Commands.sequence(
+                    superstructure.goToL4Command(),
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitSeconds(0.8)
+                ),
+                Commands.sequence(
+                    Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                    // drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                    // Commands.deadline(
+                    //     Commands.waitSeconds(0.5), 
+                    //     drivetrain.pidToPoseContinuousCommand()
+                    // ),
+                    drivetrain.pidToPoseContinuousCommand()
+                )
             ),
-            Commands.sequence(
-                Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                // drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                // Commands.deadline(
-                //     Commands.waitSeconds(0.5), 
-                //     drivetrain.pidToPoseContinuousCommand()
-                // ),
-                drivetrain.pidToPoseContinuousCommand(),
-                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
-            )
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
         );
     }
 
