@@ -209,8 +209,8 @@ public class RobotContainer {
             )
         ).onFalse(
             Commands.sequence(
-                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-                superstructure.stowCommand()
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+                // superstructure.stowCommand()
             )
         );
 

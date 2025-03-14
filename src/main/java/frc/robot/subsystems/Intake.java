@@ -27,7 +27,7 @@ public class Intake extends SubsystemBase{
     private static Intake instance = null;
     
     public static final double kStallForwardTime = 0.45;
-    public static final double kStallReverseTime = 0.11;
+    public static final double kStallReverseTime = 0.16;
 
     private SmartDashboardNumber minPivotRotation = new SmartDashboardNumber("intake/intake-min-rotation", 0.2);
     private SmartDashboardNumber maxPivotRotation = new SmartDashboardNumber("intake/intake-max-rotation", 25);
