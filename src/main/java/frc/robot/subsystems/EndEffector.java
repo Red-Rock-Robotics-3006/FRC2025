@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import redrocklib.wrappers.RedRockTalon;
+import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
 import frc.robot.Superstructure.Position;
 
@@ -52,7 +53,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("endeffector/min-rotation", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 40);
 
-    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0.25);
+    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", 0.2);
     private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0.2);
     private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.09);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.03);
@@ -69,7 +70,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 28.5);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 30);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 21);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 19);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 9);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 5);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.1);
@@ -84,7 +85,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
 
-    
+    private SmartDashboardBoolean usingVeloVoltage = new SmartDashboardBoolean("endeffector/ef-using-velo-voltage", true);
 
     private EndEffector(){
         super("End Effector");
@@ -100,7 +101,7 @@ public class EndEffector extends SubsystemBase {
             .withKA(0)
             .withKS(0)
             .withKV(0)
-            .withKP(0.1)
+            .withKP(0.35)
             .withKI(0)
             .withKD(0)
         )
@@ -144,6 +145,8 @@ public class EndEffector extends SubsystemBase {
             .withStatorCurrentLimitEnable(true)
         )
         .withTuningEnabled(kEnableMotorTuning);
+
+        this.wristMotor.motor.setPosition(0);
     }
 
     public void increaseTarget() {
@@ -246,10 +249,12 @@ public class EndEffector extends SubsystemBase {
     }
 
     public void stop() {
-        this.driveMotor.motor.setControl(new VelocityVoltage(0)
-        .withEnableFOC(true)
-        .withSlot(0)
-        .withOverrideBrakeDurNeutral(true));
+        if (usingVeloVoltage.getValue())
+            this.driveMotor.motor.setControl(new VelocityVoltage(0)
+            .withEnableFOC(true)
+            .withSlot(0)
+            .withOverrideBrakeDurNeutral(true));
+        else this.driveMotor.motor.setControl(new DutyCycleOut(0));
     }
 
     public void resetWrist() {

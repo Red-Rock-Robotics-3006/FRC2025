@@ -44,7 +44,9 @@ import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.RobotContainer;
 import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import frc.robot.subsystems.swerve.generated.TunerConstants.TunerSwerveDrivetrain;
@@ -135,6 +137,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
+    private SmartDashboardNumber sourcePositionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.5);
+    private SmartDashboardNumber sourcePositionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.4); // 15
+    private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
+    private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
+
+    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.5);
+    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.4); // 15
+    private SmartDashboardNumber autoePositionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
+    private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
+
     private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
     private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3);
@@ -169,7 +181,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d blueSourceLeft = new Pose2d(1.133, 7.0218, Rotation2d.fromDegrees(126));
     private Pose2d blueSourceRight = new Pose2d(1.133, 1.03, Rotation2d.fromDegrees(-126));
     private Pose2d redSourceLeft = new Pose2d(16.421, 1.03, Rotation2d.fromDegrees(-54));
-    private Pose2d redSourceRight = new Pose2d(16.413, 7.0218, Rotation2d.fromDegrees(54));
+    private Pose2d redSourceRight = new Pose2d(16.421, 7.0218, Rotation2d.fromDegrees(54));
 
     private ArrayList<Pose2d> sourcePoses = new ArrayList<>();
 
@@ -183,6 +195,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private int reefClockSide = 0;
     
     ScorePose scorePose = ScorePose.A;
+
+    private boolean inAuto = false;
+
+    private CommandXboxController controller;
 
     
     /* SysId routine for characterizing translation. This is used to find PID gains for the drive motors. */
@@ -489,6 +505,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return m_sysIdRoutineToApply.dynamic(direction);
     }
 
+    public void setIsAuto() {
+
+    }
+
     @Override
     public void periodic() {
         /*
@@ -521,11 +541,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             this.angleRequest.HeadingController.setI(0);
             this.angleRequest.HeadingController.reset();
         }
-        this.positionControllerX.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
-        this.positionControllerY.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
 
-        positionControllerX.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
-        positionControllerY.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
+        if (!isTargetingReef) {
+            this.positionControllerX.setPID(sourcePositionKp.getNumber(), sourcePositionKi.getNumber(), sourcePositionKd.getNumber());
+            this.positionControllerY.setPID(sourcePositionKp.getNumber(), sourcePositionKi.getNumber(), sourcePositionKd.getNumber());
+
+            this.positionControllerX.setIntegratorRange(-sourcePositionIRange.getNumber(), sourcePositionIRange.getNumber());
+            this.positionControllerY.setIntegratorRange(-sourcePositionIRange.getNumber(), sourcePositionIRange.getNumber());
+
+            System.out.println("sigh aye guh ma");
+        } else {
+            this.positionControllerX.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
+            this.positionControllerY.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
+    
+            positionControllerX.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
+            positionControllerY.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
+        }
 
         this.positionControllerX.setTolerance(positionTolerance.getNumber());
         this.positionControllerY.setTolerance(positionTolerance.getNumber());
@@ -560,6 +591,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         SmartDashboard.putBoolean("dt/dt-using-single-axis", this.usingSingleAxisDrive);
         SmartDashboard.putBoolean("dt/dt-position-target-override", this.positionTargetOverride);
+        SmartDashboard.putBoolean("dt/dt-target-reef", this.isTargetingReef);
 
         SmartDashboard.putNumber("dt/dt-closest-side", getClosestReefSide((this.alliance == Alliance.Blue) ? blueCenter : redCenter, this.getPose()));
         SmartDashboard.putNumber("dt/dt-choose-side", this.reefClockSide);
@@ -659,6 +691,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void setTargetHeadingDegrees(double degrees){
         this.targetHeadingDegrees = degrees;
+    }
+
+    public void setDriveController(CommandXboxController contoller) {
+        this.controller = contoller;
     }
 
     public double getHeadingDegrees(){
@@ -876,6 +912,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             () -> angleRequest.withVelocityX(MathUtil.clamp(this.getPositionPIDValueX() * this.getPIDScale(), -this.getMaxPIDVelocity(), this.getMaxPIDVelocity()))
                                             .withVelocityY(MathUtil.clamp(this.getPositionPIDValueY() * this.getPIDScale(), -this.getMaxPIDVelocity(), this.getMaxPIDVelocity()))
                                             .withTargetDirection(Rotation2d.fromDegrees(this.getTargetHeadingDegrees()))
+        );
+    }
+
+    public Command driveFacingAngleContinuousCommand() {
+        double[] drivestickValues = RobotContainer.rotateBy(-controller.getLeftY(), -controller.getLeftX(), this.getFieldCentricOffset());
+        return this.applyRequest(
+            () -> angleRequest.withVelocityX(RobotContainer.progressiveInput(drivestickValues[0],RobotContainer.progressiveDriveExponent) * this.getMaxDriveSpeed())
+            .withVelocityY(RobotContainer.progressiveInput(drivestickValues[1], RobotContainer.progressiveDriveExponent, true) * this.getMaxDriveSpeed())
+            .withTargetDirection(Rotation2d.fromDegrees(this.getTargetHeadingDegrees()))
         );
     }
 

@@ -59,7 +59,7 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/elevator-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("elevator/elevator-tuning/target", 0);
-    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 0.6);
+    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 1.5);
     private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
 
     private Position targetPosition = Position.STOW;

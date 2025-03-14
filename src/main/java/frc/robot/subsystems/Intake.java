@@ -50,7 +50,7 @@ public class Intake extends SubsystemBase{
     
     private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 5000);
     private SmartDashboardNumber tqIntakeSpeed = new SmartDashboardNumber("intake/tq-intake-speed", 3000);
-    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1550);
+    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1600);
     private SmartDashboardNumber resetSpeed = new SmartDashboardNumber("intake/reset-speed", -0.05);
     private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -900);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
@@ -61,7 +61,7 @@ public class Intake extends SubsystemBase{
 
     private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("intake/intake-tof-threshold", 0.1);
 
-    private SmartDashboardBoolean usingMotionMagic = new SmartDashboardBoolean("intake/intake-using-mm", false);
+    private SmartDashboardBoolean usingMotionMagic = new SmartDashboardBoolean("intake/intake-using-mm", true);
 
     private double veloictyTarget = 0;
 
@@ -132,6 +132,8 @@ public class Intake extends SubsystemBase{
             .withStatorCurrentLimit(80)
             .withStatorCurrentLimitEnable(true)
         );
+
+        this.pivotMotor.motor.setPosition(0);
     }
 
     public void setPivotResetSpeed() {
