@@ -21,8 +21,8 @@ public class Climber extends SubsystemBase{
 
     private RedRockTalon climbMotor = new RedRockTalon(61, "climb-motor", "*");
 
-    private SmartDashboardNumber climbSpeed = new SmartDashboardNumber("climber/climb-speed", 0.15);
-    private SmartDashboardNumber deploySpeed = new SmartDashboardNumber("climber/climb-deploy", -0.15);
+    private SmartDashboardNumber climbSpeed = new SmartDashboardNumber("climber/climb-speed", 0.65);
+    private SmartDashboardNumber deploySpeed = new SmartDashboardNumber("climber/climb-deploy", -0.65);
 
 
     private Climber() {

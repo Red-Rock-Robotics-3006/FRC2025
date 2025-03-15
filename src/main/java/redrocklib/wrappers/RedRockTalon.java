@@ -13,6 +13,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import redrocklib.logging.SmartDashboardNumber;
 
 public class RedRockTalon {
+    public static final boolean kEnableMotorDashboardTuning = true;
+
     public TalonFX motor;
 
     private SmartDashboardNumber kS;
@@ -121,7 +123,7 @@ public class RedRockTalon {
     }
 
     public RedRockTalon withTuningEnabled(boolean enabled) {
-        this.tuningEnabled = enabled;
+        this.tuningEnabled = kEnableMotorDashboardTuning && enabled;
         return this;
     }
 

@@ -144,6 +144,10 @@ public class LED extends SubsystemBase{
         if (blinkControl % freq * 2 < freq) this.setLights(c);
         else this.setLights(OFF);
     }
+
+    public void resetLEDs() {
+        this.state = LEDState.IDLE;
+    }
     
     // public void setSwerveIsHoming(boolean b) {
     //     swerveIsHoming = b;

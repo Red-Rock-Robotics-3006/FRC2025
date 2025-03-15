@@ -25,12 +25,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Superstructure.Position;
-import frc.robot.subsystems.Arm;
-import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.*;
 import frc.robot.subsystems.led.LED;
-import frc.robot.subsystems.Climber;
-import frc.robot.subsystems.Elevator;
-import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.subsystems.swerve.generated.TunerConstants;
 import redrocklib.logging.SmartDashboardBoolean;
@@ -41,8 +37,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-    private static double progressiveDriveExponent = 1.4;
-    private static double progressiveTurnExponent = 1.7;
+    public static double progressiveDriveExponent = 1.4;
+    public static double progressiveTurnExponent = 1.7;
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -76,6 +72,8 @@ public class RobotContainer {
 
     public RobotContainer() {
         drivetrain.setSwerveRequest(this.driveFacingAngle);
+        drivetrain.setDriveController(this.drivestick);
+        drivetrain.setDriveRequest(this.drive);
 
         autoFactory = drivetrain.createAutoFactory();
         autos = new Autos(autoFactory);
@@ -93,6 +91,9 @@ public class RobotContainer {
         m_chooser.addOption("Middle 2 L4", autos.middleTwoL4Auto());
         m_chooser.addOption("JustGiveItAName", autos.justGiveItANameAuto());
 
+        m_chooser.addOption("Left 3 L4", autos.left3L4());
+        m_chooser.addOption("Right 3 L4", autos.right3L4());
+
         m_chooser.addOption("Middle 2 L4 Paths", autos.middleTwoL4Paths());
         m_chooser.addOption("JustGiveItAName Paths", autos.justGiveItANamePaths());
             
@@ -109,7 +110,7 @@ public class RobotContainer {
         drivetrain.setDefaultCommand(
             drivetrain.applyRequest(
               () -> {
-                double[] drivestickValues = this.rotateBy(-drivestick.getLeftY(), -drivestick.getLeftX(), drivetrain.getFieldCentricOffset());
+                double[] drivestickValues = rotateBy(-drivestick.getLeftY(), -drivestick.getLeftX(), drivetrain.getFieldCentricOffset());
                 if (drivetrain.isTargetingPosition()) {
                     inPIDTolerance.putBoolean(false);
                     return driveFacingAngle.withVelocityX(MathUtil.clamp(drivetrain.getPositionPIDValueX() * drivetrain.getPIDScale(), -drivetrain.getMaxPIDVelocity(), drivetrain.getMaxPIDVelocity()))
@@ -153,9 +154,9 @@ public class RobotContainer {
             new InstantCommand(drivetrain::toggleHeadingPID, drivetrain)
         );
 
-        drivestick.rightStick().onTrue(
-            new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
-        );
+        // drivestick.rightStick().onTrue(
+        //     new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
+        // );
 
         // drivestick.a().whileTrue(drivetrain.applyRequest(() -> brake));
 
@@ -191,7 +192,8 @@ public class RobotContainer {
                 Commands.deadline(
                     superstructure.intakeCoral(),
                     intake.spasmIntakeCommand()
-                )
+                ),
+                this.rumbleControllerCommand(1, 0.6)
             )
         ).onFalse(
             Commands.sequence(
@@ -207,18 +209,27 @@ public class RobotContainer {
             )
         ).onFalse(
             Commands.sequence(
-                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-                superstructure.stowCommand()
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+                // superstructure.stowCommand()
             )
         );
 
         drivestick.leftBumper().onTrue(
             Commands.parallel(
+                // Commands.sequence(
+                //     Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
+                //     Commands.either(
+                //         drivetrain.pidToPoseContinuousCommand(), 
+                //         drivetrain.driveFacingAngleContinuousCommand(), 
+                //         () -> drivetrain.getPositionTargeting()
+                //     )
+                //     // drivetrain.pidToPoseContinuousCommand()
+                //     // drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                //     // this.rumbleControllerCommand(1, 0.15)
+                // ),
                 Commands.sequence(
-                    Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    drivetrain.pidToPoseContinuousCommand()
-                    // drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                    // this.rumbleControllerCommand(1, 0.15)
+                    Commands.runOnce(() -> drivetrain.setNearestSourcePoseTargetHeading(), drivetrain),
+                    drivetrain.driveFacingAngleContinuousCommand()
                 ),
                 Commands.sequence(
                     superstructure.goToSourceIntakePosition(), //TODO add swerve thing
@@ -341,6 +352,14 @@ public class RobotContainer {
             superstructure.outtakeAlgaeWithArm()
         ).onFalse(
             superstructure.stowCommand()
+        );
+
+        mechstick.back().onTrue(
+            Commands.runOnce(() -> drivetrain.togglePositionTargetOverride(), drivetrain)
+        );
+
+        mechstick.start().onTrue(
+            Commands.runOnce(() -> leds.resetLEDs(), leds)
         );
     }
 
@@ -546,11 +565,11 @@ public class RobotContainer {
         return Math.min(1,Math.max(-1,Math.abs(input)/input * Math.pow(Math.abs(input), exponent)));
     }
 
-    public double progressiveInput(double input, double exponent, boolean b) {
-        return progressiveInput(input, exponent) * drivetrain.getSingleAxisMultiplier();
+    public static double progressiveInput(double input, double exponent, boolean b) {
+        return progressiveInput(input, exponent) * CommandSwerveDrivetrain.getInstance().getSingleAxisMultiplier();
     }
 
-    public double[] rotateBy(double x, double y, Rotation2d rotate) {
+    public static double[] rotateBy(double x, double y, Rotation2d rotate) {
         return new double[] {
             x * rotate.getCos() - y * rotate.getSin(),
             x * rotate.getSin() + y * rotate.getCos()
