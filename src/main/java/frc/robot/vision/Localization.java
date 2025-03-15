@@ -1,9 +1,10 @@
 package frc.robot.vision;
 
+import com.ctre.phoenix6.Utils;
+
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
@@ -12,18 +13,17 @@ import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import redrocklib.logging.SmartDashboardNumber;
 
 public class Localization {
-    public static final Pose2d redCliffPose = new Pose2d(4,0.25, new Rotation2d());
-    public static final Pose2d blueCliffPose = new Pose2d(4,0.25, new Rotation2d());
-    // public static final Pose2d redCliffPose = new Pose2d(15.468,2.321, new Rotation2d());
-    // public static final Pose2d blueCliffPose = new Pose2d(15.468,5.604, new Rotation2d());
-    public static final Pose2d turretOffset = new Pose2d(0.177, 0.190, new Rotation2d());
 
-    private static int[] validIDs = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
-    private static String[] limeLightNames = {"left", "right"};
+    private static int[] validIDs = {1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22};
+    private static String[] limeLightNames = {"front", "climb"};//, "right", "back"};
     private static double[][] limeLightStdvs = {
+        // {0.8, 0.8, 9999},
         {0.8, 0.8, 9999},
         {0.8, 0.8, 9999}
     };
+
+    // public static final double timeOf/fset = Utils.getCurrentTimeSeconds();
+    private static SmartDashboardNumber timeOffset = new SmartDashboardNumber("localization/timeoffset", Utils.getCurrentTimeSeconds());
 
     private static LimeLightPoseEstimateWrapper[] wrappers;
 
@@ -58,43 +58,8 @@ public class Localization {
         return wrappers;
     }
 
-    public static double getDistanceToTargetRed() {
-        return Math.hypot(getTurretPose2d().getX() - redCliffPose.getX(), getTurretPose2d().getY() - redCliffPose.getY());
-    }
-
-    public static double getDistanceToTargetBlue() {
-        return Math.hypot(getTurretPose2d().getX() - blueCliffPose.getX(), getTurretPose2d().getY() - blueCliffPose.getY());
-    }
-
     public static Pose2d getPose2d() {
         return CommandSwerveDrivetrain.getInstance().getPose();
-    }
-
-    /**
-     * Finds the turret's field relative position
-     * @return a <code>Pose2d</code> which represents the locaiton of the turret.
-     */
-    public static Pose2d getTurretPose2d() {
-        Pose2d botPose = getPose2d();
-        double theta = botPose.getRotation().getRadians();
-        // Add matrix transform to robot pose 
-        return new Pose2d(
-            botPose.getX() + turretOffset.getX()*Math.cos(theta) - turretOffset.getY()*Math.sin(theta),
-            botPose.getY() + turretOffset.getX()*Math.sin(theta) + turretOffset.getY()*Math.cos(theta),
-            new Rotation2d()
-        );
-    }
-
-    public static Rotation2d getAngleToRed() {
-        return Rotation2d.fromRadians(
-            Math.atan2(redCliffPose.getY() - getTurretPose2d().getY(), redCliffPose.getX() - getTurretPose2d().getX())
-        );
-    }
-
-    public static Rotation2d getAngleToBlue() {
-        return Rotation2d.fromRadians(
-            Math.atan2(blueCliffPose.getY() - getTurretPose2d().getY(), blueCliffPose.getX() - getTurretPose2d().getX())
-        );
     }
 
     public static class LimeLightPoseEstimateWrapper {
@@ -126,7 +91,7 @@ public class Localization {
             kStdvs[1] = new SmartDashboardNumber(this.name + "/" + this.name + "-stdvY", stdvDefVals[1]);
             kStdvs[2] = new SmartDashboardNumber(this.name + "/" + this.name + "-stdvTheta", stdvDefVals[2]);
 
-            SmartDashboard.putData(this.name + "/" + this.name + "field", this.field);
+            SmartDashboard.putData(this.name + "/" + this.name + "-field", this.field);
 
             return this;
         }
