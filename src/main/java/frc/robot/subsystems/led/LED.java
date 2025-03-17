@@ -16,17 +16,20 @@ public class LED extends SubsystemBase{
     private static LED instance = null;
 
     private AddressableLED control = new AddressableLED(9);
-    private AddressableLEDBuffer buffer = new AddressableLEDBuffer(299);
+    private AddressableLEDBuffer buffer = new AddressableLEDBuffer(300);
     private AddressableLEDBufferView elevatorLeftView = this.buffer.createView(0, 0);
     private AddressableLEDBufferView elevatorRightView = this.buffer.createView(0, 0);
     private AddressableLEDBufferView intakeView = this.buffer.createView(0, 0);
 
     private CommandSwerveDrivetrain swerve = CommandSwerveDrivetrain.getInstance();
 
-    private final Color INIT_YELLOW = new Color(255, 165, 0);
+    //private final Color INIT_YELLOW = new Color(255, 165, 0);
+    private final Color INIT_YELLOW = new Color(255, 255, 255);
+
     private final Color NOTE_ORANGE = new Color(255, 15, 0);
     private final Color WHITE = new Color(255, 255, 255);
-    private final Color GREEN = new Color(0, 255, 0);
+    private final Color GREEN = new Color(0, 255, 
+    0);
     private final Color BLUE = new Color(0, 0, 255);
     private final Color RED = new Color(255, 0, 0);
     private final Color MAGENTA = new Color(255, 0, 255);
@@ -158,7 +161,7 @@ public class LED extends SubsystemBase{
 
         if (swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.REEF_HOMING;
         else if (EndEffector.getInstance().coralDetected()) state = LEDState.HAS_CORAL;
-        else if (!swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.SOURCE_INTAKE_HOMING;
+        // else if (!swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.SOURCE_INTAKE_HOMING;
         else state = LEDState.IDLE;
 
         switch(state) {

@@ -312,8 +312,8 @@ public class RobotContainer {
                 superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
                 superstructure.goToL2RemoveCommand()
             )
-        ).onFalse(
-            superstructure.stowCommand()
+        // ).onFalse(
+        //     superstructure.stowCommand()
         );
 
         mechstick.povUp().onTrue(
@@ -321,8 +321,8 @@ public class RobotContainer {
                 superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
                 superstructure.goToL3RemoveCommand()
             )
-        ).onFalse(
-            superstructure.stowCommand()
+        // ).onFalse(
+        //     superstructure.stowCommand()
         );
 
         mechstick.leftBumper().onTrue(
@@ -372,7 +372,7 @@ public class RobotContainer {
             )
         );
 
-        mechstick.povDown().onTrue(Commands.runOnce(() -> drivetrain.toggleHeadingPID()));
+        // mechstick.povDown().onTrue(Commands.runOnce(() -> drivetrain.toggleHeadingPID()));
 
         drivestick.leftBumper().onTrue(
             Commands.sequence(
