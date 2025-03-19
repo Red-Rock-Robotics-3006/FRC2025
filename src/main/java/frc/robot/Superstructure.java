@@ -190,9 +190,9 @@ public class Superstructure {
             Commands.select(
                 Map.ofEntries(
                     Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL1Stow(), elevator)),
-                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL2Stow(), elevator)),
-                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL3Stow(), elevator)),
-                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL4Stow(), elevator)),
+                    Map.entry(Position.L2, Commands.runOnce(() -> this.elevator.setL2Stow(), elevator)),
+                    Map.entry(Position.L3, Commands.runOnce(() -> this.elevator.setL3Stow(), elevator)),
+                    Map.entry(Position.L4, Commands.runOnce(() -> this.elevator.setL4Stow(), elevator)),
                     Map.entry(Position.STOW, this.elevator.goToPosition(Position.STOW))
                 ), 
                 () -> this.getRequestedScoringPosition()),

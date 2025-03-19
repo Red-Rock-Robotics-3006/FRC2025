@@ -932,7 +932,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (!this.getUseHeadingPID() || Math.abs(controller.getRightX()) > this.getTurnDeadBand())
                 return fieldCentricRequest.withVelocityX(RobotContainer.progressiveInput(drivestickValues[0],RobotContainer.progressiveDriveExponent) * this.getMaxDriveSpeed())
                 .withVelocityY(RobotContainer.progressiveInput(drivestickValues[1],RobotContainer.progressiveDriveExponent, true) * this.getMaxDriveSpeed())
-                .withRotationalRate(RobotContainer.progressiveInput(-controller.getRightX(),RobotContainer.progressiveTurnExponent) * this.getMaxTurnSpeed());
+                .withRotationalRate(RobotContainer.progressiveInput(-controller.getRightX(),RobotContainer.progressiveTurnExponent) * this.getMaxTurnSpeed() * Math.PI);
             else 
                 return angleRequest.withVelocityX(RobotContainer.progressiveInput(drivestickValues[0],RobotContainer.progressiveDriveExponent) * this.getMaxDriveSpeed())
                 .withVelocityY(RobotContainer.progressiveInput(drivestickValues[1], RobotContainer.progressiveDriveExponent, true) * this.getMaxDriveSpeed())

@@ -242,14 +242,9 @@ public class RobotContainer {
                 )
             )
         ).onFalse(
-            Commands.parallel(
-                Commands.sequence(
-                    Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-                    drivetrain.driveFacingAngleContinuousCommand()
-                ),
                 // superstructure.stowCommand() //TODO add swerve thing
                 superstructure.stowReefCommand()
-            )
+            
         );
 
         drivestick.rightTrigger(0.25).onTrue(
