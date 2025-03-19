@@ -70,7 +70,7 @@ public class Elevator extends SubsystemBase {
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
 
-    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 15);
+    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 0);
                                                                                                              
 
     private Elevator() {
@@ -258,6 +258,18 @@ public class Elevator extends SubsystemBase {
 
     public void setL2Stow() {
         this.setPosition(this.getStowPosition(Position.L2));
+    }
+
+    public void setL3Stow() {
+        this.setPosition(this.getStowPosition(Position.L3));
+    }
+
+    public void setL4Stow() {
+        this.setPosition(this.getStowPosition(Position.L4));
+    }
+
+    public void setL1Stow() {
+        this.setPosition(this.getStowPosition(Position.L1));
     }
     /**
      * Check if the elevator is at target position

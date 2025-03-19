@@ -48,7 +48,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber maxAngleDegrees = new SmartDashboardNumber("arm/max-angle", 225).withTuningEnabled(kEnableLimitsTuning);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0.625).withTuningEnabled(kEnableLimitsTuning);
 
-    private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", 0.15);
+    private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", -0.03);
     private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0.25);
     private Position targetPosition = Position.STOW;
 

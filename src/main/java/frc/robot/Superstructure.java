@@ -1,5 +1,6 @@
 package frc.robot;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -173,6 +174,28 @@ public class Superstructure {
             Commands.waitUntil(() -> this.arm.inSafeZone()),
             this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(Position.STOW),
+            this.endEffector.goToPosition(Position.STOW),
+            this.endEffector.stopCommand()
+        );
+    }
+
+    public Command stowReefCommand() {
+        return new SequentialCommandGroup(
+            this.arm.goToPosition(Position.STOW),
+            this.intake.stopIntakeCommand(),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
+            Commands.waitUntil(() -> this.arm.inSafeZone()),
+            this.intake.stowIntakeCommand(),
+            Commands.select(
+                Map.ofEntries(
+                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL1Stow(), elevator)),
+                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL2Stow(), elevator)),
+                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL3Stow(), elevator)),
+                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL4Stow(), elevator)),
+                    Map.entry(Position.STOW, this.elevator.goToPosition(Position.STOW))
+                ), 
+                () -> this.getRequestedScoringPosition()),
             this.endEffector.goToPosition(Position.STOW),
             this.endEffector.stopCommand()
         );
