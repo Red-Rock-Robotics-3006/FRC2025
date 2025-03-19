@@ -43,6 +43,11 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2-algae", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3-algae", 19).withTuningEnabled(kEnablePositionTuning);
 
+    private SmartDashboardNumber l1StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l1", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l2", 1.5).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l3", 21).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator--stow-l4", 59).withTuningEnabled(kEnablePositionTuning);
+
     private SmartDashboardNumber l1min = new SmartDashboardNumber("elevator/reef-safe-zones/l1-min", 0);
     private SmartDashboardNumber l1max = new SmartDashboardNumber("elevator/reef-safe-zones/l1-max", 0);
     private SmartDashboardNumber l2min = new SmartDashboardNumber("elevator/reef-safe-zones/l2-min", 0);
@@ -158,6 +163,16 @@ public class Elevator extends SubsystemBase {
         }
     }
 
+    public double getStowPosition(Position pos) {
+        switch(pos) {
+            case L1: return this.l1StowPosition.getNumber();
+            case L2: return this.l2StowPosition.getNumber();
+            case L3: return this.l3StowPosition.getNumber();
+            case L4: return this.l4StowPosition.getNumber();
+            default: return this.stowPosition.getNumber();
+        }
+    }
+
     public boolean inReefSafeZone(Position position) {
         switch (position) {
             case L1: return this.getPosition() > l1min.getNumber() && this.getPosition() < l1max.getNumber();
@@ -183,6 +198,10 @@ public class Elevator extends SubsystemBase {
         this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(this.convertPosition(pos), minRotation.getNumber(), maxRotation.getNumber()));
     }
 
+    public void setPosition(double pos) {
+        this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(pos, minRotation.getNumber(), maxRotation.getNumber()));
+    }
+
     @Override
     public void periodic() {
 
@@ -197,6 +216,7 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/pos", this.getPosition());
         SmartDashboard.putNumber("elevator/target", this.convertPosition(this.targetPosition));
         SmartDashboard.putString("elevator/tpos", this.targetPosition.name());
+        SmartDashboard.putBoolean("elevator/above ground intake threshold", this.aboveGroundIntakeThreshold());
 
         this.m_elevatorLeft.update();
         this.m_elevatorRight.update();
@@ -236,7 +256,9 @@ public class Elevator extends SubsystemBase {
         return this.m_elevatorLeft.aboveSpikeThreshold() || this.m_elevatorRight.aboveSpikeThreshold();
     }
 
-
+    public void setL2Stow() {
+        this.setPosition(this.getStowPosition(Position.L2));
+    }
     /**
      * Check if the elevator is at target position
      * @return true if the elevator is on target

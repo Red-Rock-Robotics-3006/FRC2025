@@ -168,8 +168,9 @@ public class Superstructure {
         return new SequentialCommandGroup(
             this.arm.goToPosition(Position.STOW),
             this.intake.stopIntakeCommand(),
-            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
-            new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
+            Commands.waitUntil(() -> this.arm.inSafeZone()),
             this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
