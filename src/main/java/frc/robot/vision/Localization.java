@@ -18,8 +18,8 @@ public class Localization {
     private static String[] limeLightNames = {"front", "climb"};//, "right", "back"};
     private static double[][] limeLightStdvs = {
         // {0.8, 0.8, 9999},
-        {0.8, 0.8, 9999},
-        {0.8, 0.8, 9999}
+        {0.9, 0.9, 9999},
+        {0.9, 0.9, 9999}
     };
 
     // public static final double timeOf/fset = Utils.getCurrentTimeSeconds();

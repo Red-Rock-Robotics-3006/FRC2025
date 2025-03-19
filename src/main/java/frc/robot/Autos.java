@@ -26,6 +26,14 @@ public class Autos {
         );
     }
 
+    public Command TESTPATH1() {
+        return followTrajectoryCommand("TESTPATH1");
+    }
+
+    public Command TESTPATH2() {
+        return followTrajectoryCommand("TESTPATH2");
+    }
+
     public Command leftOneL4Auto() {
         return Commands.sequence(
             factory.resetOdometry("BBML-J"),

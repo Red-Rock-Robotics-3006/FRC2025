@@ -23,7 +23,7 @@ public class TunerConstants {
     // The steer motor uses any SwerveModule.SteerRequestType control request with the
     // output type specified by SwerveModuleConstants.SteerMotorClosedLoopOutput
     private static final Slot0Configs steerGains = new Slot0Configs()
-        .withKP(35).withKI(0.07).withKD(0.3756775) //20.264kp
+        .withKP(50)/*was 35*/.withKI(0.07).withKD(0.3756775) //20.264kp
         .withKS(0).withKV(0.123458).withKA(0.005628)
         .withStaticFeedforwardSign(StaticFeedforwardSignValue.UseClosedLoopSign);
     // When using closed-loop control, the drive motor uses the control
@@ -50,16 +50,16 @@ public class TunerConstants {
 
     // The stator current at which the wheels start to slip;
     // This needs to be tuned to your individual robot
-    private static final Current kSlipCurrent = Amps.of(110);
+    private static final Current kSlipCurrent = Amps.of(80);
 
     // Initial configs for the drive and steer motors and the azimuth encoder; these cannot be null.
     // Some configs will be overwritten; check the `with*InitialConfigs()` API documentation.
     private static final TalonFXConfiguration driveInitialConfigs = new TalonFXConfiguration()
         .withCurrentLimits(
             new CurrentLimitsConfigs()
-                .withSupplyCurrentLimit(Amps.of(80))
+                .withSupplyCurrentLimit(Amps.of(60))
                 .withSupplyCurrentLimitEnable(true)
-                .withStatorCurrentLimit(Amps.of(120))
+                .withStatorCurrentLimit(Amps.of(80))
                 .withStatorCurrentLimitEnable(true)
         );
 
@@ -68,7 +68,7 @@ public class TunerConstants {
             new CurrentLimitsConfigs()
                 .withSupplyCurrentLimit(Amps.of(40))
                 .withSupplyCurrentLimitEnable(true)
-                .withStatorCurrentLimit(Amps.of(80))
+                .withStatorCurrentLimit(Amps.of(60))
                 .withStatorCurrentLimitEnable(true)
         );
         
@@ -90,7 +90,7 @@ public class TunerConstants {
     
         private static final double kDriveGearRatio = 5.357142857142857;//5.31982421875; //5.28515625;//5.357142857142857;
         private static final double kSteerGearRatio = 18.75;
-        private static final Distance kWheelRadius = Inches.of(1.96);
+        private static final Distance kWheelRadius = Inches.of(1.68);
 
         private static final boolean kInvertLeftSide = false;
         private static final boolean kInvertRightSide = true;

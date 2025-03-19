@@ -85,6 +85,9 @@ public class RobotContainer {
     public void configureSelector(){
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
 
+        m_chooser.addOption("TESTPATH1", autos.TESTPATH1());
+        m_chooser.addOption("TESTPATH2", autos.TESTPATH2());
+
         m_chooser.addOption("Left 1 L4", autos.leftOneL4Auto());
         m_chooser.addOption("Middle 1 L4", autos.middleOneL4Auto());
         m_chooser.addOption("Right 1 L4", autos.rightOneL4Auto());

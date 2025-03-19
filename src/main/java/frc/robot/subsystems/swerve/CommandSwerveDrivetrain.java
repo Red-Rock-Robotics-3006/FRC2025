@@ -103,7 +103,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     
     private SmartDashboardNumber kRejectionDistance = new SmartDashboardNumber("localization/rejection-distance", 3);
-    private SmartDashboardNumber kRejectionRotationRate = new SmartDashboardNumber("localization/rejection-rotation-rate", 3);
+    private SmartDashboardNumber kRejectionRotationRate = new SmartDashboardNumber("localization/rejection-rotation-rate", 10);
 
     private SmartDashboardBoolean visionEnabled = new SmartDashboardBoolean("localization/vision-enabled", true);
 
@@ -137,15 +137,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
-    private SmartDashboardNumber sourcePositionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.5);
-    private SmartDashboardNumber sourcePositionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.4); // 15
-    private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
+    private SmartDashboardNumber sourcePositionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.85);
+    private SmartDashboardNumber sourcePositionKi = new SmartDashboardNumber("dt/dt-position-ki", 0); // 15
+    private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-position-kd", 0.013);
     private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
-    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.5);
-    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.4); // 15
-    private SmartDashboardNumber autoePositionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
-    private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
+    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-position-kp", 8);
+    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-position-ki", 0.6); // 15
+    private SmartDashboardNumber autoPositionKd = new SmartDashboardNumber("dt/dt-auto-position-kd", 0);
+    //private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-auto-position-Irange", 0.2);
+
+    private SmartDashboardNumber autoThetaKp = new SmartDashboardNumber("dt/dt-auto-theta-kp", 4);
+    private SmartDashboardNumber autoThetaKi = new SmartDashboardNumber("dt/dt-auto-theta-ki", 0.3);
+    private SmartDashboardNumber autoThetaKd = new SmartDashboardNumber("dt/dt-auto-theta-kd", 0);
 
     private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
     private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
@@ -160,9 +164,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02);
 
-    private final PIDController m_pathXController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
-    private final PIDController m_pathYController = new PIDController(10, positionKi.getNumber(), positionKd.getNumber());
-    private final PIDController m_pathThetaController = new PIDController(rotateP.getNumber(), rotateI.getNumber(), rotateD.getNumber());
+    private final PIDController m_pathXController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
+    private final PIDController m_pathYController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
+    private final PIDController m_pathThetaController = new PIDController(autoThetaKp.getNumber(), autoThetaKi.getNumber(), autoThetaKd.getNumber());
 
     private SmartDashboardNumber pidMaxVelo = new SmartDashboardNumber("dt/dt-max-pid-velo", 1.7);
   
@@ -189,8 +193,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d fieldCenter = new Pose2d(8.75665, 4.0259, Rotation2d.kZero);
 
-    private Pose2d seedOffsetCW = new Pose2d(5.76 - 4.4958, -4.0259 + 3.83, Rotation2d.kZero);
-    private Pose2d seedOffsetCCW = new Pose2d(5.76 - 4.4958, 4.0259 - 3.83 - 0.05, Rotation2d.kZero);
+    private Pose2d seedOffsetCW = new Pose2d(5.78 - 4.4958, -4.0259 + 3.86, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.78 - 4.4958, 4.0259 - 3.86, Rotation2d.kZero);
 
     private int reefClockSide = 0;
     
@@ -439,14 +443,14 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         autoRealPose2d = this.getState().Pose;
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-        // m_pathThetaController.setI(rotateI.getNumber());
+        m_pathThetaController.setI(rotateI.getNumber());
         // if(m_pathThetaController.atSetpoint()) m_pathThetaController.reset();
 
-        // m_pathXController.setI(positionKi.getNumber());
+        m_pathXController.setI(positionKi.getNumber());
         // if(m_pathXController.atSetpoint()) m_pathXController.reset();
 
         m_pathYController.setI(positionKi.getNumber());
-        if(m_pathYController.atSetpoint()) m_pathYController.reset();
+        //if(m_pathYController.atSetpoint()) m_pathYController.reset();
         
         var pose = getState().Pose;
 
@@ -562,7 +566,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         this.positionControllerX.setTolerance(positionTolerance.getNumber());
         this.positionControllerY.setTolerance(positionTolerance.getNumber());
-        if(this.positionControllerX.atSetpoint())
+        if(this.positionControllerX.atSetpoint() && this.positionKi.getNumber() > 0)
         {
             this.positionControllerX.setI(0);
             this.positionControllerX.reset();
