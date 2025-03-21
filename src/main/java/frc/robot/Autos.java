@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 
 public class Autos {
@@ -14,6 +15,7 @@ public class Autos {
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
+    private final Elevator elevator = Elevator.getInstance();
 
     public Autos(AutoFactory f) {
         factory = f;
@@ -122,24 +124,28 @@ public class Autos {
             factory.trajectoryCmd("RBML-E"),
             goToScoreAutoCommand(0),
             superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets()),
-
+            
             factory.resetOdometry("EL-RSM"),
-            factory.trajectoryCmd("EL-RSM"),
+            Commands.sequence(
+                superstructure.stowCommand(),
+                Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
+                factory.trajectoryCmd("EL-RSM")
+            ),
             goToIntakeAutoCommand(),
 
             factory.resetOdometry("RSML-D"),
             factory.trajectoryCmd("RSML-D"),
             goToScoreAutoCommand(1),
             superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets()),
 
             factory.resetOdometry("DL-RSM"),
-            factory.trajectoryCmd("DL-RSM"),
+            Commands.parallel(
+                superstructure.stowCommand(),
+                Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
+                factory.trajectoryCmd("DL-RSM")
+            ),
             goToIntakeAutoCommand(),
 
             factory.resetOdometry("RSML-C"),

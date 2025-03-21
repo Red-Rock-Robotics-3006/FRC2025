@@ -45,8 +45,8 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber l1StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l1", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l2", 1.5).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l3StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l3", 21).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l4StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator--stow-l4", 21).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l3", 15).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator--stow-l4", 15).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber l1min = new SmartDashboardNumber("elevator/reef-safe-zones/l1-min", 0);
     private SmartDashboardNumber l1max = new SmartDashboardNumber("elevator/reef-safe-zones/l1-max", 0);
@@ -71,6 +71,7 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
 
     private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 0);
+    private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 40);
                                                                                                              
 
     private Elevator() {
@@ -292,6 +293,10 @@ public class Elevator extends SubsystemBase {
 
     public boolean aboveGroundIntakeThreshold() {
         return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() > this.intakeArmThreshold.getNumber();
+    }
+
+    public boolean belowAutoStowGroundThreshold() {
+        return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() < this.autoStowThreshold.getNumber();
     }
     
     /**
