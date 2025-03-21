@@ -179,7 +179,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d[][] scorePosesBlue = new Pose2d[6][2], scorePosesRed = new Pose2d[6][2];
 
 
-    private Pose2d blueCenter = new Pose2d(4.4958, 4.0259, new Rotation2d());
+    private Pose2d blueCenter = new Pose2d(4.489323, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.066, 4.0259, new Rotation2d());
 
     private Pose2d blueSourceLeft = new Pose2d(1.133, 7.0218, Rotation2d.fromDegrees(126));
@@ -193,8 +193,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d fieldCenter = new Pose2d(8.75665, 4.0259, Rotation2d.kZero);
 
-    private Pose2d seedOffsetCW = new Pose2d(5.78 - 4.4958, -4.0259 + 3.86, Rotation2d.kZero);
-    private Pose2d seedOffsetCCW = new Pose2d(5.78 - 4.4958, 4.0259 - 3.86, Rotation2d.kZero);
+    private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86, Rotation2d.kZero);
 
     private int reefClockSide = 0;
     
@@ -388,21 +388,21 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             scorePosesRed[i][1] = rotatePose(redSeedCCW, Rotation2d.fromDegrees(i * 60), redCenter);
         }
 
-        // for (int i = 0; i < 6; i++) {
-        //     System.out.println(i);
-        //     for (int j = 0; j < 2; j++) {
-        //         System.out.println(scorePosesBlue[i][j]);
-        //     }
-        //     System.out.println();                                      jnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
-        // }
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(scorePosesBlue[i][j]);
+            }
+            System.out.println();
+        }
 
-        // for (int i = 0; i < 6; i++) {
-        //     System.out.println(i);
-        //     for (int j = 0; j < 2; j++) {
-        //         System.out.println(scorePosesRed[i][j]);
-        //     }
-        //     System.out.println();
-        // }
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(scorePosesRed[i][j]);
+            }
+            System.out.println();
+        }
 
         sourcePoses.add(blueSourceLeft);
         sourcePoses.add(blueSourceRight);
