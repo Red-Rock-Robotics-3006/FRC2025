@@ -188,7 +188,8 @@ public class RobotContainer {
                 superstructure.goToIntakePosition(),
                 Commands.deadline(
                     superstructure.intakeCoral(),
-                    intake.spasmIntakeCommand()
+                    // intake.spasmIntakeCommand()
+                    intake.startIntakeCommand()
                 ),
                 this.rumbleControllerCommand(1, 0.6)
             )

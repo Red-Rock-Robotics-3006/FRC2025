@@ -67,7 +67,7 @@ public class Autos {
             superstructure.setRequestedScoringPositionCommand(Position.L4),
 
             followTrajectoryCommand("L3GS", 0),
-            goToScoreAutoCommand(1),
+            scoreAutoCommand(1),
             superstructure.outtakeCoral(),
 
             Commands.deadline(
@@ -79,7 +79,7 @@ public class Autos {
             ),  
             Commands.either(
                 Commands.sequence(
-                    goToScoreAutoCommand(0), 
+                    scoreAutoCommand(0), 
                     superstructure.outtakeCoral()
                 ),
                 Commands.print("SECOND CORAL MISSED"), 
@@ -93,7 +93,7 @@ public class Autos {
                 ),
                 groundIntakeCommand()
             ),  
-            goToScoreAutoCommand(1),
+            scoreAutoCommand(1),
             superstructure.outtakeCoral()
         );
     }
@@ -103,7 +103,7 @@ public class Autos {
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
             followTrajectoryCommand("R3GS", 0),
-            goToScoreAutoCommand(0),
+            scoreAutoCommand(0),
             superstructure.outtakeCoral(),
 
             Commands.deadline(
@@ -115,7 +115,7 @@ public class Autos {
             ),  
             Commands.either(
                 Commands.sequence(
-                    goToScoreAutoCommand(1), 
+                    scoreAutoCommand(1), 
                     superstructure.outtakeCoral()
                 ),
                 Commands.print("SECOND CORAL MISSED"), 
@@ -129,12 +129,12 @@ public class Autos {
                 ),
                 groundIntakeCommand()
             ),  
-            goToScoreAutoCommand(0),
+            scoreAutoCommand(0),
             superstructure.outtakeCoral()
         );
     }
 
-    public Command goToScoreAutoCommand(Pose2d pose) {
+    public Command scoreAutoCommand(Pose2d pose) {
         return Commands.parallel(
             Commands.sequence(
                 superstructure.goToL4Command(),
@@ -153,7 +153,7 @@ public class Autos {
         );
     }
 
-    public Command goToScoreAutoCommand(int reefSide) {
+    public Command scoreAutoCommand(int reefSide) {
         return Commands.sequence(
             Commands.deadline(
                 Commands.sequence(
@@ -181,7 +181,7 @@ public class Autos {
         );
     }
 
-    public Command goToSourceIntakeCommand() {
+    public Command sourceIntakeCommand() {
         return Commands.sequence(
             Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
             Commands.deadline(
