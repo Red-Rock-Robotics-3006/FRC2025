@@ -29,7 +29,11 @@ public class Autos {
     }
 
     public Command TESTPATH1() {
-        return followTrajectoryCommand("TESTPATH1");
+        return 
+        Commands.sequence(
+            followTrajectoryCommand("TESTPATH1"),
+            followTrajectoryCommand("TESTPATH1")
+        );
     }
 
     public Command TESTPATH2() {
@@ -120,14 +124,14 @@ public class Autos {
 
     public Command right3L4() {
         return Commands.sequence(
-            factory.resetOdometry("RBML-E"),
-            factory.trajectoryCmd("RBML-E"),
+            // factory.resetOdometry("RBML-E"),
+            // factory.trajectoryCmd("RBML-E"),
+            factory.resetOdometry("EL-RSM"), //A
             goToScoreAutoCommand(0),
             superstructure.outtakeCoral(),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
             
-            factory.resetOdometry("EL-RSM"),
-            Commands.sequence(
+            Commands.sequence(//A above
                 superstructure.stowCommand(),
                 Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
                 factory.trajectoryCmd("EL-RSM")

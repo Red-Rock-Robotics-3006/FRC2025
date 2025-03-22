@@ -142,8 +142,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-position-kd", 0.013);
     private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
-    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-position-kp", 8);
-    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-position-ki", 0.6); // 15
+    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-position-kp", 6);
+    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-position-ki", 0.4); // 15
     private SmartDashboardNumber autoPositionKd = new SmartDashboardNumber("dt/dt-auto-position-kd", 0);
     //private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-auto-position-Irange", 0.2);
 
