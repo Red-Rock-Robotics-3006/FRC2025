@@ -358,7 +358,14 @@ public class RobotContainer {
         );
 
         mechstick.back().onTrue(
-            Commands.runOnce(() -> drivetrain.togglePositionTargetOverride(), drivetrain)
+            Commands.sequence(
+                Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
+                drivetrain.pidToPoseContinuousCommand()
+            )
+        ).onFalse(
+            Commands.sequence(
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+            )
         );
 
         mechstick.start().onTrue(

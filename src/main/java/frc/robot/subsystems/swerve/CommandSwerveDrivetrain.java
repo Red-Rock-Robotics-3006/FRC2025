@@ -132,19 +132,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SlewRateLimiter positionRateLimiterX;
     private SlewRateLimiter positionRateLimiterY;
 
-    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.55);
-    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0.7); // 15
-    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0);
+    private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.85);
+    private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0); // 15
+    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0.013);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
-    private SmartDashboardNumber sourcePositionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.85);
-    private SmartDashboardNumber sourcePositionKi = new SmartDashboardNumber("dt/dt-position-ki", 0); // 15
-    private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-position-kd", 0.013);
-    private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
+    private SmartDashboardNumber sourcePositionKp = new SmartDashboardNumber("dt/dt-source-kp", 0.85);
+    private SmartDashboardNumber sourcePositionKi = new SmartDashboardNumber("dt/dt-source-ki", 0); // 15
+    private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-source-kd", 0.013);
+    private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-source-Irange", 0.2);
 
-    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-position-kp", 6);
-    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-position-ki", 0.4); // 15
-    private SmartDashboardNumber autoPositionKd = new SmartDashboardNumber("dt/dt-auto-position-kd", 0);
+    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-auto-kp", 6);
+    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-auto-ki", 0.4); // 15
+    private SmartDashboardNumber autoPositionKd = new SmartDashboardNumber("dt/dt-auto-auto-kd", 0);
     //private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-auto-position-Irange", 0.2);
 
     private SmartDashboardNumber autoThetaKp = new SmartDashboardNumber("dt/dt-auto-theta-kp", 4);
@@ -844,6 +844,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     public void disablePositionTargeting() {
         this.inPositionTargeting = false;
+        this.isTargetingReef = false;
     }
 
     public boolean getPositionTargeting() {
