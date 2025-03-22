@@ -41,7 +41,7 @@ import frc.robot.Superstructure.Position;
  */
 
 public class EndEffector extends SubsystemBase {
-    public static final double kCoralOuttakeWaitTime = 0.2;
+    public static final double kCoralOuttakeWaitTime = 0.0;
     public static final double kAlgaeOUttakeWaitTime = 0.2;
 
     public static boolean kEnableMotorTuning = false;

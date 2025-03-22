@@ -88,17 +88,11 @@ public class RobotContainer {
         m_chooser.addOption("TESTPATH1", autos.TESTPATH1());
         m_chooser.addOption("TESTPATH2", autos.TESTPATH2());
 
-        m_chooser.addOption("Left 1 L4", autos.leftOneL4Auto());
-        m_chooser.addOption("Middle 1 L4", autos.middleOneL4Auto());
-        m_chooser.addOption("Right 1 L4", autos.rightOneL4Auto());
-        m_chooser.addOption("Middle 2 L4", autos.middleTwoL4Auto());
-        m_chooser.addOption("JustGiveItAName", autos.justGiveItANameAuto());
-
         m_chooser.addOption("Left 3 L4", autos.left3L4());
         m_chooser.addOption("Right 3 L4", autos.right3L4());
 
-        m_chooser.addOption("Middle 2 L4 Paths", autos.middleTwoL4Paths());
-        m_chooser.addOption("JustGiveItAName Paths", autos.justGiveItANamePaths());
+        m_chooser.addOption("Left 3 L4 Paths", autos.left3L4Paths());
+        m_chooser.addOption("Right 3 L4 Paths", autos.right3L4Paths());
             
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }

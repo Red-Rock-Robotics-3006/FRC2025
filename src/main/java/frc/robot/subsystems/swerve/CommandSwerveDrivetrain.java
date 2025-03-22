@@ -847,6 +847,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.isTargetingReef = false;
     }
 
+    public Command disablePositionTargetingCommand() {
+        return Commands.runOnce(() -> this.disablePositionTargeting(), this);
+    }
+
     public boolean getPositionTargeting() {
         return this.inPositionTargeting;
     }

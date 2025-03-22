@@ -1,13 +1,13 @@
 package frc.robot;
 
-import choreo.Choreo;
 import choreo.auto.AutoFactory;
-import choreo.util.ChoreoAllianceFlipUtil;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Superstructure.Position;
 import frc.robot.subsystems.Elevator;
+import frc.robot.subsystems.EndEffector;
+import frc.robot.subsystems.Intake;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 
 public class Autos {
@@ -15,221 +15,122 @@ public class Autos {
 
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
-    private final Elevator elevator = Elevator.getInstance();
+    private final Intake intake = Intake.getInstance();
+    private final EndEffector endeffector = EndEffector.getInstance();
 
     public Autos(AutoFactory f) {
         factory = f;
     }
 
-    public Command followTrajectoryCommand(String trajectoryName) {
-        return Commands.sequence(
-            factory.resetOdometry(trajectoryName),
-            factory.trajectoryCmd(trajectoryName)
-        );
-    }
-
     public Command TESTPATH1() {
         return 
         Commands.sequence(
-            followTrajectoryCommand("TESTPATH1"),
-            followTrajectoryCommand("TESTPATH1")
+            followTrajectoryCommand("TESTPATH1", 0),
+            followTrajectoryCommand("TESTPATH1", 0)
         );
     }
 
     public Command TESTPATH2() {
-        return followTrajectoryCommand("TESTPATH2");
+        return followTrajectoryCommand("TESTPATH2", 0);
     }
 
-    public Command leftOneL4Auto() {
+    public Command left3L4Paths() {
         return Commands.sequence(
-            factory.resetOdometry("BBML-J"),
-            factory.trajectoryCmd("BBML-J"),
-            goToScoreAutoCommand(new Pose2d(5.03, 5.25, Rotation2d.fromDegrees(60))),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets())
+            followTrajectoryCommand("L3GS", 0),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("L3GS", 1),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("L3GS", 2),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("L3GS", 3),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("L3GS", 4)
         );
     }
 
-    public Command middleOneL4Auto() {
+    public Command right3L4Paths() {
         return Commands.sequence(
-            factory.resetOdometry("CL-H"),
-            factory.trajectoryCmd("CL-H"),
-            // goToScoreAutoCommand(new Pose2d(5.755, 4.18, Rotation2d.fromDegrees(0))),
-            goToScoreAutoCommand(1),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets())
+            followTrajectoryCommand("R3GS", 0),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("R3GS", 1),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("R3GS", 2),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("R3GS", 3),
+            Commands.waitSeconds(1.5),
+            followTrajectoryCommand("R3GS", 4)
         );
     }
     
-    public Command rightOneL4Auto() {
+    public Command left3L4() {
         return Commands.sequence(
-            factory.resetOdometry("RBML-F"),
-            factory.trajectoryCmd("RBML-F"),
-            // goToScoreAutoCommand(new Pose2d(5.27, 2.97, Rotation2d.fromDegrees(-60))),
-            goToScoreAutoCommand(0),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets())
-        );
-    }
+            superstructure.setRequestedScoringPositionCommand(Position.L4),
 
-    public Command middleTwoL4Auto() {
-        return Commands.sequence(
-            factory.resetOdometry("CL-H"),
-            factory.trajectoryCmd("CL-H"),
-            goToScoreAutoCommand(new Pose2d(5.755, 4.18, Rotation2d.fromDegrees(0))),
+            followTrajectoryCommand("L3GS", 0),
+            goToScoreAutoCommand(1),
             superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets()),
 
-            factory.resetOdometry("HL-C"),
-            factory.trajectoryCmd("HL-C"),
-            Commands.runOnce(() -> {drivetrain.setTargetPose(new Pose2d(7.17, 4, Rotation2d.fromDegrees(0))); drivetrain.enablePositionTargeting();}, drivetrain),
             Commands.deadline(
                 Commands.sequence(
-                    superstructure.goToSourceIntakePosition(),
-                    superstructure.intakeCoral()
-                ), 
-                drivetrain.pidToPoseContinuousCommand()
+                    followTrajectoryCommand("L3GS", 1),
+                    followTrajectoryCommand("L3GS", 2)
+                ),
+                groundIntakeCommand()
+            ),  
+            Commands.either(
+                Commands.sequence(
+                    goToScoreAutoCommand(0), 
+                    superstructure.outtakeCoral()
+                ),
+                Commands.print("SECOND CORAL MISSED"), 
+                () -> endeffector.coralDetected()
             ),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            superstructure.stowCommand(),
 
-            factory.resetOdometry("CL-G"),
-            factory.trajectoryCmd("CL-G"),
-            goToScoreAutoCommand(new Pose2d(5.755, 3.84, Rotation2d.fromDegrees(0))),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets())
-        );
-    }
-
-    public Command middleTwoL4Paths() {
-        return Commands.sequence(
-            factory.resetOdometry("CL-H"),
-            factory.trajectoryCmd("CL-H"),
-            factory.resetOdometry("HL-C"),
-            factory.trajectoryCmd("HL-C"),
-            factory.resetOdometry("CL-G"),
-            factory.trajectoryCmd("CL-G")
+            Commands.parallel(
+                Commands.sequence(
+                    followTrajectoryCommand("L3GS", 3),
+                    followTrajectoryCommand("L3GS", 4)
+                ),
+                groundIntakeCommand()
+            ),  
+            goToScoreAutoCommand(1),
+            superstructure.outtakeCoral()
         );
     }
 
     public Command right3L4() {
         return Commands.sequence(
-            // factory.resetOdometry("RBML-E"),
-            // factory.trajectoryCmd("RBML-E"),
-            factory.resetOdometry("EL-RSM"), //A
-            goToScoreAutoCommand(0),
-            superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
+            superstructure.setRequestedScoringPositionCommand(Position.L4),
             
-            Commands.sequence(//A above
-                superstructure.stowCommand(),
-                Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
-                factory.trajectoryCmd("EL-RSM")
-            ),
-            goToIntakeAutoCommand(),
-
-            factory.resetOdometry("RSML-D"),
-            factory.trajectoryCmd("RSML-D"),
-            goToScoreAutoCommand(1),
+            followTrajectoryCommand("R3GS", 0),
+            goToScoreAutoCommand(0),
             superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
 
-            factory.resetOdometry("DL-RSM"),
+            Commands.deadline(
+                Commands.sequence(
+                    followTrajectoryCommand("R3GS", 1),
+                    followTrajectoryCommand("R3GS", 2)
+                ),
+                groundIntakeCommand()
+            ),  
+            Commands.either(
+                Commands.sequence(
+                    goToScoreAutoCommand(1), 
+                    superstructure.outtakeCoral()
+                ),
+                Commands.print("SECOND CORAL MISSED"), 
+                () -> endeffector.coralDetected()
+            ),
+
             Commands.parallel(
-                superstructure.stowCommand(),
-                Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
-                factory.trajectoryCmd("DL-RSM")
-            ),
-            goToIntakeAutoCommand(),
-
-            factory.resetOdometry("RSML-C"),
-            factory.trajectoryCmd("RSML-C"),
+                Commands.sequence(
+                    followTrajectoryCommand("R3GS", 3),
+                    followTrajectoryCommand("R3GS", 4)
+                ),
+                groundIntakeCommand()
+            ),  
             goToScoreAutoCommand(0),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets())
-        );
-    }
-
-    public Command left3L4() {
-        return Commands.sequence(
-            factory.resetOdometry("BBML-J"),
-            factory.trajectoryCmd("BBML-J"),
-            goToScoreAutoCommand(1),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets()),
-
-            factory.resetOdometry("JL-LSM"),
-            factory.trajectoryCmd("JL-LSM"),
-            goToIntakeAutoCommand(),
-
-            factory.resetOdometry("LSML-K"),
-            factory.trajectoryCmd("LSML-K"),
-            goToScoreAutoCommand(0),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets()),
-
-            factory.resetOdometry("KL-LSM"),
-            factory.trajectoryCmd("KL-LSM"),
-            goToIntakeAutoCommand(),
-
-            factory.resetOdometry("LSML-L"),
-            factory.trajectoryCmd("LSML-L"),
-            goToScoreAutoCommand(1),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets())
-        );
-    }
-
-    public Command justGiveItANameAuto() {
-        return Commands.sequence(
-            factory.resetOdometry("RandomL-E"),
-            factory.trajectoryCmd("RandomL-E"),
-            goToScoreAutoCommand(new Pose2d(5, 2.8, Rotation2d.fromDegrees(-60))),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets()),
-
-            factory.resetOdometry("EL-RSM"),
-            factory.trajectoryCmd("EL-RSM"),
-            goToIntakeAutoCommand(),
-
-            factory.resetOdometry("RSML-D"),
-            factory.trajectoryCmd("RSML-D"),
-            goToScoreAutoCommand(new Pose2d(3.975, 2.81, Rotation2d.fromDegrees(-120))),
-            superstructure.outtakeCoral(),
-            superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.waitUntil(() -> superstructure.atTargets())
-        );
-    }
-
-    public Command justGiveItANamePaths() {
-        return Commands.sequence(
-            factory.resetOdometry("RandomL-E"),
-            factory.trajectoryCmd("RandomL-E"),
-            factory.resetOdometry("EL-RSM"),
-            factory.trajectoryCmd("EL-RSM"),
-            factory.resetOdometry("RSML-D"),
-            factory.trajectoryCmd("RSML-D")
+            superstructure.outtakeCoral()
         );
     }
 
@@ -258,23 +159,29 @@ public class Autos {
                 Commands.sequence(
                     superstructure.goToL4Command(),
                     Commands.waitUntil(() -> superstructure.atTargets()),
-                    Commands.waitSeconds(0.8)
+                    Commands.waitSeconds(0.4)
                 ),
                 Commands.sequence(
                     Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    // drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                    // Commands.deadline(
-                    //     Commands.waitSeconds(0.5), 
-                    //     drivetrain.pidToPoseContinuousCommand()
-                    // ),
                     drivetrain.pidToPoseContinuousCommand()
                 )
             ),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+            drivetrain.disablePositionTargetingCommand()
         );
     }
 
-    public Command goToIntakeAutoCommand() {
+    public Command groundIntakeCommand() {
+        return Commands.sequence(
+            superstructure.goToIntakePosition(),
+            Commands.deadline(
+                superstructure.intakeCoral(),
+                intake.spasmIntakeCommand()
+            ),
+            superstructure.stowReefCommand()
+        );
+    }
+
+    public Command goToSourceIntakeCommand() {
         return Commands.sequence(
             Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
             Commands.deadline(
@@ -286,6 +193,13 @@ public class Autos {
             ),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
             superstructure.stowCommand()
+        );
+    }
+
+    public Command followTrajectoryCommand(String trajectoryName, int index) {
+        return Commands.sequence(
+            factory.resetOdometry(trajectoryName, index),
+            factory.trajectoryCmd(trajectoryName, index)
         );
     }
 }
