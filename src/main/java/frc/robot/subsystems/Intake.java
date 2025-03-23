@@ -36,7 +36,7 @@ public class Intake extends SubsystemBase{
     private RedRockTalon pivotMotor = new RedRockTalon(22, "intake-pivot-motor", "*");
     private RedRockTalon intakeMotor = new RedRockTalon(21, "intake-drive-motor", "*");
 
-    private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 23.5);
+    private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 21.75);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0.2);
 
     private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 6.5);
@@ -104,7 +104,7 @@ public class Intake extends SubsystemBase{
                 
         this.intakeMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
-            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withInverted(InvertedValue.Clockwise_Positive)
             .withPeakForwardDutyCycle(1d)
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Brake)

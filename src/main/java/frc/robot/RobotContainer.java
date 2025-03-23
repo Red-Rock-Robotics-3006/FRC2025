@@ -187,7 +187,7 @@ public class RobotContainer {
             Commands.sequence(
                 superstructure.goToIntakePosition(),
                 Commands.deadline(
-                    superstructure.intakeCoral(),
+                    superstructure.intakeGroundCoral(),
                     // intake.spasmIntakeCommand()
                     intake.startIntakeCommand()
                 ),

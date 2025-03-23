@@ -173,10 +173,10 @@ public class Superstructure {
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
-            this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(Position.STOW),
             this.endEffector.goToPosition(Position.STOW),
-            this.endEffector.stopCommand()
+            this.endEffector.stopCommand(),
+            this.intake.stowIntakeCommand()
         );
     }
 
@@ -245,6 +245,10 @@ public class Superstructure {
      */
     public Command intakeCoral() {
         return this.endEffector.intakeCoral();
+    }
+
+    public Command intakeGroundCoral() {
+        return this.endEffector.intakeGroundCoral();
     }
 
     /**

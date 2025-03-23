@@ -35,7 +35,7 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3", 21).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 59).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-source", 4).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 17).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 22.23).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-algae-ground", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-processor", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-stow", 0).withTuningEnabled(kEnablePositionTuning);
@@ -70,7 +70,7 @@ public class Elevator extends SubsystemBase {
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
 
-    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 0);
+    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 12);
     private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 40);
                                                                                                              
 

@@ -43,6 +43,7 @@ import frc.robot.Superstructure.Position;
 public class EndEffector extends SubsystemBase {
     public static final double kCoralOuttakeWaitTime = 0.0;
     public static final double kAlgaeOUttakeWaitTime = 0.2;
+    public static final double kCoralGroundIntakeTime = 0.03;
 
     public static boolean kEnableMotorTuning = false;
 
@@ -62,6 +63,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.5);
     private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold-speed", 0);
+    private SmartDashboardNumber coralGroundIntakeSpeed = new SmartDashboardNumber("endeffector/coral-ground-intake-speed-ef", -0.45);
     
     private Position targetPosition = Position.STOW;
 
@@ -72,7 +74,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 30);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 19);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 9);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 5);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 39.34);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.1);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
@@ -220,6 +222,10 @@ public class EndEffector extends SubsystemBase {
         this.setSpeed(this.coralIntakeSpeed.getNumber());
     }
 
+    public void setGroundCoralIntakeSpeed() {
+        this.setSpeed(this.coralGroundIntakeSpeed.getNumber());
+    }
+
     public void setCoralOuttakeSpeed() {
         this.setSpeed(this.coralOuttakeSpeed.getNumber());
     }
@@ -330,6 +336,15 @@ public class EndEffector extends SubsystemBase {
             (interrupted) -> this.stop(),
             () -> this.coralDetected(),
             this
+        );
+    }
+
+    public Command intakeGroundCoral() {
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setGroundCoralIntakeSpeed(), this),
+            Commands.waitUntil(() -> this.coralDetected()),
+            Commands.waitSeconds(kCoralGroundIntakeTime),
+            Commands.runOnce(() -> this.stop(), this)
         );
     }
 
