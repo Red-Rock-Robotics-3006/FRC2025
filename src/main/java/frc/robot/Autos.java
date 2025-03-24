@@ -25,8 +25,13 @@ public class Autos {
     public Command TESTPATH1() {
         return 
         Commands.sequence(
-            followTrajectoryCommand("TESTPATH1", 0),
-            followTrajectoryCommand("TESTPATH1", 0)
+            Commands.parallel(
+                followTrajectoryWithPIDEndingCommand("TESTPATH1", 0),
+                Commands.waitSeconds(3)),
+            
+            Commands.parallel(
+                followTrajectoryWithPIDEndingCommand("TESTPATH1", 1),
+                Commands.waitSeconds(3))
         );
     }
 
@@ -202,4 +207,34 @@ public class Autos {
             factory.trajectoryCmd(trajectoryName, index)
         );
     }
+
+    /**
+     * PID to poses to the final pose position in the given trajectory
+     * 
+     * @return Command to PID to pose until at target pose
+     */
+    public Command pidToFinalPathPoseCommand(String trajectoryName, int index) {
+        return Commands.sequence(
+            Commands.runOnce(() -> {
+                drivetrain.setTargetPose(factory.cache().loadTrajectory(trajectoryName, index).get().getFinalPose(false).get());
+                drivetrain.enablePositionTargeting();
+                }, drivetrain),
+    
+            Commands.deadline(
+                Commands.waitUntil(() -> drivetrain.atTargetPose()),
+                drivetrain.pidToPoseContinuousCommand()
+            ),
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+        );
+    }
+
+    /**
+     * Follows trajectory normally, but uses PID to pose to make up for any error at the end of the path
+     * 
+     * @return Command to follow path and then PID to final path pose
+     */
+    public Command followTrajectoryWithPIDEndingCommand(String trajectoryName, int index) {
+        return Commands.sequence(followTrajectoryCommand(trajectoryName, index),pidToFinalPathPoseCommand(trajectoryName, index));
+    }
+    
 }

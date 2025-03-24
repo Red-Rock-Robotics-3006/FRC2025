@@ -157,7 +157,7 @@ public class LED extends SubsystemBase{
     public void periodic() {
         blinkControl++;
 
-        if (swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.REEF_HOMING;
+        if (swerve.getTargetingReef() && swerve.isTargetingPosition()) state = LEDState.REEF_HOMING;
         else if (EndEffector.getInstance().coralDetected()) state = LEDState.HAS_CORAL;
         // else if (!swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.SOURCE_INTAKE_HOMING;
         else state = LEDState.IDLE;

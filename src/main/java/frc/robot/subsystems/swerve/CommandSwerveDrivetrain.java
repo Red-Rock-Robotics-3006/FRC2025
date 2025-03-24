@@ -851,9 +851,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return Commands.runOnce(() -> this.disablePositionTargeting(), this);
     }
 
-    public boolean getPositionTargeting() {
-        return this.inPositionTargeting;
-    }
 
     public double getSingleAxisMultiplier() {
         if (usingSingleAxisDrive) return 0;
