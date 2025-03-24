@@ -180,7 +180,7 @@ public class Autos {
             superstructure.goToIntakePosition(),
             Commands.deadline(
                 superstructure.intakeCoral(),
-                intake.spasmIntakeCommand()
+                intake.startIntakeCommand()
             ),
             superstructure.stowReefCommand()
         );
