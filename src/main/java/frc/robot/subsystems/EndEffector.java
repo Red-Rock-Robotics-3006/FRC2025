@@ -73,7 +73,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 28.5);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 30);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 19);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 29.5);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 29);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 39.34);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.1);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
