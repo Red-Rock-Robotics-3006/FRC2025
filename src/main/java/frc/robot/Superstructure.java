@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -157,9 +158,9 @@ public class Superstructure {
 
     public Command goToIntakePosition() {
         return Commands.sequence(
+            this.elevator.goToPosition(Position.CORAL_GROUND),
             this.intake.deployIntakeCommand(),
             this.endEffector.goToPosition(Position.CORAL_GROUND),
-            this.elevator.goToPosition(Position.CORAL_GROUND),
             Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
             this.arm.goToPosition(Position.CORAL_GROUND)
         );
@@ -228,7 +229,16 @@ public class Superstructure {
     }
 
     public Command goToSourceIntakePosition() {
-        return this.goToPosition(Position.SOURCE);
+        // return this.goToPosition(Position.SOURCE);
+        return Commands.sequence(
+            this.elevator.goToPosition(Position.SOURCE),
+            this.endEffector.goToPosition(Position.SOURCE),
+            Commands.waitUntil(() -> this.elevator.aboveSourceIntakeThreshold()),
+            this.arm.goToPosition(Position.SOURCE)
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.SOURCE) && this.arm.belowFloorThreshold())),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.SOURCE) && !this.arm.inSafeZone())),
+            // this.intake.stowIntakeCommand(),
+        );
     }
 
     public Command goToL2RemoveCommand() {

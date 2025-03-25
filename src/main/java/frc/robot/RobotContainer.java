@@ -151,6 +151,10 @@ public class RobotContainer {
             new InstantCommand(drivetrain::toggleHeadingPID, drivetrain)
         );
 
+        drivestick.back().and(drivestick.povRight()).onTrue(
+            Commands.runOnce(() -> drivetrain.setHeadingFromMegatag1(), drivetrain)
+        );
+
         // drivestick.rightStick().onTrue(
         //     new InstantCommand(drivetrain::toggleUsingSingleAxis, drivetrain)
         // );

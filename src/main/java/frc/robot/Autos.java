@@ -25,18 +25,22 @@ public class Autos {
     public Command TESTPATH1() {
         return 
         Commands.sequence(
-            Commands.parallel(
-                followTrajectoryWithPIDEndingCommand("TESTPATH1", 0),
-                Commands.waitSeconds(3)),
+            followTrajectoryWithPIDEndingCommand("TESTPATH1", 0),
+            followTrajectoryWithPIDEndingCommand("TESTPATH1", 1)
+            // Commands.deadline(
+            //     Commands.waitSeconds(6),
+            //     followTrajectoryWithPIDEndingCommand("TESTPATH1", 0)
+            // ),
             
-            Commands.parallel(
-                followTrajectoryWithPIDEndingCommand("TESTPATH1", 1),
-                Commands.waitSeconds(3))
+            // Commands.deadline(
+            //     Commands.waitSeconds(6),
+            //     followTrajectoryWithPIDEndingCommand("TESTPATH1", 1)
+            // )
         );
     }
 
     public Command TESTPATH2() {
-        return followTrajectoryCommand("TESTPATH2", 0);
+        return followTrajectoryWithPIDEndingCommand("TESTPATH2", 0);
     }
 
     public Command left3L4Paths() {
@@ -215,16 +219,25 @@ public class Autos {
      */
     public Command pidToFinalPathPoseCommand(String trajectoryName, int index) {
         return Commands.sequence(
+            
             Commands.runOnce(() -> {
+
                 drivetrain.setTargetPose(factory.cache().loadTrajectory(trajectoryName, index).get().getFinalPose(false).get());
                 drivetrain.enablePositionTargeting();
                 }, drivetrain),
     
             Commands.deadline(
-                Commands.waitUntil(() -> drivetrain.atTargetPose()),
+                Commands.race(
+                    Commands.waitUntil(() -> drivetrain.atTargetPose()),
+                    Commands.waitSeconds(0.4)
+                ),
                 drivetrain.pidToPoseContinuousCommand()
             ),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
+            Commands.deadline(
+                Commands.waitSeconds(0.02), 
+                drivetrain.driveContinuousStillCommand()
+            )
         );
     }
 
@@ -234,7 +247,8 @@ public class Autos {
      * @return Command to follow path and then PID to final path pose
      */
     public Command followTrajectoryWithPIDEndingCommand(String trajectoryName, int index) {
-        return Commands.sequence(followTrajectoryCommand(trajectoryName, index),pidToFinalPathPoseCommand(trajectoryName, index));
+        return Commands.sequence(followTrajectoryCommand(trajectoryName, index),
+                pidToFinalPathPoseCommand(trajectoryName, index));
     }
     
 }

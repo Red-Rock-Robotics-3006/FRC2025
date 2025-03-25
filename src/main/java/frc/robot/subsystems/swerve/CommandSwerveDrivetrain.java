@@ -142,9 +142,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-source-kd", 0.013);
     private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-source-Irange", 0.2);
 
-    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-auto-kp", 6);
-    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-auto-ki", 0.4); // 15
-    private SmartDashboardNumber autoPositionKd = new SmartDashboardNumber("dt/dt-auto-auto-kd", 0);
+    private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-auto-kp", 4);
+    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-auto-ki", 2.8); // 15
+    private SmartDashboardNumber autoPositionKd = new SmartDashboardNumber("dt/dt-auto-auto-kd", 0.3);
     //private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-auto-position-Irange", 0.2);
 
     private SmartDashboardNumber autoThetaKp = new SmartDashboardNumber("dt/dt-auto-theta-kp", 4);
@@ -515,6 +515,18 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.fieldCentricRequest = drive;
     }
 
+    public void setHeadingFromMegatag1() {
+        double deg = Localization.getMegatag1Pose2dFromClimb();
+        this.targetHeadingDegrees = deg;
+        this.resetPose(
+            new Pose2d(
+                this.getPose().getX(),
+                this.getPose().getY(),
+                Rotation2d.fromDegrees(deg)
+            )
+        );
+    }
+
     @Override
     public void periodic() {
         /*
@@ -555,11 +567,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             this.positionControllerX.setIntegratorRange(-sourcePositionIRange.getNumber(), sourcePositionIRange.getNumber());
             this.positionControllerY.setIntegratorRange(-sourcePositionIRange.getNumber(), sourcePositionIRange.getNumber());
 
-            System.out.println("sigh aye guh ma");
+            // System.out.println("sigh aye guh ma");
         } else {
             this.positionControllerX.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
             this.positionControllerY.setPID(positionKp.getNumber(), positionKi.getNumber(), positionKd.getNumber());
-    
+            
             positionControllerX.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
             positionControllerY.setIntegratorRange(-positionIRange.getNumber(), positionIRange.getNumber());
         }
@@ -607,6 +619,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         this.xVelocity.putNumber(this.positionControllerX.getErrorDerivative());
         this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
+
+        SmartDashboard.putNumber("localization/megatag-1-heading", Localization.getMegatag1Pose2dFromClimb());
 
         if (visionEnabled.getValue()) updateVisionMeasurements();
     }
@@ -940,6 +954,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 .withVelocityY(RobotContainer.progressiveInput(drivestickValues[1], RobotContainer.progressiveDriveExponent, true) * this.getMaxDriveSpeed())
                 .withTargetDirection(Rotation2d.fromDegrees(this.getTargetHeadingDegrees()));
         }
+        );
+    }
+
+    public Command driveContinuousStillCommand() {
+        return this.applyRequest(
+            () -> fieldCentricRequest.withVelocityX(0).withVelocityY(0).withRotationalRate(0)
         );
     }
 

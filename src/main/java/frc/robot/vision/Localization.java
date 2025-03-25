@@ -10,6 +10,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
+import frc.robot.vision.LimelightHelpers.PoseEstimate;
 import redrocklib.logging.SmartDashboardNumber;
 
 public class Localization {
@@ -51,15 +52,26 @@ public class Localization {
             wrappers[i].withPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(s))
                         .withTagInVision(LimelightHelpers.getTV(s));
         }
-        SmartDashboard.putNumber("localization/pose/x", getPose2d().getX());
-        SmartDashboard.putNumber("localization/pose/y", getPose2d().getY());
-        SmartDashboard.putNumber("localization/pose/heading", getPose2d().getRotation().getDegrees());
+
+        Pose2d pose = getPose2d();
+        SmartDashboard.putNumber("localization/pose/x", pose.getX());
+        SmartDashboard.putNumber("localization/pose/y", pose.getY());
+        SmartDashboard.putNumber("localization/pose/heading", pose.getRotation().getDegrees());
 
         return wrappers;
     }
 
     public static Pose2d getPose2d() {
         return CommandSwerveDrivetrain.getInstance().getPose();
+    }
+
+    public static double getMegatag1Pose2dFromClimb() {
+        // if (LimelightHelpers.getTV(limeLightNames[1])) {
+        //     SmartDashboard.putBoolean("locaization/mt1-tiv", true);
+        return LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-" + limeLightNames[1]).pose.getRotation().getDegrees();
+        // }
+        // SmartDashboard.putBoolean("locaization/mt1-tiv", false);
+        // return new Pose2d();
     }
 
     public static class LimeLightPoseEstimateWrapper {

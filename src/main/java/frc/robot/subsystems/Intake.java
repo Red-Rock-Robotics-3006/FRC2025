@@ -36,10 +36,10 @@ public class Intake extends SubsystemBase{
     private RedRockTalon pivotMotor = new RedRockTalon(22, "intake-pivot-motor", "*");
     private RedRockTalon intakeMotor = new RedRockTalon(21, "intake-drive-motor", "*");
 
-    private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 21.75);
+    private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 22.3);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0.2);
 
-    private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 6.5);
+    private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 2.8);
 
     private SmartDashboardNumber intakeAlgaeStowPosition = new SmartDashboardNumber("intake/intake-algae/stow", 3);
     private SmartDashboardNumber intakeAlgaePosition = new SmartDashboardNumber("intake/intake-algae/pos", 8.5);
@@ -50,7 +50,7 @@ public class Intake extends SubsystemBase{
     
     private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 5000);
     private SmartDashboardNumber tqIntakeSpeed = new SmartDashboardNumber("intake/tq-intake-speed", 3000);
-    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1600);
+    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1700);
     private SmartDashboardNumber resetSpeed = new SmartDashboardNumber("intake/reset-speed", -0.05);
     private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -900);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
@@ -121,10 +121,11 @@ public class Intake extends SubsystemBase{
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
+
             .withMotionMagicAcceleration(1300)
             .withMotionMagicCruiseVelocity(100)
         )
-        .withSpikeThreshold(60)
+        .withSpikeThreshold(39)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
             .withSupplyCurrentLimit(45)
@@ -142,7 +143,7 @@ public class Intake extends SubsystemBase{
 
     public void resetPivot() {
         this.pivotMotor.motor.setControl(new NeutralOut());
-        this.pivotMotor.motor.setPosition(0);
+        this.pivotMotor.motor.setPosition(-1);
     }
 
     public void setOuttakeSpeed() {

@@ -34,7 +34,7 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2", 1.5).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3", 21).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 59).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-source", 4).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-source", 50).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 22.23).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-algae-ground", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-processor", 0).withTuningEnabled(kEnablePositionTuning);
@@ -72,6 +72,7 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 12);
     private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 40);
+    private SmartDashboardNumber intakeSourceArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/source-threshold", 20);
                                                                                                              
 
     private Elevator() {
@@ -297,6 +298,10 @@ public class Elevator extends SubsystemBase {
 
     public boolean belowAutoStowGroundThreshold() {
         return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() < this.autoStowThreshold.getNumber();
+    }
+
+    public boolean aboveSourceIntakeThreshold() {
+        return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() > this.intakeSourceArmThreshold.getNumber();
     }
     
     /**
