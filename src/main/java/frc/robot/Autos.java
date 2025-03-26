@@ -2,6 +2,8 @@ package frc.robot;
 
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Superstructure.Position;
@@ -45,15 +47,15 @@ public class Autos {
 
     public Command left3L4Paths() {
         return Commands.sequence(
-            followTrajectoryCommand("L3GS", 0),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("L3GS", 1),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("L3GS", 2),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("L3GS", 3),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("L3GS", 4)
+            followTrajectoryWithPIDEndingCommand("L3GS", 0),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("L3GS", 1),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("L3GS", 2),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("L3GS", 3),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("L3GS", 4)
         );
     }
 
@@ -82,6 +84,7 @@ public class Autos {
             Commands.deadline(
                 Commands.sequence(
                     followTrajectoryCommand("L3GS", 1),
+                    Commands.waitSeconds(0.2),
                     followTrajectoryCommand("L3GS", 2)
                 ),
                 groundIntakeCommand()
@@ -98,6 +101,7 @@ public class Autos {
             Commands.parallel(
                 Commands.sequence(
                     followTrajectoryCommand("L3GS", 3),
+                    Commands.waitSeconds(0.2),
                     followTrajectoryCommand("L3GS", 4)
                 ),
                 groundIntakeCommand()
@@ -222,7 +226,7 @@ public class Autos {
             
             Commands.runOnce(() -> {
 
-                drivetrain.setTargetPose(factory.cache().loadTrajectory(trajectoryName, index).get().getFinalPose(false).get());
+                drivetrain.setTargetPose(factory.cache().loadTrajectory(trajectoryName, index).get().getFinalPose(DriverStation.getAlliance().get().equals(Alliance.Red)).get());
                 drivetrain.enablePositionTargeting();
                 }, drivetrain),
     
