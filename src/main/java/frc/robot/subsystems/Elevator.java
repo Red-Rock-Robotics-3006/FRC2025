@@ -70,7 +70,7 @@ public class Elevator extends SubsystemBase {
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
 
-    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 12);
+    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 8);
     private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 40);
     private SmartDashboardNumber intakeSourceArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/source-threshold", 20);
                                                                                                              
