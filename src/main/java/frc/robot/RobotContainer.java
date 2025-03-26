@@ -171,7 +171,8 @@ public class RobotContainer {
             Commands.sequence(
                 // superstructure.normalizeCommand()
                 superstructure.stopEndEffector(),
-                intake.stopIntakeCommand()
+                intake.stopIntakeCommand(),
+                Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
             )
         );
 

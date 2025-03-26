@@ -120,7 +120,7 @@ public class LED extends SubsystemBase{
     private void rainbow() {
         for (var i = 0; i < buffer.getLength(); i++) {
           final var hue = (huething + (i * 180 / buffer.getLength())) % 180;
-          buffer.setHSV(i, hue, 255, 50);
+          buffer.setHSV(i, hue, 255, 128);
         }
         huething += huethingcontrol;
         huething %= 180;

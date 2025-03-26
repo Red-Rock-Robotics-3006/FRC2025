@@ -47,7 +47,7 @@ public class Autos {
 
     public Command left3L4Paths() {
         return Commands.sequence(
-            followTrajectoryWithPIDEndingCommand("L3GS", 0),
+            // followTrajectoryWithPIDEndingCommand("L3GS", 0),
             // Commands.waitSeconds(1.5),
             followTrajectoryWithPIDEndingCommand("L3GS", 1),
             // Commands.waitSeconds(1.5),
@@ -61,15 +61,15 @@ public class Autos {
 
     public Command right3L4Paths() {
         return Commands.sequence(
-            followTrajectoryCommand("R3GS", 0),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("R3GS", 1),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("R3GS", 2),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("R3GS", 3),
-            Commands.waitSeconds(1.5),
-            followTrajectoryCommand("R3GS", 4)
+            // followTrajectoryCommand("R3GS", 0),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("R3GS", 1),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("R3GS", 2),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("R3GS", 3),
+            // Commands.waitSeconds(1.5),
+            followTrajectoryWithPIDEndingCommand("R3GS", 4)
         );
     }
     
@@ -115,7 +115,7 @@ public class Autos {
         return Commands.sequence(
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
-            followTrajectoryCommand("R3GS", 0),
+            // followTrajectoryCommand("R3GS", 0),
             scoreAutoCommand(0),
             superstructure.outtakeCoral(),
 
@@ -211,8 +211,10 @@ public class Autos {
 
     public Command followTrajectoryCommand(String trajectoryName, int index) {
         return Commands.sequence(
+            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index)
+            factory.trajectoryCmd(trajectoryName, index),
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
         );
     }
 

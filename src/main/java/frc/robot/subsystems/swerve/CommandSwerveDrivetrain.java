@@ -641,7 +641,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                     estimateWrapper.poseEstimate.pose
                 );
                 SmartDashboard.putBoolean("localization/vision-accepted", true);
-                SmartDashboard.putNumber(estimateWrapper.name + "/" + estimateWrapper.name + "-latency", estimateWrapper.poseEstimate.latency);
+                SmartDashboard.putNumber(estimateWrapper.name + "/" + estimateWrapper.name + "-latency", estimateWrapper.poseEstimate.latency * 0.01);
             }
             else
                 SmartDashboard.putBoolean("localization/vision-accepted", false);
@@ -869,6 +869,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return Commands.runOnce(() -> this.disablePositionTargeting(), this);
     }
 
+    public void disableVision() {
+        this.visionEnabled.putBoolean(false);
+    }
+
+    public void enableVision() {
+        this.visionEnabled.putBoolean(true);
+    }
 
     public double getSingleAxisMultiplier() {
         if (usingSingleAxisDrive) return 0;
