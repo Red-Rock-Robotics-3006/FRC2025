@@ -85,14 +85,20 @@ public class RobotContainer {
     public void configureSelector(){
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
 
-        m_chooser.addOption("TESTPATH1", autos.TESTPATH1());
-        m_chooser.addOption("TESTPATH2", autos.TESTPATH2());
+        // m_chooser.addOption("TESTPATH1", autos.TESTPATH1());
+        // m_chooser.addOption("TESTPATH2", autos.TESTPATH2());
 
-        m_chooser.addOption("Left 3 L4", autos.left3L4());
-        m_chooser.addOption("Right 3 L4", autos.right3L4());
+        m_chooser.addOption("Left 3 L4 Ground Source", autos.left3L4GroundSource());
+        m_chooser.addOption("Right 3 L4 Ground Source", autos.right3L4GroundSource());
 
-        m_chooser.addOption("Left 3 L4 Paths", autos.left3L4Paths());
-        m_chooser.addOption("Right 3 L4 Paths", autos.right3L4Paths());
+        m_chooser.addOption("Left 3 L4 Ground Lollipop", autos.left3L4GroundLollipop());
+        m_chooser.addOption("Right 3 L4 Ground Lollipop", autos.right3L4GroundLollipop());
+
+        m_chooser.addOption("Left 3 L4 Source", autos.left3L4Source());
+        m_chooser.addOption("Right 3 L4 Source", autos.right3L4Source());
+
+        // m_chooser.addOption("Left 3 L4 Paths", autos.left3L4Paths());
+        // m_chooser.addOption("Right 3 L4 Paths", autos.right3L4Paths());
             
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }
@@ -237,7 +243,7 @@ public class RobotContainer {
                 ),
                 Commands.sequence(
                     superstructure.goToSourceIntakePosition(), //TODO add swerve thing
-                    superstructure.intakeCoral(),
+                    superstructure.intakeGroundCoral(),
                     this.rumbleControllerCommand(1, 0.6)
                 )
             )
@@ -331,6 +337,7 @@ public class RobotContainer {
         mechstick.leftBumper().onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> Arm.getInstance().setClimbPosition(), Arm.getInstance()), //TODO Don't use Arm!
+                Commands.runOnce(() -> intake.setIntakeClimb(), intake),
                 Commands.runOnce(() -> climber.setStowSpeed(), climber)
             )
         ).onFalse(
@@ -368,9 +375,11 @@ public class RobotContainer {
             )
         );
 
-        mechstick.start().onTrue(
-            Commands.runOnce(() -> leds.resetLEDs(), leds)
-        );
+        // mechstick.start().onTrue(
+        //     Commands.runOnce(() -> EndEffector.getInstance().setCoralIntakeSpeed(), EndEffector.getInstance())
+        // ).onFalse(
+
+        // )
     }
 
     public void configureTestBindings() {

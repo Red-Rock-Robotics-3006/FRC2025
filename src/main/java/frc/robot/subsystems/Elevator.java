@@ -28,12 +28,12 @@ public class Elevator extends SubsystemBase {
     private static boolean kEnablePositionTuning = true;
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("elevator/min-rotation", 0);
-    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 60);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 62);
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l1", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2", 1.5).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3", 21).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 59).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 61).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-source", 50).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 22.23).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-algae-ground", 0).withTuningEnabled(kEnablePositionTuning);
@@ -41,7 +41,7 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-stow", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-barge", 60).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2-algae", 0).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3-algae", 19).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3-algae", 17.5).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber l1StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l1", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l2", 1.5).withTuningEnabled(kEnablePositionTuning);

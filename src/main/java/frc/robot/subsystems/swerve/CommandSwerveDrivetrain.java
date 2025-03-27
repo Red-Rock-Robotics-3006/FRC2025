@@ -134,12 +134,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private SmartDashboardNumber positionKp = new SmartDashboardNumber("dt/dt-position-kp", 0.85);
     private SmartDashboardNumber positionKi = new SmartDashboardNumber("dt/dt-position-ki", 0); // 15
-    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0.013);
+    private SmartDashboardNumber positionKd = new SmartDashboardNumber("dt/dt-position-kd", 0.009);
     private SmartDashboardNumber positionIRange = new SmartDashboardNumber("dt/dt-position-Irange", 0.2);
 
     private SmartDashboardNumber sourcePositionKp = new SmartDashboardNumber("dt/dt-source-kp", 0.85);
     private SmartDashboardNumber sourcePositionKi = new SmartDashboardNumber("dt/dt-source-ki", 0); // 15
-    private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-source-kd", 0.013);
+    private SmartDashboardNumber sourcePositionKd = new SmartDashboardNumber("dt/dt-source-kd", 0.009);
     private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-source-Irange", 0.2);
 
     private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-auto-kp", 4);
@@ -182,10 +182,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d blueCenter = new Pose2d(4.489323, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.066, 4.0259, new Rotation2d());
 
-    private Pose2d blueSourceLeft = new Pose2d(1.133, 7.0218, Rotation2d.fromDegrees(126));
-    private Pose2d blueSourceRight = new Pose2d(1.133, 1.03, Rotation2d.fromDegrees(-126));
-    private Pose2d redSourceLeft = new Pose2d(16.421, 1.03, Rotation2d.fromDegrees(-54));
-    private Pose2d redSourceRight = new Pose2d(16.421, 7.0218, Rotation2d.fromDegrees(54));
+    private Pose2d blueSourceLeft = new Pose2d(1.12, 7.04, Rotation2d.fromDegrees(126));
+    private Pose2d blueSourceRight = new Pose2d(1.12, 1.0, Rotation2d.fromDegrees(-126));
+    private Pose2d redSourceLeft = new Pose2d(16.42, 1.0, Rotation2d.fromDegrees(-54));
+    private Pose2d redSourceRight = new Pose2d(16.42, 7.04, Rotation2d.fromDegrees(54));
 
     private ArrayList<Pose2d> sourcePoses = new ArrayList<>();
 
@@ -193,8 +193,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d fieldCenter = new Pose2d(8.75665, 4.0259, Rotation2d.kZero);
 
-    private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86, Rotation2d.kZero);
-    private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86, Rotation2d.kZero);
+    private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.025, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.025, Rotation2d.kZero);
 
     private int reefClockSide = 0;
     
@@ -635,13 +635,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {
                 this.addVisionMeasurement(estimateWrapper.poseEstimate.pose,
                                         // estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()), 
-                                        Utils.getCurrentTimeSeconds() - estimateWrapper.poseEstimate.latency * 0.01,
+                                        Utils.getCurrentTimeSeconds() - estimateWrapper.poseEstimate.latency * 0.001,
                                         estimateWrapper.getStdvs(estimateWrapper.poseEstimate.avgTagDist));
                 estimateWrapper.field.setRobotPose(
                     estimateWrapper.poseEstimate.pose
                 );
                 SmartDashboard.putBoolean("localization/vision-accepted", true);
-                SmartDashboard.putNumber(estimateWrapper.name + "/" + estimateWrapper.name + "-latency", estimateWrapper.poseEstimate.latency * 0.01);
+                SmartDashboard.putNumber(estimateWrapper.name + "/" + estimateWrapper.name + "-latency", estimateWrapper.poseEstimate.latency * 0.001);
             }
             else
                 SmartDashboard.putBoolean("localization/vision-accepted", false);

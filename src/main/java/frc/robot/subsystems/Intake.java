@@ -40,6 +40,7 @@ public class Intake extends SubsystemBase{
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0.2);
 
     private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 2.8);
+    private SmartDashboardNumber intakeClimbPosition = new SmartDashboardNumber("intake/climb-pos", 5);
 
     private SmartDashboardNumber intakeAlgaeStowPosition = new SmartDashboardNumber("intake/intake-algae/stow", 3);
     private SmartDashboardNumber intakeAlgaePosition = new SmartDashboardNumber("intake/intake-algae/pos", 8.5);
@@ -199,6 +200,10 @@ public class Intake extends SubsystemBase{
 
     public void setIntakeDeploy() {
         this.setPosition(intakeDeployPosition.getNumber());
+    }
+
+    public void setIntakeClimb() {
+        this.setPosition(intakeClimbPosition.getNumber());
     }
 
     public void setIntakeStow() {

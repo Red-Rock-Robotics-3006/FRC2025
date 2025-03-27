@@ -170,7 +170,8 @@ public class LED extends SubsystemBase{
                 setLights(BLUE);
                 break;
             case REEF_HOMING:
-                blink(GREEN, 7);
+                // blink(GREEN, 7);
+                setLights(GREEN);
                 break;
             case REEF_READY:
                 setLights(GREEN);

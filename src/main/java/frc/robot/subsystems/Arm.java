@@ -59,7 +59,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 118.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 118.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 114).withTuningEnabled(kEnablePositionTuning); //112 @ utah
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 114.57).withTuningEnabled(kEnablePositionTuning); //112 @ utah
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", -57).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -52).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 155).withTuningEnabled(kEnablePositionTuning);
