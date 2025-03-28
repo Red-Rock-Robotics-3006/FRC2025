@@ -97,6 +97,9 @@ public class RobotContainer {
         m_chooser.addOption("Left 3 L4 Source", autos.left3L4Source());
         m_chooser.addOption("Right 3 L4 Source", autos.right3L4Source());
 
+        m_chooser.addOption("Left 3 L4 Source Slow", autos.slowLeft3L4Source());
+        m_chooser.addOption("Right 3 L4 Source Slow", autos.slowRight3L4Source());
+
         m_chooser.addOption("left3L4GroundLollipopPaths", autos.left3L4GroundLollipopPaths());
 
         // m_chooser.addOption("Left 3 L4 Paths", autos.left3L4Paths());
@@ -190,10 +193,6 @@ public class RobotContainer {
 
         drivestick.povLeft().onTrue(
             superstructure.normalizeEFCommand()
-        );
-
-        drivestick.povRight().onTrue(
-            superstructure.normalizeECommand()
         );
 
         drivestick.leftTrigger(0.25).onTrue(

@@ -161,6 +161,7 @@ public class Superstructure {
             this.elevator.goToPosition(Position.CORAL_GROUND),
             this.intake.deployIntakeCommand(),
             this.endEffector.goToPosition(Position.CORAL_GROUND),
+            Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
             Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
             this.arm.goToPosition(Position.CORAL_GROUND)
         );

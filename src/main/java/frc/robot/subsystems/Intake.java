@@ -57,6 +57,8 @@ public class Intake extends SubsystemBase{
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("intake/intake-position-tolerance", 0.4);
 
+    private SmartDashboardNumber intakeDeployThreshold = new SmartDashboardNumber("intake/intkae-deploy-threshold", 18.5);
+
     private SmartDashboardNumber delta = new SmartDashboardNumber("intake/tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("intake/tuning/target", 0);
 
@@ -184,6 +186,10 @@ public class Intake extends SubsystemBase{
             .withEnableFOC(true)
             .withOverrideBrakeDurNeutral(true)
         );
+    }
+
+    public boolean pastIntakeDeployThreshold() {
+        return this.pivotMotor.motor.getPosition().getValueAsDouble() > this.intakeDeployThreshold.getNumber();
     }
 
     public void setAlgaeOuttakePosition() {

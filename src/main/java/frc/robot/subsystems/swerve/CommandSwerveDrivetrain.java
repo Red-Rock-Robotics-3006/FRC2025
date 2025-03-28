@@ -440,7 +440,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public void followPath(SwerveSample sample) {
         autoWantedPose2d = sample.getPose();
-        autoRealPose2d = this.getState().Pose;
+        // autoRealPose2d = this.getState().Pose;
+        autoRealPose2d = this.getPose();
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         m_pathThetaController.setI(rotateI.getNumber());
@@ -620,7 +621,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.xVelocity.putNumber(this.positionControllerX.getErrorDerivative());
         this.yVelocity.putNumber(this.positionControllerY.getErrorDerivative());
 
-        SmartDashboard.putNumber("localization/megatag-1-heading", Localization.getMegatag1Pose2dFromClimb());
+        //SmartDashboard.putNumber("localization/megatag-1-heading", Localization.getMegatag1Pose2dFromClimb()); //TODOUNCOMMENT
 
         if (visionEnabled.getValue()) updateVisionMeasurements();
     }
