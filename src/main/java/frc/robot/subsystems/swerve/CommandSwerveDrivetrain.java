@@ -629,7 +629,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public void updateVisionMeasurements() {
         Localization.LimeLightPoseEstimateWrapper[] wrappers = Localization.getPoseEstimates(this.getHeadingDegrees());
         for (int i = 0; i < wrappers.length; i++) {
-            if (i == 0 && isTargetingReef && isTargetingPosition()) continue;
+            if (i == 0 && (isTargetingReef || !isTargetingPosition())) continue;
             else if (i == 1 && !isTargetingReef && isTargetingPosition()) continue;
             Localization.LimeLightPoseEstimateWrapper estimateWrapper = wrappers[i];
             if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {

@@ -180,7 +180,8 @@ public class LED extends SubsystemBase{
                 blink(NOTE_ORANGE, 14);
                 break;
             case IDLE:
-                rainbow();
+                // rainbow();
+                setLights(GREEN);
                 break;
         }
 

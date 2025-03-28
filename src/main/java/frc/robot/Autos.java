@@ -75,6 +75,7 @@ public class Autos {
     
     public Command left3L4GroundSource() {
         return Commands.sequence(
+            endeffector.stopCommand(),
             superstructure.setRequestedScoringPositionCommand(Position.L4),
 
             followTrajectoryCommand("L3GS", 0),
@@ -113,6 +114,7 @@ public class Autos {
 
     public Command right3L4GroundSource() {
         return Commands.sequence(
+            endeffector.stopCommand(),
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
             followTrajectoryCommand("R3GS", 0),
@@ -149,8 +151,11 @@ public class Autos {
 
     public Command left3L4GroundLollipop() {
         return Commands.sequence(
+            endeffector.stopCommand(),
+
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
+            factory.resetOdometry("L3GL", 0),
             followTrajectoryCommand("L3GL", 0),
             scoreAutoCommand(1),
             superstructure.outtakeCoral(),
@@ -183,10 +188,24 @@ public class Autos {
         );
     }
 
+    public Command left3L4GroundLollipopPaths() {
+        return Commands.sequence(
+            factory.resetOdometry("L3GL", 0),
+            followTrajectoryCommand("L3GL", 0),
+            followTrajectoryCommand("L3GL", 1),
+            followTrajectoryCommand("L3GL", 2),
+            followTrajectoryCommand("L3GL", 3),
+            followTrajectoryCommand("L3GL", 4)
+        );
+    }
+
     public Command right3L4GroundLollipop() {
         return Commands.sequence(
+            endeffector.stopCommand(),
+
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
+            factory.resetOdometry("R3GL", 0),
             followTrajectoryCommand("R3GL", 0),
             scoreAutoCommand(0),
             superstructure.outtakeCoral(),
@@ -221,6 +240,8 @@ public class Autos {
 
     public Command left3L4Source() {
         return Commands.sequence(
+            endeffector.stopCommand(),
+
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
             followTrajectoryCommand("L3S", 0),
@@ -261,6 +282,8 @@ public class Autos {
 
     public Command right3L4Source() {
         return Commands.sequence(
+            endeffector.stopCommand(),
+
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
             followTrajectoryCommand("R3S", 0),
@@ -364,10 +387,10 @@ public class Autos {
 
     public Command followTrajectoryCommand(String trajectoryName, int index) {
         return Commands.sequence(
-            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index)
-            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
+            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
+            // factory.resetOdometry(trajectoryName, index),
+            factory.trajectoryCmd(trajectoryName, index),
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
         );
     }
 

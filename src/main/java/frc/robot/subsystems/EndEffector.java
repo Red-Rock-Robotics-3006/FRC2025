@@ -7,6 +7,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.ToFParamsConfigs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
+import com.ctre.phoenix6.controls.PositionVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -87,7 +88,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
 
-    private SmartDashboardBoolean usingVeloVoltage = new SmartDashboardBoolean("endeffector/ef-using-velo-voltage", true);
+    private SmartDashboardBoolean usingVeloVoltage = new SmartDashboardBoolean("endeffector/ef-using-velo-voltage", false);
 
     private EndEffector(){
         super("End Effector");
@@ -101,9 +102,9 @@ public class EndEffector extends SubsystemBase {
         .withSlot0Configs(
             new Slot0Configs()
             .withKA(0)
-            .withKS(0)
+            .withKS(0.008)
             .withKV(0)
-            .withKP(0.35)
+            .withKP(3)
             .withKI(0)
             .withKD(0)
         )
@@ -255,12 +256,21 @@ public class EndEffector extends SubsystemBase {
     }
 
     public void stop() {
-        if (usingVeloVoltage.getValue())
-            this.driveMotor.motor.setControl(new VelocityVoltage(0)
+        // if (usingVeloVoltage.getValue())
+        //     this.driveMotor.motor.setControl(new VelocityVoltage(0)
+        //     .withEnableFOC(true)
+        //     .withSlot(0)
+        //     .withOverrideBrakeDurNeutral(true));
+        // this.driveMotor.motor.setControl(new DutyCycleOut(0));
+        this.driveMotor.motor.setControl(new NeutralOut());
+
+        double pos = this.driveMotor.motor.getPosition().getValueAsDouble();
+        this.driveMotor.motor.setControl(
+            new PositionVoltage(pos)
             .withEnableFOC(true)
             .withSlot(0)
-            .withOverrideBrakeDurNeutral(true));
-        else this.driveMotor.motor.setControl(new DutyCycleOut(0));
+            .withOverrideBrakeDurNeutral(true)
+        );
     }
 
     public void resetWrist() {

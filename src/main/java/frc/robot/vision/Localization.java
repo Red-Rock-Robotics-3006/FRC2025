@@ -14,6 +14,7 @@ import frc.robot.vision.LimelightHelpers.PoseEstimate;
 import redrocklib.logging.SmartDashboardNumber;
 
 public class Localization {
+    private static boolean isSim = false;
 
     private static int[] validIDs = {1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22};
     private static String[] limeLightNames = {"front", "climb"};//, "right", "back"};
@@ -39,6 +40,7 @@ public class Localization {
             wrappers[i] = new LimeLightPoseEstimateWrapper().withName(limeLightNames[i]);
             LimelightHelpers.SetFiducialIDFiltersOverride(limeLightNames[i], validIDs);
         }
+        isSim = Utils.isSimulation();
     }
 
     public static LimeLightPoseEstimateWrapper[] getPoseEstimates(double headingDegrees) {
@@ -68,6 +70,8 @@ public class Localization {
     public static double getMegatag1Pose2dFromClimb() {
         // if (LimelightHelpers.getTV(limeLightNames[1])) {
         //     SmartDashboard.putBoolean("locaization/mt1-tiv", true);
+        // if (isSim) return 0;
+        // return 0;
         return LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-" + limeLightNames[1]).pose.getRotation().getDegrees();
         // }
         // SmartDashboard.putBoolean("locaization/mt1-tiv", false);
