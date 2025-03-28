@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -70,6 +72,7 @@ public class Intake extends SubsystemBase{
 
     private Intake() {
         super();
+        AutoLogOutputManager.addObject(this);
                 
         this.pivotMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()

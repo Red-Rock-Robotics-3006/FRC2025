@@ -3,6 +3,8 @@ package frc.robot;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -48,6 +50,7 @@ public class Superstructure {
     }
 
     private Superstructure() {
+        AutoLogOutputManager.addObject(this);
         // this.initialize();
     }
 

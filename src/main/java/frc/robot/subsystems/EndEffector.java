@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -91,7 +93,9 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardBoolean usingVeloVoltage = new SmartDashboardBoolean("endeffector/ef-using-velo-voltage", false);
 
     private EndEffector(){
+        
         super("End Effector");
+        AutoLogOutputManager.addObject(this);
         this.driveMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)

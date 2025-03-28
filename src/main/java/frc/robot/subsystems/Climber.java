@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -27,6 +29,8 @@ public class Climber extends SubsystemBase{
 
     private Climber() {
         super("climber");
+
+        AutoLogOutputManager.addObject(this);
 
         this.climbMotor
         .withMotorOutputConfigs(
