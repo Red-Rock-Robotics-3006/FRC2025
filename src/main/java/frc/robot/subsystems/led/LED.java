@@ -1,5 +1,7 @@
 package frc.robot.subsystems.led;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.AddressableLEDBufferView;
@@ -46,6 +48,9 @@ public class LED extends SubsystemBase{
 
     private LED() {
         super("LED");
+
+        AutoLogOutputManager.addObject(this);
+        
         this.control.setLength(this.buffer.getLength());
         this.control.setColorOrder(AddressableLED.ColorOrder.kRGB);
 

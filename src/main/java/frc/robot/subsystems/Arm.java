@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MagnetSensorConfigs;
@@ -78,6 +80,8 @@ public class Arm extends SubsystemBase {
 
     private Arm(){
         super("Arm");
+
+        AutoLogOutputManager.addObject(this);
 
         FeedbackConfigs feedbackConfigs = new FeedbackConfigs()
         .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)

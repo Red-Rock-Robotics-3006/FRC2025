@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutputManager;
+
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -77,6 +79,8 @@ public class Elevator extends SubsystemBase {
 
     private Elevator() {
         super("Elevator");
+
+        AutoLogOutputManager.addObject(this);
 
         MotorOutputConfigs elevatorMotorOutputConfigs = new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
