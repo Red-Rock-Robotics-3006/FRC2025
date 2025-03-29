@@ -182,8 +182,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d blueCenter = new Pose2d(4.489323, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.066, 4.0259, new Rotation2d());
 
-    private Pose2d blueSourceLeft = new Pose2d(1.12, 7.04, Rotation2d.fromDegrees(126));
-    private Pose2d blueSourceRight = new Pose2d(1.12, 1.0, Rotation2d.fromDegrees(-126));
+    private Pose2d blueSourceLeft = new Pose2d(1.08, 7.03, Rotation2d.fromDegrees(126));
+    private Pose2d blueSourceRight = new Pose2d(1.08, 1.0, Rotation2d.fromDegrees(-126));
     private Pose2d redSourceLeft = new Pose2d(16.42, 1.0, Rotation2d.fromDegrees(-54));
     private Pose2d redSourceRight = new Pose2d(16.42, 7.04, Rotation2d.fromDegrees(54));
 
