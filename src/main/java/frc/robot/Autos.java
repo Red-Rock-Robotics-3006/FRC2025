@@ -263,7 +263,13 @@ public class Autos {
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             sourceIntakeCommand(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            followTrajectoryCommand("L3S", 2),
+            Commands.deadline(
+                followTrajectoryCommand("L3S", 2),
+                Commands.sequence(
+                    Commands.waitSeconds(0.8),
+                    superstructure.stowReefCommand()
+                )
+            ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             scoreAutoCommand(0), 
             superstructure.outtakeCoral(),
@@ -276,7 +282,13 @@ public class Autos {
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             sourceIntakeCommand(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            followTrajectoryCommand("L3S", 4),
+            Commands.deadline(
+                followTrajectoryCommand("L3S", 4),
+                Commands.sequence(
+                    Commands.waitSeconds(0.8),
+                    superstructure.stowReefCommand()
+                )
+            ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             scoreAutoCommand(1), 
             superstructure.outtakeCoral(),
@@ -302,7 +314,13 @@ public class Autos {
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             sourceIntakeCommand(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            followTrajectoryCommand("R3S", 2),
+            Commands.deadline(
+                followTrajectoryCommand("R3S", 2),
+                Commands.sequence(
+                    Commands.waitSeconds(0.8),
+                    superstructure.stowReefCommand()
+                )
+            ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             scoreAutoCommand(1), 
             superstructure.outtakeCoral(),
@@ -310,12 +328,18 @@ public class Autos {
 
             Commands.parallel(
                 superstructure.goToSourceIntakePosition(),
-                followTrajectoryCommand("R3S", 3)
+                followTrajectoryCommand("R3S",  3)
             ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             sourceIntakeCommand(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            followTrajectoryCommand("R3S", 4),
+            Commands.deadline(
+                followTrajectoryCommand("R3S", 4),
+                Commands.sequence(
+                    Commands.waitSeconds(0.8),
+                    superstructure.stowReefCommand()
+                )
+            ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             scoreAutoCommand(0), 
             superstructure.outtakeCoral(),
