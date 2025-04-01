@@ -250,8 +250,10 @@ public class Autos {
             endeffector.stopCommand(),
 
             superstructure.setRequestedScoringPositionCommand(Position.L4),
-            
-            followFirstTrajectoryCommand("L3S", 0),
+            Commands.parallel(
+                followFirstTrajectoryCommand("L3S", 0),
+                superstructure.stowReefCommand()
+            ),
             scoreAutoCommand(1),
             superstructure.outtakeCoral(),
 
@@ -267,7 +269,7 @@ public class Autos {
                 followTrajectoryCommand("L3S", 2),
                 Commands.sequence(
                     Commands.waitSeconds(0.8),
-                    superstructure.stowReefCommand()
+                    superstructure.goToL4Command()
                 )
             ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
@@ -286,7 +288,7 @@ public class Autos {
                 followTrajectoryCommand("L3S", 4),
                 Commands.sequence(
                     Commands.waitSeconds(0.8),
-                    superstructure.stowReefCommand()
+                    superstructure.goToL4Command()
                 )
             ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
@@ -302,7 +304,10 @@ public class Autos {
 
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
-            followFirstTrajectoryCommand("R3S", 0),
+            Commands.parallel(
+                followFirstTrajectoryCommand("R3S", 0),
+                superstructure.stowReefCommand()
+            ),
             scoreAutoCommand(0),
             superstructure.outtakeCoral(),
 
@@ -318,7 +323,7 @@ public class Autos {
                 followTrajectoryCommand("R3S", 2),
                 Commands.sequence(
                     Commands.waitSeconds(0.8),
-                    superstructure.stowReefCommand()
+                    superstructure.goToL4Command()
                 )
             ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
@@ -337,7 +342,7 @@ public class Autos {
                 followTrajectoryCommand("R3S", 4),
                 Commands.sequence(
                     Commands.waitSeconds(0.8),
-                    superstructure.stowReefCommand()
+                    superstructure.goToL4Command()
                 )
             ),
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),

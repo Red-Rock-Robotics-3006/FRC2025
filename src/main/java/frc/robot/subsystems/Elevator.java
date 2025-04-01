@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
@@ -68,7 +69,8 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber target = new SmartDashboardNumber("elevator/elevator-tuning/target", 0);
     private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 1.5);
     private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
-
+    
+    @AutoLogOutput 
     private Position targetPosition = Position.STOW;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40);
 
