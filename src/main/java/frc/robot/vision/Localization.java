@@ -1,5 +1,7 @@
 package frc.robot.vision;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.Utils;
 
 import edu.wpi.first.math.Matrix;
@@ -23,6 +25,7 @@ public class Localization {
         {0.9, 0.9, 9999},
         {0.9, 0.9, 9999}
     };
+    private static Pose2d[][] limeLightPoses = {{new Pose2d(), new Pose2d()}, {new Pose2d(), new Pose2d()}}; // First is MT1, second is MT2
 
     // public static final double timeOf/fset = Utils.getCurrentTimeSeconds();
     private static SmartDashboardNumber timeOffset = new SmartDashboardNumber("localization/timeoffset", Utils.getCurrentTimeSeconds());
@@ -43,22 +46,44 @@ public class Localization {
         isSim = Utils.isSimulation();
     }
 
-    public static LimeLightPoseEstimateWrapper[] getPoseEstimates(double headingDegrees) {
+    public static void updateHeading(double headingDegrees) {
         heading.putNumber(headingDegrees);
         if(wrappers == null)
             initialize();
         for(int i = 0; i < limeLightNames.length; i++){
-            String s = "limelight-" + limeLightNames[i];
-            SmartDashboard.putNumber("localization/"+s+"/heading", headingDegrees);
-            LimelightHelpers.SetRobotOrientation(s, headingDegrees, CommandSwerveDrivetrain.getInstance().getRotationRateDegrees(), 0, 0, 0, 0);
-            wrappers[i].withPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(s))
-                        .withTagInVision(LimelightHelpers.getTV(s));
+            String name = "limelight-" + limeLightNames[i];
+            SmartDashboard.putNumber("localization/"+name+"/heading", headingDegrees);
+            LimelightHelpers.SetRobotOrientation(name, headingDegrees, CommandSwerveDrivetrain.getInstance().getRotationRateDegrees(), 0, 0, 0, 0);
+            PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
+            wrappers[i].withPoseEstimate(estimate).withTagInVision(LimelightHelpers.getTV(name));
+            
+            limeLightPoses[i][0] = LimelightHelpers.getBotPose2d_wpiBlue(name); // MT1
+            limeLightPoses[i][1] = estimate.pose;                               // MT2
+            Logger.recordOutput("limelight/" + limeLightNames[i], limeLightPoses[i]);
         }
 
         Pose2d pose = getPose2d();
         SmartDashboard.putNumber("localization/pose/x", pose.getX());
         SmartDashboard.putNumber("localization/pose/y", pose.getY());
         SmartDashboard.putNumber("localization/pose/heading", pose.getRotation().getDegrees());
+    }
+
+    public static LimeLightPoseEstimateWrapper[] getPoseEstimates() {
+        // heading.putNumber(headingDegrees);
+        // if(wrappers == null)
+        //     initialize();
+        // for(int i = 0; i < limeLightNames.length; i++){
+        //     String s = "limelight-" + limeLightNames[i];
+        //     SmartDashboard.putNumber("localization/"+s+"/heading", headingDegrees);
+        //     LimelightHelpers.SetRobotOrientation(s, headingDegrees, CommandSwerveDrivetrain.getInstance().getRotationRateDegrees(), 0, 0, 0, 0);
+        //     wrappers[i].withPoseEstimate(LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(s))
+        //                 .withTagInVision(LimelightHelpers.getTV(s));
+        // }
+
+        // Pose2d pose = getPose2d();
+        // SmartDashboard.putNumber("localization/pose/x", pose.getX());
+        // SmartDashboard.putNumber("localization/pose/y", pose.getY());
+        // SmartDashboard.putNumber("localization/pose/heading", pose.getRotation().getDegrees());
 
         return wrappers;
     }

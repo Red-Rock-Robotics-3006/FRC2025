@@ -623,12 +623,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         //SmartDashboard.putNumber("localization/megatag-1-heading", Localization.getMegatag1Pose2dFromClimb()); //TODOUNCOMMENT
 
-        if (visionEnabled.getValue()) updateVisionMeasurements();
+        Localization.updateHeading(this.getHeadingDegrees()); // Update ll values every cycle
+        if (visionEnabled.getValue()) updateVisionMeasurements(); // Only use ll for pose if vision is enabled
     }
 
     
     public void updateVisionMeasurements() {
-        Localization.LimeLightPoseEstimateWrapper[] wrappers = Localization.getPoseEstimates(this.getHeadingDegrees());
+        Localization.LimeLightPoseEstimateWrapper[] wrappers = Localization.getPoseEstimates();
         for (int i = 0; i < wrappers.length; i++) {
             if (i == 0 && (isTargetingReef || !isTargetingPosition())) continue;
             else if (i == 1 && !isTargetingReef && isTargetingPosition()) continue;
