@@ -19,9 +19,6 @@ import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Intake;
 
-/* TODO
- * Tune scoreBarge delays
- */
 
 public class Superstructure {
     private Elevator elevator = Elevator.getInstance();
@@ -69,10 +66,6 @@ public class Superstructure {
 
     public Command normalizeEFCommand() { // TODO Temp
         return this.endEffector.normalizeEndEffectorCommand();
-    }
-
-    public Command normalizeECommand() { // TODO Temp
-        return this.elevator.normalizeElevatorCommand();
     }
 
     public void setRequestedScoringPosition(Position pos) {
@@ -130,7 +123,7 @@ public class Superstructure {
             this.arm.goToPosition(pos),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && !this.arm.inSafeZone())),
-            Commands.waitUntil(() -> this.arm.inSafeZone()),
+            Commands.waitUntil(() -> this.arm.inSafeZone()), // TODO Why does this no longer consider elevator position?
             // this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos),
             this.endEffector.goToPosition(pos)
@@ -316,8 +309,6 @@ public class Superstructure {
         return new SequentialCommandGroup(
             this.goToPosition(Position.BARGE),
             new WaitUntilCommand(() -> this.atTargets()),
-            new WaitCommand(.1),
-            this.arm.scoreBarge(),
             new WaitCommand(.3),
             this.endEffector.scoreBarge()
         );
@@ -328,7 +319,7 @@ public class Superstructure {
      * @return true if subsystems are on target
      */
     public boolean atTargets() {
-        return this.elevator.atTarget() && this.arm.atTarget() && this.endEffector.atTarget();
+        return this.elevator.atTarget() && this.arm.atTarget() && this.endEffector.atTarget() && this.intake.atPositionTarget();
     }
 
     /**

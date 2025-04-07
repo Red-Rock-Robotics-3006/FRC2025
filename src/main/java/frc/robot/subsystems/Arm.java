@@ -24,13 +24,6 @@ import redrocklib.wrappers.RedRockTalon;
 import redrocklib.logging.SmartDashboardNumber;
 import frc.robot.Superstructure.Position;
 
-/* TODO
- * Find pos values & combine accordingly
- * Tune Slot0
- * Tune MM
- * Tune tolerance
- * Tune scoreBarge
- */
 
 public class Arm extends SubsystemBase {
     public static final double kCANCoderOffset = -0.29052734375;
@@ -237,7 +230,7 @@ public class Arm extends SubsystemBase {
      * @param pos the Position to move to
      * @return a Command to do so
      */
-    public Command goToPosition(Position pos){ // TODO: Ensure no illegal movements
+    public Command goToPosition(Position pos){
         return Commands.runOnce(
             () -> {this.setPosition(pos);}, this
         );
@@ -267,7 +260,7 @@ public class Arm extends SubsystemBase {
      * @return a Command to do so
      */
     public Command scoreBarge(){
-        return this.goToPosition(Position.L3); // A bit jank but it should work
+        return this.goToPosition(Position.L3); // TODO Consider deprecation and removal
     }
 
     /**

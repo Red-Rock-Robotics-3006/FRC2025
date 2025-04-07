@@ -31,17 +31,6 @@ import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
 import frc.robot.Superstructure.Position;
 
-/* TODO
- * Tune speeds
- * Tune tolerance
- * Find positions & combine accordingly
- * Tune Slot0s
- * Tune MMs
- * Tune spikeThresholds
- * Tune outtake delays
- * Tune scoreBarge
- * Implement double-jointed Slot0 angle sensing (How?)
- */
 
 public class EndEffector extends SubsystemBase {
     public static final double kCoralOuttakeWaitTime = 0.0;
@@ -66,7 +55,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.5);
     private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold-speed", 0);
-    private SmartDashboardNumber coralGroundIntakeSpeed = new SmartDashboardNumber("endeffector/coral-ground-intake-speed-ef", -0.45);
+    private SmartDashboardNumber coralGroundIntakeSpeed = new SmartDashboardNumber("endeffector/coral-ground-intake-speed-ef", -0.45); // TODO This is the same as coralIntakeSpeed. Consider deprecation and removal
     
     private Position targetPosition = Position.STOW;
 
@@ -223,6 +212,7 @@ public class EndEffector extends SubsystemBase {
         );
     }
 
+    // TODO What is with all these "setters" not taking a value? What is this setting the coral intake speed to?
     public void setCoralIntakeSpeed() {
         this.setSpeed(this.coralIntakeSpeed.getNumber());
     }

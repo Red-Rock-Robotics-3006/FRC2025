@@ -203,7 +203,7 @@ public class Intake extends SubsystemBase{
         this.setIntakeSpeed(intakeAlgaeSpeed.getNumber());
     }
 
-    public void setAlgaeOuttaekSpeed() {
+    public void setAlgaeOuttakeSpeed() {
         this.setIntakeSpeed(outtakeAlgaeSpeed.getNumber());
     }
 
@@ -334,7 +334,7 @@ public class Intake extends SubsystemBase{
         return Commands.sequence(
             Commands.runOnce(() -> this.setAlgaeOuttakePosition(), this),
             // Commands.waitUntil(() -> this.atPositionTarget()),
-            Commands.runOnce(() -> this.setAlgaeOuttaekSpeed(), this)
+            Commands.runOnce(() -> this.setAlgaeOuttakeSpeed(), this)
         );
     }
 

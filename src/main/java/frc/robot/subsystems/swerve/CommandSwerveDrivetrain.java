@@ -790,9 +790,6 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         return instance;
     }
 
-
-    // TODO Remove stuff I added
-
     public void setBlueRightSourceTarget() {
         this.setTargetPose(blueSourceRight);
     }

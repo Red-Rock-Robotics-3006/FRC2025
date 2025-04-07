@@ -192,7 +192,7 @@ public class RobotContainer {
         );
 
         drivestick.povLeft().onTrue(
-            superstructure.normalizeEFCommand()
+            superstructure.normalizeEFCommand() // TODO Why do we still have this?
         );
 
         drivestick.leftTrigger(0.25).onTrue(
@@ -225,7 +225,7 @@ public class RobotContainer {
             )
         );
 
-        drivestick.leftBumper().onTrue(
+        drivestick.leftBumper().onTrue( // TODO What does this do?
             Commands.parallel(
                 // Commands.sequence(
                 //     Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
@@ -244,14 +244,13 @@ public class RobotContainer {
                 ),
                 Commands.sequence(
                     superstructure.goToSourceIntakePosition(), //TODO add swerve thing
-                    superstructure.intakeGroundCoral(),
+                    superstructure.intakeGroundCoral(), // TODO Are we intaking ground coral or source coral?
                     this.rumbleControllerCommand(1, 0.6)
                 )
             )
         ).onFalse(
                 // superstructure.stowCommand() //TODO add swerve thing
                 superstructure.stowReefCommand()
-            
         );
 
         drivestick.rightTrigger(0.25).onTrue(
