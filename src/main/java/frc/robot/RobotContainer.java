@@ -37,8 +37,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 public class RobotContainer {
     private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
     private double MaxAngularRate = RotationsPerSecond.of(0.75).in(RadiansPerSecond); // 3/4 of a rotation per second max angular velocity
-    public static double progressiveDriveExponent = 1.4;
-    public static double progressiveTurnExponent = 1.7;
+    public static double progressiveDriveExponent = 1;
+    public static double progressiveTurnExponent = 1;
 
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
@@ -183,6 +183,7 @@ public class RobotContainer {
                 // superstructure.normalizeCommand()
                 superstructure.stopEndEffector(),
                 intake.stopIntakeCommand(),
+                Commands.runOnce(() -> drivetrain.resetKalaman(), drivetrain),
                 Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
             )
         );

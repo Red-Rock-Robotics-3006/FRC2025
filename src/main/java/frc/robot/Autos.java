@@ -550,10 +550,10 @@ public class Autos {
                     ); 
             },
             drivetrain),
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             
             // factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
+            factory.trajectoryCmd(trajectoryName, index)
         );
     }
     
