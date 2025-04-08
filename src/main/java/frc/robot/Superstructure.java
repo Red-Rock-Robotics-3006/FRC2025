@@ -319,9 +319,9 @@ public class Superstructure {
      * @return true if subsystems are on target
      */
     public boolean atTargets() {
-        return this.elevator.atTarget() && this.arm.atTarget() && this.endEffector.atTarget() && this.intake.atPositionTarget();
+        return this.elevator.atTarget() && this.arm.atTarget() && this.endEffector.atTarget();
     }
-
+ 
     /**
      * Abstracted full Coral scoring
      * @param pos the Position to score Coral at

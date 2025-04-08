@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
+import org.littletonrobotics.junction.Logger;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
@@ -71,8 +73,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber rotationOmegaSignificance = new SmartDashboardNumber("dt/dt-rotation-rate-limit", 1).withTuningEnabled(false);
     private SmartDashboardNumber driveMaxSpeed = new SmartDashboardNumber("dt/dt-max-drive-speed", 6);
     private SmartDashboardNumber turnMaxSpeed = new SmartDashboardNumber("dt/dt-max-turn-speed", 1.5);
-    private SmartDashboardNumber driveDeadBand = new SmartDashboardNumber("dt/dt-drive-deadband", 0.05);
-    private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.05);
+    private SmartDashboardNumber driveDeadBand = new SmartDashboardNumber("dt/dt-drive-deadband", 0.025);
+    private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.025);
     private SmartDashboardNumber headingPIDTolerance = new SmartDashboardNumber("dt/dt-heading-pid-tolerance", 1.5).withTuningEnabled(false);
 
     private boolean enableHeadingPID = true;
@@ -148,7 +150,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     //private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-auto-position-Irange", 0.2);
 
     private SmartDashboardNumber autoThetaKp = new SmartDashboardNumber("dt/dt-auto-theta-kp", 4);
-    private SmartDashboardNumber autoThetaKi = new SmartDashboardNumber("dt/dt-auto-theta-ki", 0.3);
+    private SmartDashboardNumber autoThetaKi = new SmartDashboardNumber("dt/dt-auto-theta-ki", 0);
     private SmartDashboardNumber autoThetaKd = new SmartDashboardNumber("dt/dt-auto-theta-kd", 0);
 
     private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
@@ -440,11 +442,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public void followPath(SwerveSample sample) {
         autoWantedPose2d = sample.getPose();
+        Logger.recordOutput("path/wanted-pose", autoWantedPose2d);
         // autoRealPose2d = this.getState().Pose;
         autoRealPose2d = this.getPose();
         m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
-        m_pathThetaController.setI(rotateI.getNumber());
+        // m_pathThetaController.setI(rotateI.getNumber());
         // if(m_pathThetaController.atSetpoint()) m_pathThetaController.reset();
 
         m_pathXController.setI(positionKi.getNumber());
@@ -468,8 +471,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         setControl(
             m_pathApplyFieldSpeeds.withSpeeds(targetSpeeds)
-                .withWheelForceFeedforwardsX(sample.moduleForcesX())
-                .withWheelForceFeedforwardsY(sample.moduleForcesY())
+                // .withWheelForceFeedforwardsX(sample.moduleForcesX())
+                // .withWheelForceFeedforwardsY(sample.moduleForcesY())
                 
         );
     }
@@ -683,6 +686,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             updateSimState(deltaTime, RobotController.getBatteryVoltage());
         });
         m_simNotifier.startPeriodic(kSimLoopPeriod);
+    }
+
+    public void resetKalaman() {
+        this.resetPose(
+            this.getState().Pose
+        );
     }
 
     public Command resetHeadingCommand(){
@@ -958,7 +967,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             if (!this.getUseHeadingPID() || Math.abs(controller.getRightX()) > this.getTurnDeadBand())
                 return fieldCentricRequest.withVelocityX(RobotContainer.progressiveInput(drivestickValues[0],RobotContainer.progressiveDriveExponent) * this.getMaxDriveSpeed())
                 .withVelocityY(RobotContainer.progressiveInput(drivestickValues[1],RobotContainer.progressiveDriveExponent, true) * this.getMaxDriveSpeed())
-                .withRotationalRate(RobotContainer.progressiveInput(-controller.getRightX(),RobotContainer.progressiveTurnExponent) * this.getMaxTurnSpeed() * Math.PI);
+                .withRotationalRate(RobotContainer.progressiveInput(-controller.getRightX(),RobotContainer.progressiveTurnExponent) * this.getMaxTurnSpeed() * 2 * Math.PI);
             else 
                 return angleRequest.withVelocityX(RobotContainer.progressiveInput(drivestickValues[0],RobotContainer.progressiveDriveExponent) * this.getMaxDriveSpeed())
                 .withVelocityY(RobotContainer.progressiveInput(drivestickValues[1], RobotContainer.progressiveDriveExponent, true) * this.getMaxDriveSpeed())

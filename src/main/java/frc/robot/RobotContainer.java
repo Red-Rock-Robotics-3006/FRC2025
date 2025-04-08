@@ -101,6 +101,7 @@ public class RobotContainer {
         m_chooser.addOption("Right 3 L4 Source Slow", autos.slowRight3L4Source());
 
         m_chooser.addOption("left3L4GroundLollipopPaths", autos.left3L4GroundLollipopPaths());
+        m_chooser.addOption("right3L4GroundLollipopPaths", autos.right3L4GroundLollipopPaths());
 
         // m_chooser.addOption("Left 3 L4 Paths", autos.left3L4Paths());
         // m_chooser.addOption("Right 3 L4 Paths", autos.right3L4Paths());
@@ -183,7 +184,8 @@ public class RobotContainer {
                 // superstructure.normalizeCommand()
                 superstructure.stopEndEffector(),
                 intake.stopIntakeCommand(),
-                Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
+                Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
+                Commands.runOnce(() -> drivetrain.resetKalaman(), drivetrain)
             )
         );
 

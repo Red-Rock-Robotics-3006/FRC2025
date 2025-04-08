@@ -57,8 +57,9 @@ public class Localization {
             PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
             wrappers[i].withPoseEstimate(estimate).withTagInVision(LimelightHelpers.getTV(name));
             
-            limeLightPoses[i][0] = LimelightHelpers.getBotPose2d_wpiBlue(name); // MT1
-            limeLightPoses[i][1] = estimate.pose;                               // MT2
+            Pose2d mt1Pose = LimelightHelpers.getBotPose2d_wpiBlue(name);
+            limeLightPoses[i][0] =  mt1Pose==null?new Pose2d():mt1Pose;       // MT1
+            limeLightPoses[i][1] = estimate==null?new Pose2d():estimate.pose; // MT2
             Logger.recordOutput("limelight/" + limeLightNames[i], limeLightPoses[i]);
         }
 

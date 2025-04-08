@@ -245,6 +245,15 @@ public class Autos {
         );
     }
 
+    public Command right3L4GroundLollipopPaths() {
+        return Commands.sequence(
+            followFirstTrajectoryCommand("R3GL", 1),
+            followTrajectoryCommand("R3GL", 2),
+            followTrajectoryCommand("R3GL", 3),
+            followTrajectoryCommand("R3GL", 4)
+        );
+    }
+
     public Command left3L4Source() {
         return Commands.sequence(
             endeffector.stopCommand(),
@@ -550,10 +559,10 @@ public class Autos {
                     ); 
             },
             drivetrain),
-            
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             // factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
+            factory.trajectoryCmd(trajectoryName, index)
+            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
         );
     }
     
