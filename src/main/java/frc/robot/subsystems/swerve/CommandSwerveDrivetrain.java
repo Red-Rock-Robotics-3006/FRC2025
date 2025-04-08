@@ -450,11 +450,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         // m_pathThetaController.setI(rotateI.getNumber());
         // if(m_pathThetaController.atSetpoint()) m_pathThetaController.reset();
 
-        m_pathXController.setI(positionKi.getNumber());
-        // if(m_pathXController.atSetpoint()) m_pathXController.reset();
+        // m_pathXController.setI(positionKi.getNumber());
+        // // if(m_pathXController.atSetpoint()) m_pathXController.reset();
 
-        m_pathYController.setI(positionKi.getNumber());
-        //if(m_pathYController.atSetpoint()) m_pathYController.reset();
+        // m_pathYController.setI(positionKi.getNumber());
+        // //if(m_pathYController.atSetpoint()) m_pathYController.reset();
+
+        m_pathThetaController.setPID(autoThetaKp.getNumber(), autoThetaKi.getNumber(), autoThetaKd.getNumber());
+        m_pathXController.setPID(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
+        m_pathYController.setPID(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
         
         var pose = getState().Pose;
 
