@@ -201,7 +201,7 @@ public class RobotContainer {
             Commands.sequence(
                 superstructure.goToIntakePosition(),
                 Commands.deadline(
-                    superstructure.intakeGroundCoral(),
+                    superstructure.intakeCoral(),
                     // intake.spasmIntakeCommand()
                     intake.startIntakeCommand()
                 ),
@@ -246,7 +246,7 @@ public class RobotContainer {
                 ),
                 Commands.sequence(
                     superstructure.goToSourceIntakePosition(), //TODO add swerve thing
-                    superstructure.intakeGroundCoral(), // TODO Are we intaking ground coral or source coral?
+                    superstructure.intakeCoral(), // TODO Are we intaking ground coral or source coral?
                     this.rumbleControllerCommand(1, 0.6)
                 )
             )
@@ -320,7 +320,7 @@ public class RobotContainer {
 
         mechstick.povDown().onTrue(
             Commands.sequence(
-                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
                 superstructure.goToL2RemoveCommand()
             )
         // ).onFalse(
@@ -329,7 +329,7 @@ public class RobotContainer {
 
         mechstick.povUp().onTrue(
             Commands.sequence(
-                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
                 superstructure.goToL3RemoveCommand()
             )
         // ).onFalse(
@@ -359,13 +359,6 @@ public class RobotContainer {
             superstructure.stowCommand()
         );
 
-        mechstick.rightTrigger(0.25).onTrue(
-            // intake.outtakeAlgaeCommand()
-            superstructure.outtakeAlgaeWithArm()
-        ).onFalse(
-            superstructure.stowCommand()
-        );
-
         mechstick.back().onTrue(
             Commands.sequence(
                 Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
@@ -379,7 +372,7 @@ public class RobotContainer {
 
         mechstick.start().onTrue(
             Commands.runOnce(
-                () -> EndEffector.getInstance().setGroundCoralIntakeSpeed()
+                () -> EndEffector.getInstance().setCoralIntakeSpeed()
                 , 
                 EndEffector.getInstance())
         ).onFalse(
@@ -445,28 +438,6 @@ public class RobotContainer {
             superstructure.stowCommand()
         );
 
-        drivestick.back().and(drivestick.povLeft()).onTrue(
-            superstructure.autoScoreCoral(Position.L3)
-        );
-
-        drivestick.back().and(drivestick.povRight()).onTrue(
-            new SequentialCommandGroup(
-                
-                // new InstantCommand(() -> {this.drivetrainSetTargetPoseConstruct(); drivetrain.enablePositionTargeting();}),
-                // new WaitUntilCommand(() -> !drivetrain.isTargetingPosition() || drivetrain.atTargetPose() && drivetrain.atTargetVelocity()),
-                drivetrain.goToPoseCommand(),
-                Commands.print("@@@@@@@@@@@@@@@@@@@@@@@@"),
-                superstructure.autoScoreCoral(Position.L3),
-                // elevator.setL3Command(),
-                // new WaitUntilCommand(() -> elevator.withinTargetRotation(Elevator.Position.L3)),
-                // doohickey.startOuttakeCommand(),
-                // new WaitCommand(1),
-                // doohickey.stopCommand(),
-                // elevator.setSourceCommand(),
-                new InstantCommand(() -> drivetrain.disablePositionTargeting())
-            )
-        );
-
         drivestick.rightStick().onTrue(
             superstructure.normalizeCommand()// elevator.normalizeElevatorCommand()
         );
@@ -514,14 +485,14 @@ public class RobotContainer {
 
         mechstick.x().onTrue(
             Commands.sequence(
-                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
                 superstructure.goToL2RemoveCommand()
             )
         );
 
         mechstick.y().onTrue(
             Commands.sequence(
-                superstructure.setEndEfffectorAlgaeRemovalSpeedCommand(),
+                superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
                 superstructure.goToL3RemoveCommand()
             )
         );

@@ -135,21 +135,11 @@ public class Superstructure {
     }
 
     public Command intakeAlgaeGroundCommand() {
-        return Commands.sequence(
-            Commands.runOnce(() -> endEffector.setAlgaeIntakeSpeed(), endEffector),
-            this.goToAlgaeGroundCommand(),
-            Commands.waitUntil(() -> endEffector.currentSpike()),
-            Commands.waitSeconds(0.3),
-            Commands.runOnce(() -> endEffector.setAlgaeHoldSpeed(), endEffector)
-        );
+        return Commands.runOnce(() -> this.endEffector.intakeGroundAlgae(), this.endEffector);
     }
 
-    public Command outtakeAlgaeWithArm() {
-        return Commands.sequence(
-            Commands.runOnce(() -> endEffector.setAlgaeOuttakeSpeed(), endEffector),
-            Commands.runOnce(() -> endEffector.setAlgaeOuttakePosition(), endEffector),
-            Commands.runOnce(() -> arm.setAlgaeOuttakePosition(), arm)
-        );
+    public Command removeAlgaeCommand() {
+        return Commands.runOnce(() -> this.endEffector.removeAlgae(), this.endEffector);
     }
 
     public Command goToIntakePosition() {
@@ -254,16 +244,20 @@ public class Superstructure {
         return this.endEffector.intakeCoral();
     }
 
-    public Command intakeGroundCoral() {
-        return this.endEffector.intakeGroundCoral();
+    /**
+     * Intake Algae to EndEffector
+     * @return a Command to do so
+     */
+    public Command intakeGroundAlgaeEndeffector() {
+        return this.endEffector.intakeGroundAlgae();
     }
 
     /**
      * Intake Algae to EndEffector
      * @return a Command to do so
      */
-    public Command intakeAlgaeEndeffector() {
-        return this.endEffector.intakeAlgae();
+    public Command removeAlgaeEndeffector() {
+        return this.endEffector.removeAlgae();
     }
 
     /**
@@ -290,7 +284,7 @@ public class Superstructure {
         return this.endEffector.stopCommand();
     }
 
-    public Command setEndEfffectorAlgaeRemovalSpeedCommand() {
+    public Command setEndEffectorAlgaeRemovalSpeedCommand() {
         return this.endEffector.setAlgaeRemovalSpeedCommand();
     }
 
@@ -302,51 +296,11 @@ public class Superstructure {
     }
 
     /**
-     * Abstracted full Barge scoring
-     * @return a Command to do so
-     */
-    public Command autoScoreBarge() {
-        return new SequentialCommandGroup(
-            this.goToPosition(Position.BARGE),
-            new WaitUntilCommand(() -> this.atTargets()),
-            new WaitCommand(.3),
-            this.endEffector.scoreBarge()
-        );
-    }
-
-    /**
      * Check if subsystems are at target positions
      * @return true if subsystems are on target
      */
     public boolean atTargets() {
         return this.elevator.atTarget() && this.arm.atTarget() && this.endEffector.atTarget();
-    }
- 
-    /**
-     * Abstracted full Coral scoring
-     * @param pos the Position to score Coral at
-     * @return a Command to do so
-     */
-    public Command autoScoreCoral(Position pos) {
-        return Commands.sequence(
-            this.goToPosition(pos),
-            new WaitUntilCommand(() -> this.atTargets()),
-            this.endEffector.outtakeCoral(),
-            this.goToPosition(Position.STOW)
-        );
-    }
-
-    /**
-     * Abstracted full Proc scoring
-     * @return a Command to do so
-     */
-    public Command autoScoreProcessor() {
-        return Commands.sequence(
-            this.goToPosition(Position.PROCESSOR),
-            new WaitUntilCommand(() -> this.atTargets()),
-            this.endEffector.outtakeAlgae(),
-            this.goToPosition(Position.STOW)
-        );
     }
 
     public void update() {

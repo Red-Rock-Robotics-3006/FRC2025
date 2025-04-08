@@ -6,11 +6,9 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.ToFParamsConfigs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
-import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -21,7 +19,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.FunctionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -34,28 +31,31 @@ import frc.robot.Superstructure.Position;
 
 public class EndEffector extends SubsystemBase {
     public static final double kCoralOuttakeWaitTime = 0.0;
-    public static final double kAlgaeOUttakeWaitTime = 0.2;
+    public static final double kAlgaeOuttakeWaitTime = 0.2;
     public static final double kCoralGroundIntakeTime = 0.25;
+    public static final double kAlgaeGroundIntakeTime = 0.25;
+    public static final double kAlgaeRemoveTime = 0.25;
 
     public static boolean kEnableMotorTuning = false;
 
-    private final RedRockTalon driveMotor = new RedRockTalon(51,"endeffector-drive","*");
-    private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*");
-    private final CANrange timeOfFlight = new CANrange(53, "*");
+    private final RedRockTalon coralDriveMotor = new RedRockTalon(51,"endeffector-drive","*");
+    // private final RedRockTalon algaeDriveMotor = new RedRockTalon(52,"endeffector-drive","*"); // TODO uncomment on rebuild
+    private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*"); // TODO re-id on rebuild 53
+    private final CANrange coralTOF = new CANrange(53, "*"); // TODO re-id on rebuild 54
+    // private final CANrange algaeTOF = new CANrange(55, "*"); TODO uncomment on rebuild
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("endeffector/min-rotation", 0);
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 40);
 
-    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed", -0.45);
+    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed-ef", -0.45);
     private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0.2);
-    private SmartDashboardNumber tofThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.09);
+    private SmartDashboardNumber coralTOFThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.09);
+    private SmartDashboardNumber algaeTOFThreshold = new SmartDashboardNumber("endeffector/algae-threshold", 0.09);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.1);
     private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.35);
     private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0.45);
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.5);
-    private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold-speed", 0);
-    private SmartDashboardNumber coralGroundIntakeSpeed = new SmartDashboardNumber("endeffector/coral-ground-intake-speed-ef", -0.45); // TODO This is the same as coralIntakeSpeed. Consider deprecation and removal
     
     private Position targetPosition = Position.STOW;
 
@@ -74,18 +74,14 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 35.5);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 35.5);
 
-    private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("endeffector/algae-outtake-position", 17);
-
     private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
-
-    private SmartDashboardBoolean usingVeloVoltage = new SmartDashboardBoolean("endeffector/ef-using-velo-voltage", false);
 
     private EndEffector(){
         
         super("End Effector");
         AutoLogOutputManager.addObject(this);
-        this.driveMotor.withMotorOutputConfigs(
+        this.coralDriveMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
             .withPeakForwardDutyCycle(1d)
@@ -109,6 +105,30 @@ public class EndEffector extends SubsystemBase {
             .withStatorCurrentLimit(60)
             .withStatorCurrentLimitEnable(true)
         );
+        
+        // this.algaeDriveMotor.withMotorOutputConfigs( // TODO uncomment on rebuild
+        //     new MotorOutputConfigs()
+        //     .withInverted(InvertedValue.CounterClockwise_Positive)
+        //     .withPeakForwardDutyCycle(1d)
+        //     .withPeakReverseDutyCycle(-1d)
+        //     .withNeutralMode(NeutralModeValue.Brake)
+        // )
+        // .withSlot0Configs(
+        //     new Slot0Configs()
+        //     .withKA(0)
+        //     .withKS(0.008) // TODO tune
+        //     .withKV(0)
+        //     .withKP(3)
+        //     .withKI(0)
+        //     .withKD(0)
+        // )
+        // .withCurrentLimitConfigs(
+        //     new CurrentLimitsConfigs()
+        //     .withSupplyCurrentLimit(25)
+        //     .withSupplyCurrentLimitEnable(true)
+        //     .withStatorCurrentLimit(60)
+        //     .withStatorCurrentLimitEnable(true)
+        // );
                 
         this.wristMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
@@ -206,43 +226,37 @@ public class EndEffector extends SubsystemBase {
      * Set the drive speed to a specified power
      * @param speed the power to drive at
      */
-    private void setSpeed(double speed){
-        this.driveMotor.motor.setControl(
+    private void setCoralSpeed(double speed){
+        this.coralDriveMotor.motor.setControl(
             new DutyCycleOut(speed)
         );
     }
 
-    // TODO What is with all these "setters" not taking a value? What is this setting the coral intake speed to?
-    public void setCoralIntakeSpeed() {
-        this.setSpeed(this.coralIntakeSpeed.getNumber());
+
+    private void setAlgaeSpeed(double speed){
+        // this.algaeDriveMotor.motor.setControl( TODO uncomment on rebuild
+        //     new DutyCycleOut(speed)
+        // );
     }
 
-    public void setGroundCoralIntakeSpeed() {
-        this.setSpeed(this.coralGroundIntakeSpeed.getNumber());
+    public void setCoralIntakeSpeed() {
+        this.setCoralSpeed(this.coralIntakeSpeed.getNumber());
     }
 
     public void setCoralOuttakeSpeed() {
-        this.setSpeed(this.coralOuttakeSpeed.getNumber());
+        this.setCoralSpeed(this.coralOuttakeSpeed.getNumber());
     }
 
     public void setAlgaeIntakeSpeed() {
-        this.setSpeed(this.algaeIntakeSpeed.getNumber());
+        this.setAlgaeSpeed(this.algaeIntakeSpeed.getNumber());
     }
 
     public void setAlgaeOuttakeSpeed() {
-        this.setSpeed(this.algaeOuttakeSpeed.getNumber());
+        this.setAlgaeSpeed(this.algaeOuttakeSpeed.getNumber());
     }
 
     public void setAlgaeRemoveSpeed() {
-        this.setSpeed(this.algaeRemovalSpeed.getNumber());
-    }
-
-    public void setAlgaeHoldSpeed() {
-        this.setSpeed(this.algaeHoldSpeed.getNumber());
-    }
-
-    public void setAlgaeOuttakePosition() {
-        this.setPosition(algaeOuttakePosition.getNumber());
+        this.setAlgaeSpeed(this.algaeRemovalSpeed.getNumber());
     }
 
     public void setNormalizeSpeed() {
@@ -250,21 +264,28 @@ public class EndEffector extends SubsystemBase {
     }
 
     public void stop() {
-        // if (usingVeloVoltage.getValue())
-        //     this.driveMotor.motor.setControl(new VelocityVoltage(0)
-        //     .withEnableFOC(true)
-        //     .withSlot(0)
-        //     .withOverrideBrakeDurNeutral(true));
-        // this.driveMotor.motor.setControl(new DutyCycleOut(0));
-        this.driveMotor.motor.setControl(new NeutralOut());
-
-        double pos = this.driveMotor.motor.getPosition().getValueAsDouble();
-        this.driveMotor.motor.setControl(
-            new PositionVoltage(pos)
+        this.coralDriveMotor.motor.setControl(new NeutralOut());
+        
+        double coralPos = this.coralDriveMotor.motor.getPosition().getValueAsDouble();
+        
+        this.coralDriveMotor.motor.setControl(
+            new PositionVoltage(coralPos)
             .withEnableFOC(true)
             .withSlot(0)
             .withOverrideBrakeDurNeutral(true)
         );
+
+        // TODO uncomment on rebuild
+        // this.algaeDriveMotor.motor.setControl(new NeutralOut());
+            
+        // double algaePos = this.algaeDriveMotor.motor.getPosition().getValueAsDouble();
+
+        // this.algaeDriveMotor.motor.setControl(
+        //     new PositionVoltage(algaePos)
+        //     .withEnableFOC(true)
+        //     .withSlot(0)
+        //     .withOverrideBrakeDurNeutral(true)
+        // );
     }
 
     public void resetWrist() {
@@ -279,20 +300,19 @@ public class EndEffector extends SubsystemBase {
     public boolean atTarget(){
         // return Math.abs(this.convertPosition(this.targetPosition)
         //     - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
-        return Math.abs(this.driveMotor.motor.getClosedLoopError().getValueAsDouble()) < this.wristTolerance.getNumber() 
-            || Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
-    }
-
-    public boolean currentSpike() {
-        return this.driveMotor.aboveSpikeThreshold();
+        return // Math.abs(this.wristMotor.motor.getClosedLoopError().getValueAsDouble()) < this.wristTolerance.getNumber() ||
+            Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
     }
 
     @Override
     public void periodic() {
-        this.driveMotor.update();
+        this.coralDriveMotor.update();
+        // this.algaeDriveMotor.update(); TODO uncomment on rebuild
         this.wristMotor.update();
-        SmartDashboard.putNumber("endeffector/ef-canrange-val", this.timeOfFlight.getDistance().getValueAsDouble());
+        SmartDashboard.putNumber("endeffector/coral-canrange-val", this.coralTOF.getDistance().getValueAsDouble());
+        // SmartDashboard.putNumber("endeffector/algae-canrange-val", this.algaeTOF.getDistance().getValueAsDouble()); TODO uncomment on rebuild
         SmartDashboard.putBoolean("endeffector/coral-detected", this.coralDetected());
+        SmartDashboard.putBoolean("endeffector/algae-detected", this.algaeDetected());
     }
 
     /**
@@ -307,22 +327,20 @@ public class EndEffector extends SubsystemBase {
     }
 
     /**
-     * Dispense Algae with momentum into the Barge
-     * @return
-     */
-    public Command scoreBarge(){
-        return new ParallelCommandGroup(
-            this.goToPosition(Position.PROCESSOR), // Should open up algae
-            this.outtakeAlgae()
-        ); // Will have to be tuned experimentally
-    };
-
-    /**
      * Detect if Coral is present in the endeffector
      * @return true if coral is present
      */
     public boolean coralDetected(){
-        return this.timeOfFlight.getDistance().getValueAsDouble() < this.tofThreshold.getNumber();
+        return this.coralTOF.getDistance().getValueAsDouble() < this.coralTOFThreshold.getNumber();
+    }
+
+    /**
+     * Detect if Algae is present in the endeffector
+     * @return true if algae is present
+     */
+    public boolean algaeDetected(){ 
+        // return this.algaeTOF.getDistance().getValueAsDouble() < this.algaeTOFThreshold.getNumber(); TODO uncomment on rebuild
+        return false;
     }
 
     public Command setAlgaeRemovalSpeedCommand() {
@@ -333,19 +351,9 @@ public class EndEffector extends SubsystemBase {
      * Auto intake Coral
      * @return a Command to do so
      */
-    public Command intakeCoral(){
-        return new FunctionalCommand(
-            () -> this.setCoralIntakeSpeed(),
-            () -> {},
-            (interrupted) -> this.stop(),
-            () -> this.coralDetected(),
-            this
-        );
-    }
-
-    public Command intakeGroundCoral() {
+    public Command intakeCoral() {
         return Commands.sequence(
-            Commands.runOnce(() -> this.setGroundCoralIntakeSpeed(), this),
+            Commands.runOnce(() -> this.setCoralIntakeSpeed(), this),
             Commands.waitUntil(() -> this.coralDetected()),
             Commands.waitSeconds(kCoralGroundIntakeTime),
             Commands.runOnce(() -> this.stop(), this)
@@ -356,13 +364,25 @@ public class EndEffector extends SubsystemBase {
      * Auto intake Algae
      * @return a Command to do so
      */
-    public Command intakeAlgae(){
-        return new FunctionalCommand(
-            () -> this.setSpeed(this.algaeIntakeSpeed.getNumber()),
-            () -> {},
-            (interrupted) -> this.stop(),
-            () -> this.driveMotor.aboveSpikeThreshold(),
-            this
+    public Command intakeGroundAlgae(){
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setAlgaeIntakeSpeed(), this),
+            Commands.waitUntil(() -> this.algaeDetected()),
+            Commands.waitSeconds(kAlgaeGroundIntakeTime),
+            Commands.runOnce(() -> this.stop(), this)
+        );
+    }
+
+    /**
+     * Auto remove Algae
+     * @return a Command to do so
+     */
+    public Command removeAlgae(){
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setAlgaeRemoveSpeed(), this),
+            Commands.waitUntil(() -> this.algaeDetected()),
+            Commands.waitSeconds(kAlgaeRemoveTime),
+            Commands.runOnce(() -> this.stop(), this)
         );
     }
 
@@ -384,9 +404,10 @@ public class EndEffector extends SubsystemBase {
      * @return a Command to do so
      */
     public Command outtakeAlgae(){
-        return new SequentialCommandGroup(
+        return Commands.sequence(
             new InstantCommand(this::setAlgaeIntakeSpeed, this),
-            new WaitCommand(kAlgaeOUttakeWaitTime),
+            new WaitUntilCommand(() -> !this.algaeDetected()),
+            new WaitCommand(kAlgaeOuttakeWaitTime),
             this.stopCommand()
         );
     }
@@ -408,8 +429,6 @@ public class EndEffector extends SubsystemBase {
                 () -> this.wristMotor.aboveSpikeThreshold(),
                 this
             )
-            // ,
-            // this.goToPosition(this.targetPosition)
         );
     }
 

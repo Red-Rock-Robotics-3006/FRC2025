@@ -478,7 +478,7 @@ public class Autos {
         return Commands.sequence(
             superstructure.goToIntakePosition(),
             Commands.deadline(
-                superstructure.intakeGroundCoral(),
+                superstructure.intakeCoral(),
                 intake.startIntakeCommand()
             ),
             superstructure.stowReefCommand()
@@ -491,7 +491,7 @@ public class Autos {
             Commands.deadline(
                 // Commands.sequence(
                     // superstructure.goToSourceIntakePosition(),
-                superstructure.intakeGroundCoral(),
+                superstructure.intakeCoral(),
                 // ), 
                 drivetrain.pidToPoseContinuousCommand()
             ),
