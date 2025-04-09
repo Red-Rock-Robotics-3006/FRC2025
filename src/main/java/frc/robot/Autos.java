@@ -414,21 +414,19 @@ public class Autos {
     }
 
     public Command scoreAutoCommand(Pose2d pose) {
-        return Commands.parallel(
-            Commands.sequence(
-                superstructure.goToL4Command(),
-                Commands.waitUntil(() -> superstructure.atTargets()),
-                Commands.waitSeconds(0.75)
-            ),
-            Commands.sequence(
-                Commands.runOnce(() -> {drivetrain.setTargetPose(pose); drivetrain.enablePositionTargeting();}, drivetrain),
-                drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                Commands.deadline(
-                    Commands.waitSeconds(0.5), 
-                    drivetrain.pidToPoseContinuousCommand()
+        return Commands.sequence(
+            Commands.deadline(
+                Commands.sequence(
+                    superstructure.goToL4Command(),
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitSeconds(0.15)
                 ),
-                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
-            )
+                Commands.sequence(
+                    Commands.runOnce(() -> {drivetrain.setTargetPose(pose); drivetrain.enablePositionTargeting();}, drivetrain),
+                    drivetrain.pidToPoseContinuousCommand()
+                )
+            ),
+            drivetrain.disablePositionTargetingCommand()
         );
     }
 

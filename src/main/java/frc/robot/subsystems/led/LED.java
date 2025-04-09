@@ -109,7 +109,6 @@ public class LED extends SubsystemBase{
     }
 
     public void setLights(Color c) {
-        blinkControl = 0;
         for (int i = 0; i < buffer.getLength(); i++) {
             buffer.setLED(i, c);
         }
@@ -153,7 +152,6 @@ public class LED extends SubsystemBase{
     }
 
     public void blinkSetLights(Color c, int freq) {
-        blinkControl = 0;
         if (blinkControl < freq * 12) {
             if (blinkControl % freq * 2 < freq) this.setLights(c);
             else this.setLights(OFF);
@@ -186,14 +184,16 @@ public class LED extends SubsystemBase{
             case REEF_HOMING:
                 // blink(GREEN, 7);
                 // setLights(GREEN);
-                blinkSetLights(GREEN, 4);
+                blinkControl = 0;
+                blinkSetLights(GREEN, 5);
                 break;
             case REEF_READY:
                 setLights(GREEN);
                 break;
             case HAS_CORAL:
                 // blink(NOTE_ORANGE, 14);
-                blinkSetLights(NOTE_ORANGE, 4);
+                blinkControl = 0;
+                blinkSetLights(NOTE_ORANGE, 5);
                 break;
             case IDLE:
                 rainbow();
