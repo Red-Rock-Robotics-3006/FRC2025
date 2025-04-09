@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Superstructure.Position;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Intake;
@@ -20,6 +21,7 @@ public class Autos {
     public final CommandSwerveDrivetrain drivetrain = CommandSwerveDrivetrain.getInstance();
     private final Superstructure superstructure = Superstructure.getInstance();
     private final Intake intake = Intake.getInstance();
+    private final Arm arm = Arm.getInstance();
     private final EndEffector endeffector = EndEffector.getInstance();
 
     public Autos(AutoFactory f) {
@@ -209,39 +211,43 @@ public class Autos {
 
             superstructure.setRequestedScoringPositionCommand(Position.L4),
             
-            followFirstTrajectoryCommand("R3GL", 0),
+            // followFirstTrajectoryCommand("R3GL", 0),
             scoreAutoCommand(0),
             superstructure.outtakeCoral(),
 
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             Commands.deadline(
                 Commands.sequence(
-                    followTrajectoryCommand("R3GL", 1),
+                    Commands.waitUntil(() -> arm.inSafeZone()),
+                    followFirstTrajectoryCommand("R3GL", 1),
                     followTrajectoryCommand("R3GL", 2)
                 ),
-                groundIntakeCommand()
+                Commands.sequence(
+                    groundIntakeCommand()
+                )
             ),  
             Commands.either(
                 Commands.sequence(
-                    Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
                     scoreAutoCommand(0), 
                     superstructure.outtakeCoral()
                 ),
                 Commands.print("SECOND CORAL MISSED"), 
                 () -> endeffector.coralDetected()
             ),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
 
             Commands.parallel(
                 Commands.sequence(
+                    Commands.waitUntil(() -> arm.inSafeZone()),
                     followTrajectoryCommand("R3GL", 3),
                     followTrajectoryCommand("R3GL", 4)
                 ),
-                groundIntakeCommand()
+                Commands.sequence(
+                    groundIntakeCommand()
+                )
             ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             scoreAutoCommand(1),
-            superstructure.outtakeCoral()
+            superstructure.outtakeCoral(),
+            superstructure.stowCommand(),
+            Commands.runOnce(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
         );
     }
 
@@ -250,7 +256,9 @@ public class Autos {
             followFirstTrajectoryCommand("R3GL", 1),
             followTrajectoryCommand("R3GL", 2),
             followTrajectoryCommand("R3GL", 3),
-            followTrajectoryCommand("R3GL", 4)
+            followTrajectoryCommand("R3GL", 4),
+            Commands.runOnce(() -> drivetrain.setTargetHeadingDegrees(drivetrain.getHeadingDegrees()), drivetrain)
+
         );
     }
 

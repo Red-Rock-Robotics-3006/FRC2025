@@ -225,6 +225,7 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/target", this.convertPosition(this.targetPosition));
         SmartDashboard.putString("elevator/tpos", this.targetPosition.name());
         SmartDashboard.putBoolean("elevator/above ground intake threshold", this.aboveGroundIntakeThreshold());
+        SmartDashboard.putBoolean("elevator/elevator-at-target", this.atTarget());
 
         this.m_elevatorLeft.update();
         this.m_elevatorRight.update();

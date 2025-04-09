@@ -221,6 +221,7 @@ public class Arm extends SubsystemBase {
         this.armMotor.update();
         SmartDashboard.putBoolean("arm/arm-in-safe-zone", this.inSafeZone());
         SmartDashboard.putNumber("arm/arm-closed-loop-error", this.armMotor.motor.getClosedLoopError().getValueAsDouble());
+        SmartDashboard.putBoolean("arm/arm-at-target", this.atTarget());
         // SmartDashboard.putNumber("arm/arm-cancoder-position", this.cancoder.getAbsolutePosition().getValueAsDouble());
         SmartDashboard.putNumber("arm/arm-error", Math.abs(this.angleToRotations(this.convertPosition(this.targetPosition)) - this.armMotor.motor.getPosition().getValueAsDouble()));
     }

@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -55,7 +56,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.35);
     private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0.45);
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
-    private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 0.5);
+    private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 1.3);
     
     private Position targetPosition = Position.STOW;
 
@@ -301,7 +302,8 @@ public class EndEffector extends SubsystemBase {
         // return Math.abs(this.convertPosition(this.targetPosition)
         //     - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
         return // Math.abs(this.wristMotor.motor.getClosedLoopError().getValueAsDouble()) < this.wristTolerance.getNumber() ||
-            Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
+            // Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
+            true;
     }
 
     @Override
@@ -313,6 +315,8 @@ public class EndEffector extends SubsystemBase {
         // SmartDashboard.putNumber("endeffector/algae-canrange-val", this.algaeTOF.getDistance().getValueAsDouble()); TODO uncomment on rebuild
         SmartDashboard.putBoolean("endeffector/coral-detected", this.coralDetected());
         SmartDashboard.putBoolean("endeffector/algae-detected", this.algaeDetected());
+        SmartDashboard.putBoolean("endeffector/ef-at-target", this.atTarget());
+        Logger.recordOutput("endeffector/wrist-error", Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()));
     }
 
     /**

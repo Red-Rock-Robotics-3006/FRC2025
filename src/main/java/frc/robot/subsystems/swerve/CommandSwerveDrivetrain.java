@@ -145,7 +145,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber sourcePositionIRange = new SmartDashboardNumber("dt/dt-source-Irange", 0.2);
 
     private SmartDashboardNumber autoPositionKp = new SmartDashboardNumber("dt/dt-auto-auto-kp", 4);
-    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-auto-ki", 2.8); // 15
+    private SmartDashboardNumber autoPositionKi = new SmartDashboardNumber("dt/dt-auto-auto-ki", 0); // 15
     private SmartDashboardNumber autoPositionKd = new SmartDashboardNumber("dt/dt-auto-auto-kd", 0.3);
     //private SmartDashboardNumber autoPositionIRange = new SmartDashboardNumber("dt/dt-auto-position-Irange", 0.2);
 
@@ -614,6 +614,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         SmartDashboard.putNumber("dt/dt-position-x", this.getPose().getX());
         SmartDashboard.putNumber("dt/dt-position-y", this.getPose().getY());
+        SmartDashboard.putNumber("dt/dt-rotation-rate", this.getPigeon2().getRate());
 
         SmartDashboard.putBoolean("dt/dt-using-single-axis", this.usingSingleAxisDrive);
         SmartDashboard.putBoolean("dt/dt-position-target-override", this.positionTargetOverride);

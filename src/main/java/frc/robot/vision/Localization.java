@@ -55,7 +55,9 @@ public class Localization {
             SmartDashboard.putNumber("localization/"+name+"/heading", headingDegrees);
             LimelightHelpers.SetRobotOrientation(name, headingDegrees, CommandSwerveDrivetrain.getInstance().getRotationRateDegrees(), 0, 0, 0, 0);
             PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
-            wrappers[i].withPoseEstimate(estimate).withTagInVision(LimelightHelpers.getTV(name));
+            if (estimate != null)
+                wrappers[i].withPoseEstimate(estimate).withTagInVision(LimelightHelpers.getTV(name));
+
             
             Pose2d mt1Pose = LimelightHelpers.getBotPose2d_wpiBlue(name);
             limeLightPoses[i][0] =  mt1Pose==null?new Pose2d():mt1Pose;       // MT1
@@ -105,7 +107,7 @@ public class Localization {
     }
 
     public static class LimeLightPoseEstimateWrapper {
-        public LimelightHelpers.PoseEstimate poseEstimate;
+        public LimelightHelpers.PoseEstimate poseEstimate = new PoseEstimate();
         public String name;
         public boolean tiv;
         private SmartDashboardNumber[] kStdvs = new SmartDashboardNumber[3];
