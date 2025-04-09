@@ -153,6 +153,16 @@ public class Superstructure {
         );
     }
 
+    public Command goToIntakePositionAuto() {
+        return Commands.sequence(
+            this.arm.goToPosition(Position.CORAL_GROUND),
+            this.intake.deployIntakeCommand(),
+            this.endEffector.goToPosition(Position.CORAL_GROUND),
+            Commands.waitUntil(() -> arm.inSafeZone()),
+            Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
+            this.elevator.goToPosition(Position.CORAL_GROUND)
+        );
+    }
 
     public Command stowCommand() {
         return new SequentialCommandGroup(

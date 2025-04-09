@@ -109,6 +109,7 @@ public class LED extends SubsystemBase{
     }
 
     public void setLights(Color c) {
+        blinkControl = 0;
         for (int i = 0; i < buffer.getLength(); i++) {
             buffer.setLED(i, c);
         }
@@ -151,6 +152,15 @@ public class LED extends SubsystemBase{
         else this.setLights(OFF);
     }
 
+    public void blinkSetLights(Color c, int freq) {
+        blinkControl = 0;
+        if (blinkControl < freq * 12) {
+            if (blinkControl % freq * 2 < freq) this.setLights(c);
+            else this.setLights(OFF);
+        }
+        else setLights(c);
+    }
+
     public void resetLEDs() {
         this.state = LEDState.IDLE;
     }
@@ -164,7 +174,6 @@ public class LED extends SubsystemBase{
 
         if (swerve.getTargetingReef() && swerve.isTargetingPosition()) state = LEDState.REEF_HOMING;
         else if (EndEffector.getInstance().coralDetected()) state = LEDState.HAS_CORAL;
-        // else if (!swerve.getTargetingReef() && swerve.getPositionTargeting()) state = LEDState.SOURCE_INTAKE_HOMING;
         else state = LEDState.IDLE;
 
         switch(state) {
@@ -176,13 +185,15 @@ public class LED extends SubsystemBase{
                 break;
             case REEF_HOMING:
                 // blink(GREEN, 7);
-                setLights(GREEN);
+                // setLights(GREEN);
+                blinkSetLights(GREEN, 4);
                 break;
             case REEF_READY:
                 setLights(GREEN);
                 break;
             case HAS_CORAL:
-                blink(NOTE_ORANGE, 14);
+                // blink(NOTE_ORANGE, 14);
+                blinkSetLights(NOTE_ORANGE, 4);
                 break;
             case IDLE:
                 rainbow();

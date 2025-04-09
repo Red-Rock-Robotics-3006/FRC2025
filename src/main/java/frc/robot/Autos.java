@@ -207,23 +207,15 @@ public class Autos {
 
     public Command right3L4GroundLollipop() {
         return Commands.sequence(
-            endeffector.stopCommand(),
-
-            superstructure.setRequestedScoringPositionCommand(Position.L4),
+            initializeAutoCommand(),
             
             // followFirstTrajectoryCommand("R3GL", 0),
             scoreAutoCommand(0),
             superstructure.outtakeCoral(),
 
             Commands.deadline(
-                Commands.sequence(
-                    Commands.waitUntil(() -> arm.inSafeZone()),
-                    followFirstTrajectoryCommand("R3GL", 1),
-                    followTrajectoryCommand("R3GL", 2)
-                ),
-                Commands.sequence(
-                    groundIntakeCommand()
-                )
+                followFirstTrajectoryCommand("R3GL", 1),
+                groundIntakeCommand()
             ),  
             Commands.either(
                 Commands.sequence(
@@ -235,19 +227,14 @@ public class Autos {
             ),
 
             Commands.parallel(
-                Commands.sequence(
-                    Commands.waitUntil(() -> arm.inSafeZone()),
-                    followTrajectoryCommand("R3GL", 3),
-                    followTrajectoryCommand("R3GL", 4)
-                ),
-                Commands.sequence(
-                    groundIntakeCommand()
-                )
+                followTrajectoryCommand("R3GL", 2),
+                groundIntakeCommand()
             ),
             scoreAutoCommand(1),
             superstructure.outtakeCoral(),
             superstructure.stowCommand(),
-            Commands.runOnce(() -> drivetrain.setTargetHeadingDegrees(180), drivetrain)
+
+            endAutoCommand()
         );
     }
 
@@ -255,10 +242,7 @@ public class Autos {
         return Commands.sequence(
             followFirstTrajectoryCommand("R3GL", 1),
             followTrajectoryCommand("R3GL", 2),
-            followTrajectoryCommand("R3GL", 3),
-            followTrajectoryCommand("R3GL", 4),
-            Commands.runOnce(() -> drivetrain.setTargetHeadingDegrees(drivetrain.getHeadingDegrees()), drivetrain)
-
+            endAutoCommand()
         );
     }
 
@@ -484,11 +468,9 @@ public class Autos {
 
     public Command groundIntakeCommand() {
         return Commands.sequence(
-            superstructure.goToIntakePosition(),
-            Commands.deadline(
-                superstructure.intakeCoral(),
-                intake.startIntakeCommand()
-            ),
+            superstructure.goToIntakePositionAuto(),
+            intake.startIntakeCommand(),
+            superstructure.intakeCoral(),
             superstructure.stowReefCommand()
         );
     }
@@ -516,6 +498,17 @@ public class Autos {
             factory.trajectoryCmd(trajectoryName, index)
             // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
         );
+    }
+
+    public Command initializeAutoCommand() {
+        return Commands.sequence(
+            endeffector.stopCommand(),
+            superstructure.setRequestedScoringPositionCommand(Position.L4)
+        );
+    }
+
+    public Command endAutoCommand() {
+        return Commands.runOnce(() -> drivetrain.setTargetHeadingDegrees(drivetrain.getHeadingDegrees()), drivetrain);
     }
 
     /**
