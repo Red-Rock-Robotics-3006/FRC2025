@@ -155,43 +155,36 @@ public class Autos {
 
     public Command left3L4GroundLollipop() {
         return Commands.sequence(
-            endeffector.stopCommand(),
-
-            superstructure.setRequestedScoringPositionCommand(Position.L4),
+            initializeAutoCommand(),
+            intake.deployIntakeCommand(),
             
             followFirstTrajectoryCommand("L3GL", 0),
             scoreAutoCommand(1),
-            superstructure.outtakeCoral(),
 
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             Commands.deadline(
                 Commands.sequence(
-                    followTrajectoryCommand("L3GL", 1),
-                    followTrajectoryCommand("L3GL", 2)
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    followTrajectoryCommand("L3GL", 1)
                 ),
                 groundIntakeCommand()
             ),  
             Commands.either(
-                Commands.sequence(
-                    Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-                    scoreAutoCommand(1), 
-                    superstructure.outtakeCoral()
-                ),
+                scoreAutoCommand(1),
                 Commands.print("SECOND CORAL MISSED"), 
                 () -> endeffector.coralDetected()
             ),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
 
             Commands.parallel(
                 Commands.sequence(
-                    followTrajectoryCommand("L3GL", 3),
-                    followTrajectoryCommand("L3GL", 4)
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    followFirstTrajectoryCommand("L3GL", 2)
                 ),
                 groundIntakeCommand()
             ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             scoreAutoCommand(0),
-            superstructure.outtakeCoral()
+            superstructure.stowCommand(),
+
+            endAutoCommand()
         );
     }
 
@@ -199,39 +192,39 @@ public class Autos {
         return Commands.sequence(
             followFirstTrajectoryCommand("L3GL", 0),
             followTrajectoryCommand("L3GL", 1),
-            followTrajectoryCommand("L3GL", 2),
-            followTrajectoryCommand("L3GL", 3),
-            followTrajectoryCommand("L3GL", 4)
+            followTrajectoryCommand("L3GL", 2)
         );
     }
 
     public Command right3L4GroundLollipop() {
         return Commands.sequence(
             initializeAutoCommand(),
+            intake.deployIntakeCommand(),
             
             // followFirstTrajectoryCommand("R3GL", 0),
             scoreAutoCommand(0),
-            superstructure.outtakeCoral(),
 
             Commands.deadline(
-                followFirstTrajectoryCommand("R3GL", 1),
+                Commands.sequence(
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    followFirstTrajectoryCommand("R3GL", 1)
+                ),
                 groundIntakeCommand()
             ),  
             Commands.either(
-                Commands.sequence(
-                    scoreAutoCommand(0), 
-                    superstructure.outtakeCoral()
-                ),
+                scoreAutoCommand(0),
                 Commands.print("SECOND CORAL MISSED"), 
                 () -> endeffector.coralDetected()
             ),
 
             Commands.parallel(
-                followTrajectoryCommand("R3GL", 2),
+                Commands.sequence(
+                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    followFirstTrajectoryCommand("R3GL", 2)
+                ),
                 groundIntakeCommand()
             ),
             scoreAutoCommand(1),
-            superstructure.outtakeCoral(),
             superstructure.stowCommand(),
 
             endAutoCommand()
@@ -443,7 +436,8 @@ public class Autos {
                     drivetrain.pidToPoseContinuousCommand()
                 )
             ),
-            drivetrain.disablePositionTargetingCommand()
+            drivetrain.disablePositionTargetingCommand(),
+            superstructure.outtakeCoral()
         );
     }
 
@@ -469,7 +463,7 @@ public class Autos {
             superstructure.goToIntakePositionAuto(),
             intake.startIntakeCommand(),
             superstructure.intakeCoral(),
-            superstructure.stowReefCommand()
+            superstructure.stowReefAutoCommand()
         );
     }
 

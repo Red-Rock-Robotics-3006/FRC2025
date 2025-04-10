@@ -209,6 +209,36 @@ public class Superstructure {
         );
     }
 
+    public Command stowReefAutoCommand() {
+        return new SequentialCommandGroup(
+            this.arm.goToPosition(Position.STOW),
+            this.intake.stopIntakeCommand(),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
+            Commands.waitUntil(() -> this.arm.inSafeZone()),
+            Commands.select(
+                Map.ofEntries(
+                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL1Stow(), elevator)),
+                    Map.entry(Position.L2, Commands.runOnce(() -> this.elevator.setL2Stow(), elevator)),
+                    Map.entry(Position.L3, Commands.runOnce(() -> this.elevator.setL3Stow(), elevator)),
+                    Map.entry(Position.L4, Commands.runOnce(() -> this.elevator.setL4Stow(), elevator)),
+                    Map.entry(Position.STOW, this.elevator.goToPosition(Position.STOW))
+                ), 
+                () -> this.getRequestedScoringPosition()),
+            Commands.select(
+                Map.ofEntries(
+                    Map.entry(Position.L1, this.endEffector.goToPosition(Position.L1)),
+                    Map.entry(Position.L2, this.endEffector.goToPosition(Position.L2)),
+                    Map.entry(Position.L3, this.endEffector.goToPosition(Position.L3)),
+                    Map.entry(Position.L4, this.endEffector.goToPosition(Position.L4)),
+                    Map.entry(Position.STOW, this.endEffector.goToPosition(Position.STOW))
+                ), 
+                () -> this.getRequestedScoringPosition()),
+            // this.endEffector.goToPosition(Position.STOW),
+            this.endEffector.stopCommand()
+        );
+    }
+
     public Command goToL4Command() {
         return this.goToReefPosition(Position.L4);
     }
