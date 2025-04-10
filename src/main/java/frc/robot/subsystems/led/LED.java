@@ -166,13 +166,17 @@ public class LED extends SubsystemBase{
     // public void setSwerveIsHoming(boolean b) {
     //     swerveIsHoming = b;
     // }
-
+    
     public void periodic() {
         blinkControl++;
+
+        LEDState oldState = state;
 
         if (swerve.getTargetingReef() && swerve.isTargetingPosition()) state = LEDState.REEF_HOMING;
         else if (EndEffector.getInstance().coralDetected()) state = LEDState.HAS_CORAL;
         else state = LEDState.IDLE;
+
+        if (state != oldState) blinkControl = 0;
 
         switch(state) {
             case SOURCE_INTAKE_HOMING:
@@ -184,7 +188,6 @@ public class LED extends SubsystemBase{
             case REEF_HOMING:
                 // blink(GREEN, 7);
                 // setLights(GREEN);
-                blinkControl = 0;
                 blinkSetLights(GREEN, 5);
                 break;
             case REEF_READY:
@@ -192,7 +195,6 @@ public class LED extends SubsystemBase{
                 break;
             case HAS_CORAL:
                 // blink(NOTE_ORANGE, 14);
-                blinkControl = 0;
                 blinkSetLights(NOTE_ORANGE, 5);
                 break;
             case IDLE:
