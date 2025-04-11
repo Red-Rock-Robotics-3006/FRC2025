@@ -152,7 +152,7 @@ public class LED extends SubsystemBase{
     }
 
     public void blinkSetLights(Color c, int freq) {
-        if (blinkControl < freq * 12) {
+        if (blinkControl < freq * 3) {
             if (blinkControl % freq * 2 < freq) this.setLights(c);
             else this.setLights(OFF);
         }
@@ -188,14 +188,14 @@ public class LED extends SubsystemBase{
             case REEF_HOMING:
                 // blink(GREEN, 7);
                 // setLights(GREEN);
-                blinkSetLights(GREEN, 5);
+                blinkSetLights(GREEN, 8);
                 break;
             case REEF_READY:
                 setLights(GREEN);
                 break;
             case HAS_CORAL:
                 // blink(NOTE_ORANGE, 14);
-                blinkSetLights(NOTE_ORANGE, 5);
+                blinkSetLights(NOTE_ORANGE, 8);
                 break;
             case IDLE:
                 rainbow();

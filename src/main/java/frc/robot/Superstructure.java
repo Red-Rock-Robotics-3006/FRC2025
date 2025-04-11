@@ -105,6 +105,20 @@ public class Superstructure {
         );
     }
 
+    public Command goToReefPositionAuto(Supplier<Position> pos) {
+        return Commands.sequence(
+            Commands.print(pos.get().toString()),
+            this.arm.goToPosition(Position.STOW),
+            // this.endEffector.goToPosition(Position.STOW),
+            this.endEffector.goToPosition(pos.get()),
+            Commands.waitUntil(() -> this.arm.atTarget()),
+            this.elevator.goToPosition(pos.get()),
+            Commands.waitUntil(() -> this.elevator.atTarget()),
+            this.arm.goToPosition(pos.get())
+            // this.endEffector.goToPosition(pos.get())
+        );
+    }
+
     public Command setRequestedScoringPositionCommand(Position pos) {
         return Commands.runOnce(() -> this.setRequestedScoringPosition(pos));
     }

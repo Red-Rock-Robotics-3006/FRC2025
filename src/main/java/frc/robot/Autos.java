@@ -23,6 +23,7 @@ public class Autos {
     private final Intake intake = Intake.getInstance();
     private final Arm arm = Arm.getInstance();
     private final EndEffector endeffector = EndEffector.getInstance();
+    private final Elevator elevator = Elevator.getInstance();
 
     public Autos(AutoFactory f) {
         factory = f;
@@ -99,7 +100,7 @@ public class Autos {
                     scoreAutoCommand(0), 
                     superstructure.outtakeCoral()
                 ),
-                Commands.print("SECOND CORAL MISSED"), 
+                updatePoseVisionCommand(), 
                 () -> endeffector.coralDetected()
             ),
 
@@ -206,20 +207,23 @@ public class Autos {
 
             Commands.deadline(
                 Commands.sequence(
-                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    // Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
                     followFirstTrajectoryCommand("R3GL", 1)
                 ),
                 groundIntakeCommand()
             ),  
             Commands.either(
                 scoreAutoCommand(0),
-                Commands.print("SECOND CORAL MISSED"), 
+                // Commands.print("SECOND CORAL MISSED"), 
+                updatePoseVisionCommand(),
                 () -> endeffector.coralDetected()
             ),
 
             Commands.parallel(
                 Commands.sequence(
-                    Commands.waitUntil(() -> superstructure.atTargets()),
+                    // Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
                     followFirstTrajectoryCommand("R3GL", 2)
                 ),
                 groundIntakeCommand()
@@ -425,11 +429,12 @@ public class Autos {
 
     public Command scoreAutoCommand(int reefSide) {
         return Commands.sequence(
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             Commands.deadline(
                 Commands.sequence(
-                    superstructure.goToL4Command(),
+                    superstructure.goToReefPositionAuto(() -> Position.L4),
                     Commands.waitUntil(() -> superstructure.atTargets()),
-                    Commands.waitSeconds(0.15)
+                    Commands.waitSeconds(0.35)
                 ),
                 Commands.sequence(
                     Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
@@ -437,7 +442,8 @@ public class Autos {
                 )
             ),
             drivetrain.disablePositionTargetingCommand(),
-            superstructure.outtakeCoral()
+            superstructure.outtakeCoral(),
+            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
         );
     }
 
@@ -463,7 +469,7 @@ public class Autos {
             superstructure.goToIntakePositionAuto(),
             intake.startIntakeCommand(),
             superstructure.intakeCoral(),
-            superstructure.stowReefAutoCommand()
+            superstructure.goToReefPositionAuto(() -> Position.L4)
         );
     }
 
@@ -485,10 +491,10 @@ public class Autos {
 
     public Command followTrajectoryCommand(String trajectoryName, int index) {
         return Commands.sequence(
-            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
+            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             // factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index)
-            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
+            factory.trajectoryCmd(trajectoryName, index),
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
         );
     }
 
@@ -501,6 +507,15 @@ public class Autos {
 
     public Command endAutoCommand() {
         return Commands.runOnce(() -> drivetrain.setTargetHeadingDegrees(drivetrain.getHeadingDegrees()), drivetrain);
+    }
+
+    public Command updatePoseVisionCommand() {
+        return Commands.sequence(
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
+            Commands.waitSeconds(0.5),
+            // drivetrain.pidToPoseContinuousCommand(),
+            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
+        );
     }
 
     /**
@@ -552,10 +567,10 @@ public class Autos {
                     ); 
             },
             drivetrain),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
+            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             // factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index)
-            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
+            factory.trajectoryCmd(trajectoryName, index),
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
         );
     }
     
