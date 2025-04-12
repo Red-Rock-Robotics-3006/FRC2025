@@ -202,7 +202,10 @@ public class Autos {
             initializeAutoCommand(),
             intake.deployIntakeCommand(),
             
-            // followFirstTrajectoryCommand("R3GL", 0),
+            Commands.parallel(
+                superstructure.goToReefPositionAuto(() -> Position.L4),
+                followFirstTrajectoryCommand("R3GL", 0)
+            ),
             scoreAutoCommand(0),
 
             Commands.deadline(

@@ -19,10 +19,10 @@ public class Localization {
     private static boolean isSim = false;
 
     private static int[] validIDs = {1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22};
-    private static String[] limeLightNames = {"front", "climb"};//, "right", "back"};
+    private static String[] limeLightNames = {"climb"};//, "right", "back"};
     private static double[][] limeLightStdvs = {
         // {0.8, 0.8, 9999},
-        {0.9, 0.9, 9999},
+        // {0.9, 0.9, 9999},
         {0.9, 0.9, 9999}
     };
     private static Pose2d[][] limeLightPoses = {{new Pose2d(), new Pose2d()}, {new Pose2d(), new Pose2d()}}; // First is MT1, second is MT2

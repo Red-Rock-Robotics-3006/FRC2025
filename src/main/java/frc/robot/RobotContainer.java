@@ -524,6 +524,35 @@ public class RobotContainer {
         // );
     }
 
+    private void configureArmTuning() {
+        drivestick.povUp().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().increaseTarget(), Arm.getInstance())
+        );
+        drivestick.povDown().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().decreaseTarget(), Arm.getInstance())
+        );
+
+        drivestick.a().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().setTarget(), Arm.getInstance())
+        );
+    }
+
+    private void configureEndEffectorTuning() {
+        drivestick.povUp().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().increaseTarget(), EndEffector.getInstance())
+        );
+        drivestick.povDown().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().decreaseTarget(), EndEffector.getInstance())
+        );
+
+        drivestick.a().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().setTarget(), EndEffector.getInstance())
+        );
+        drivestick.b().onTrue(
+            superstructure.normalizeEFCommand()
+        );
+    }
+
     // Pose2d targetPose = new Pose2d(5.70328981, 3.76387475, Rotation2d.fromDegrees(0));
 
     public void loop(){
