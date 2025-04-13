@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.Map;
 
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
@@ -113,6 +114,8 @@ public class RobotContainer {
         configureDriveBindings();
         // configureTestBindings();
         configureCompBindings();
+        // configureArmTuning();
+        // configureEndEffectorTuning();
     }
     
     private void configureDriveBindings() {
@@ -193,32 +196,40 @@ public class RobotContainer {
             superstructure.normalizeCommand()
         );
 
-        drivestick.povLeft().onTrue(
-            superstructure.normalizeEFCommand() // TODO Why do we still have this?
-        );
-
         drivestick.leftTrigger(0.25).onTrue(
-            Commands.sequence(
-                superstructure.goToIntakePosition(),
-                Commands.deadline(
-                    superstructure.intakeCoral(),
-                    // intake.spasmIntakeCommand()
-                    intake.startIntakeCommand()
+            Commands.either(
+                Commands.runOnce(() -> {}),
+                Commands.sequence(
+                    superstructure.goToGroundIntakePosition(),
+                    Commands.deadline(
+                        superstructure.intakeCoral(),
+                        // intake.spasmIntakeCommand()
+                        intake.startIntakeCommand()
+                    ),
+                    this.rumbleControllerCommand(1, 0.6)
                 ),
-                this.rumbleControllerCommand(1, 0.6)
+                () -> superstructure.hasAlgae()
             )
         ).onFalse(
-            Commands.sequence(
-                // superstructure.stowCommand()
-                superstructure.stowReefCommand()
+            Commands.either(
+                superstructure.stowCommand(),
+                superstructure.stowReefCommand(), 
+                () -> superstructure.hasAlgae()
             )
         );
 
         drivestick.rightBumper().onTrue(
-            Commands.sequence(
-                Commands.runOnce(() -> {drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                this.rumbleControllerCommand(1, 0.15)
+            Commands.either(
+                Commands.sequence(
+                    Commands.runOnce(() -> {drivetrain.setNearestBargePoseXTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                    drivetrain.pidToPoseContinuousCommand()
+                ),
+                Commands.sequence(
+                    Commands.runOnce(() -> {drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                    drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                    this.rumbleControllerCommand(1, 0.15)
+                ),
+                () -> superstructure.hasAlgae()
             )
         ).onFalse(
             Commands.sequence(
@@ -228,31 +239,38 @@ public class RobotContainer {
         );
 
         drivestick.leftBumper().onTrue( // TODO What does this do?
-            Commands.parallel(
-                // Commands.sequence(
-                //     Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
-                //     Commands.either(
-                //         drivetrain.pidToPoseContinuousCommand(), 
-                //         drivetrain.driveFacingAngleContinuousCommand(), 
-                //         () -> drivetrain.getPositionTargeting()
-                //     )
-                //     // drivetrain.pidToPoseContinuousCommand()
-                //     // drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                //     // this.rumbleControllerCommand(1, 0.15)
-                // ),
-                Commands.sequence(
-                    Commands.runOnce(() -> drivetrain.setNearestSourcePoseTargetHeading(), drivetrain),
-                    drivetrain.driveFacingAngleContinuousCommand()
+            Commands.either(
+                Commands.runOnce(() -> {}),
+                Commands.parallel(
+                    // Commands.sequence(
+                    //     Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
+                    //     Commands.either(
+                    //         drivetrain.pidToPoseContinuousCommand(), 
+                    //         drivetrain.driveFacingAngleContinuousCommand(), 
+                    //         () -> drivetrain.getPositionTargeting()
+                    //     )
+                    //     // drivetrain.pidToPoseContinuousCommand()
+                    //     // drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                    //     // this.rumbleControllerCommand(1, 0.15)
+                    // ),
+                    Commands.sequence(
+                        Commands.runOnce(() -> drivetrain.setNearestSourcePoseTargetHeading(), drivetrain),
+                        drivetrain.driveFacingAngleContinuousCommand()
+                    ),
+                    Commands.sequence(
+                        superstructure.goToSourceIntakePosition(), //TODO add swerve thing
+                        superstructure.intakeCoral(), // TODO Are we intaking ground coral or source coral?
+                        this.rumbleControllerCommand(1, 0.6)
+                    )
                 ),
-                Commands.sequence(
-                    superstructure.goToSourceIntakePosition(), //TODO add swerve thing
-                    superstructure.intakeCoral(), // TODO Are we intaking ground coral or source coral?
-                    this.rumbleControllerCommand(1, 0.6)
-                )
+                () -> superstructure.hasAlgae()
             )
         ).onFalse(
-                // superstructure.stowCommand() //TODO add swerve thing
-                superstructure.stowReefCommand()
+            Commands.either(
+                superstructure.stowCommand(),
+                superstructure.stowReefCommand(), 
+                () -> superstructure.hasAlgae()
+            )
         );
 
         drivestick.rightTrigger(0.25).onTrue(
@@ -272,7 +290,11 @@ public class RobotContainer {
         );
 
         drivestick.x().and(new Trigger(() -> drivestick.getHID().getRightTriggerAxis() < 0.25)).onTrue(
-            superstructure.outtakeCoral()
+            // superstructure.outtakeCoral()
+            Commands.either(
+                superstructure.outtakeAlgae(),
+                superstructure.outtakeCoral(), 
+                () -> superstructure.hasAlgae())
         ).onFalse(
             superstructure.stowCommand()
         );
@@ -284,7 +306,8 @@ public class RobotContainer {
                     Map.entry(Position.L1, superstructure.goToL1Command()),
                     Map.entry(Position.L2, superstructure.goToL2Command()),
                     Map.entry(Position.L3, superstructure.goToL3Command()),
-                    Map.entry(Position.L4, superstructure.goToL4Command())
+                    Map.entry(Position.L4, superstructure.goToL4Command()),
+                    Map.entry(Position.BARGE, superstructure.goToBargePosition())
                 ),
                 () -> superstructure.getRequestedScoringPosition())
             // superstructure.goToRequestedPositionCommand()
@@ -320,8 +343,8 @@ public class RobotContainer {
 
         mechstick.povDown().onTrue(
             Commands.sequence(
-                superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
-                superstructure.goToL2RemoveCommand()
+                superstructure.goToL2RemoveCommand(),
+                superstructure.intakeGroundAlgaeEndeffector()
             )
         // ).onFalse(
         //     superstructure.stowCommand()
@@ -329,8 +352,10 @@ public class RobotContainer {
 
         mechstick.povUp().onTrue(
             Commands.sequence(
-                superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
-                superstructure.goToL3RemoveCommand()
+                // superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
+                // superstructure.goToL3RemoveCommand()
+                superstructure.goToL3RemoveCommand(),
+                superstructure.intakeGroundAlgaeEndeffector()
             )
         // ).onFalse(
         //     superstructure.stowCommand()
@@ -359,25 +384,33 @@ public class RobotContainer {
             superstructure.stowCommand()
         );
 
+        // mechstick.back().onTrue(
+        //     Commands.sequence(
+        //         Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
+        //         drivetrain.pidToPoseContinuousCommand()
+        //     )
+        // ).onFalse(
+        //     Commands.sequence(
+        //         Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+        //     )
+        // );
+
         mechstick.back().onTrue(
-            Commands.sequence(
-                Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
-                drivetrain.pidToPoseContinuousCommand()
-            )
-        ).onFalse(
-            Commands.sequence(
-                Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
-            )
+            superstructure.setRequestedScoringPositionCommand(Position.BARGE)
         );
 
-        mechstick.start().onTrue(
-            Commands.runOnce(
-                () -> EndEffector.getInstance().setCoralIntakeSpeed()
-                , 
-                EndEffector.getInstance())
-        ).onFalse(
-            EndEffector.getInstance().stopCommand()
-        );
+        // mechstick.start().onTrue(
+        //     superstructure.setRequestedScoringPositionCommand(Position.PROCESSOR)
+        // );
+
+        // mechstick.start().onTrue(
+        //     Commands.runOnce(
+        //         () -> EndEffector.getInstance().setCoralIntakeSpeed()
+        //         , 
+        //         EndEffector.getInstance())
+        // ).onFalse(
+        //     EndEffector.getInstance().stopCommand()
+        // );
 
         // mechstick.start().onTrue(
         //     Commands.runOnce(() -> EndEffector.getInstance().setCoralIntakeSpeed(), EndEffector.getInstance())
@@ -386,7 +419,7 @@ public class RobotContainer {
         // )
     }
 
-    public void configureTestBindings() {
+    private void configureTestBindings() {
         
         RobotModeTriggers.teleop().onTrue(
             Commands.sequence(
@@ -524,18 +557,22 @@ public class RobotContainer {
         // );
     }
 
-    private void configureArmTuning() {
-        drivestick.povUp().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().increaseTarget(), Arm.getInstance())
-        );
-        drivestick.povDown().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().decreaseTarget(), Arm.getInstance())
-        );
+    // private void configureArmTuning() {
+    //     drivestick.povUp().onTrue(
+    //         Commands.runOnce(() -> Arm.getInstance().increaseTarget(), Arm.getInstance())
+    //     );
+    //     drivestick.povDown().onTrue(
+    //         Commands.runOnce(() -> Arm.getInstance().decreaseTarget(), Arm.getInstance())
+    //     );
 
-        drivestick.a().onTrue(
-            Commands.runOnce(() -> Arm.getInstance().setTarget(), Arm.getInstance())
-        );
-    }
+    //     drivestick.a().onTrue(
+    //         Commands.runOnce(() -> Arm.getInstance().setTarget(), Arm.getInstance())
+    //     );
+
+    //     drivestick.b().onTrue(
+    //         Commands.runOnce(() -> EndEffector.getInstance().setWristToCurrentPositionForTunning(), EndEffector.getInstance())
+    //     );
+    // }
 
     private void configureEndEffectorTuning() {
         drivestick.povUp().onTrue(
@@ -550,6 +587,10 @@ public class RobotContainer {
         );
         drivestick.b().onTrue(
             superstructure.normalizeEFCommand()
+        );
+
+        drivestick.x().onTrue(
+            Commands.runOnce(() -> Arm.getInstance().setArmToCurrentPositionForTuning(), Arm.getInstance())
         );
     }
 

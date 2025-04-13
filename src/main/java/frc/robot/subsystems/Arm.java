@@ -26,12 +26,12 @@ import frc.robot.Superstructure.Position;
 
 
 public class Arm extends SubsystemBase {
-    public static final double kCANCoderOffset = -0.29052734375;
+    public static final double kCANCoderOffset = -0.389892578125;
     public static final double kDiscontinuityPoint = 0.875;
-    public static final double kRotorToSensorRatio = 68 / 10 * 68 / 16 * 48 / 9;
+    public static final double kRotorToSensorRatio = 55 / 10 * 60 / 24 * 66 / 9;//68 / 10 * 68 / 16 * 48 / 9;
     public static final double kSensorToMechRatio = 1;
 
-    private static final boolean kEnableMotorTuning = true;
+    private static final boolean kEnableMotorTuning = false;
     private static final boolean kEnablePositionTuning = true;
     private static final boolean kEnableLimitsTuning = false;
 
@@ -44,7 +44,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("arm/maxRotation", 0.625).withTuningEnabled(kEnableLimitsTuning);
 
     private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", -0.03);
-    private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0.25);
+    private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0.255);
     private Position targetPosition = Position.STOW;
 
     private static Arm instance = null;
@@ -52,23 +52,29 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.025);
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 118.8).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 118.8).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 118.8).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 114.57).withTuningEnabled(kEnablePositionTuning); //112 @ utah
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 90).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 90).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 99.5).withTuningEnabled(kEnablePositionTuning); //112 @ utah
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", -57).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -52).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 155).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -0.18383789 * 360).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 208.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 73).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 0).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("arm/position/arm-l2-algae", 145).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("arm/position/arm-l3-algae", 145).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 88).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("arm/position/arm-barge", 90).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("arm/position/arm-l2-algae", 112.67).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("arm/position/arm-l3-algae", 112.67).withTuningEnabled(kEnablePositionTuning);
+
+    private SmartDashboardNumber algaeStow = new SmartDashboardNumber("arm/position/algae-stow", 112);
+
+    private SmartDashboardNumber normalizePosition = new SmartDashboardNumber("arm/position/arm-normalize", 115);
 
     private SmartDashboardNumber climbPosition = new SmartDashboardNumber("arm/position/arm-climb", 105);
     private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("arm/position/arm-algae-outtake", 155);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);
+
+    private double targetRotation = 0.25;
     
 
     private Arm(){
@@ -84,7 +90,7 @@ public class Arm extends SubsystemBase {
 
         this.armMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
-            .withInverted(InvertedValue.Clockwise_Positive)
+            .withInverted(InvertedValue.CounterClockwise_Positive)
             .withPeakForwardDutyCycle(1d)
             .withPeakReverseDutyCycle(-1d)
             .withNeutralMode(NeutralModeValue.Brake)
@@ -94,16 +100,16 @@ public class Arm extends SubsystemBase {
             .withKA(0)
             .withKS(0)
             .withKV(0)
-            .withKP(200)
+            .withKP(155)
             .withKI(0)
-            .withKD(2)
-            .withKG(0.4)
+            .withKD(3)
+            .withKG(0.6)
             .withGravityType(GravityTypeValue.Arm_Cosine)
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
-            .withMotionMagicAcceleration(4500)
-            .withMotionMagicCruiseVelocity(45000)
+            .withMotionMagicAcceleration(3)
+            .withMotionMagicCruiseVelocity(1.1)
             .withMotionMagicJerk(20000000)
         // ).withFeedbackConfigs(
         //     new FeedbackConfigs()
@@ -120,7 +126,7 @@ public class Arm extends SubsystemBase {
             .withSupplyCurrentLimitEnable(true)
             .withStatorCurrentLimit(80)
             .withStatorCurrentLimitEnable(true)
-        ).withTuningEnabled(false);
+        ).withTuningEnabled(kEnableMotorTuning);
 
         this.cancoder.getConfigurator().apply(
             new MagnetSensorConfigs()
@@ -131,6 +137,15 @@ public class Arm extends SubsystemBase {
 
         this.armMotor.motor.getConfigurator().apply(feedbackConfigs);
 
+    }
+
+    public void setArmToCurrentPositionForTuning() {
+        double pos = this.armMotor.motor.getPosition().getValueAsDouble();
+        this.armMotor.setMotionMagicPosition(pos);
+    }
+
+    public void setNormalizePosition() {
+        this.goToAngle(this.normalizePosition.getNumber());
     }
 
     public void setAlgaeOuttakePosition() {
@@ -150,7 +165,12 @@ public class Arm extends SubsystemBase {
     }
 
     public void setPosition(double rotation) {
+        this.targetRotation = rotation;
         this.armMotor.setMotionMagicPosition(MathUtil.clamp(rotation, minRotation.getNumber(), maxRotation.getNumber()));
+    }
+
+    public void setAlgaeStowPosition() {
+        this.goToAngle(algaeStow.getNumber());
     }
 
     public void setClimbPosition() {
@@ -200,6 +220,8 @@ public class Arm extends SubsystemBase {
     public boolean atTarget(){
         return //Math.abs(this.armMotor.motor.getClosedLoopError().getValueAsDouble()) < this.armTolerance.getNumber() ||
         Math.abs(this.angleToRotations(this.convertPosition(this.targetPosition))
+        - this.armMotor.motor.getPosition().getValueAsDouble()) < this.armTolerance.getNumber() ||
+        Math.abs(this.targetRotation
         - this.armMotor.motor.getPosition().getValueAsDouble()) < this.armTolerance.getNumber();
     }
 
@@ -256,12 +278,8 @@ public class Arm extends SubsystemBase {
         return this.armMotor.motor.getPosition().getValueAsDouble() < this.floorThreshold.getNumber();
     }
 
-    /**
-     * Swing arm to score in the Barge
-     * @return a Command to do so
-     */
-    public Command scoreBarge(){
-        return this.goToPosition(Position.L3); // TODO Consider deprecation and removal
+    public boolean pastVerticalThreshold() {
+        return this.armMotor.motor.getPosition().getValueAsDouble() > this.verticalThreshold.getNumber();
     }
 
     /**

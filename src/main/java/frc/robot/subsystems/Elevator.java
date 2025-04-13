@@ -26,14 +26,14 @@ import frc.robot.Superstructure.Position;
 
 public class Elevator extends SubsystemBase {
     private static Elevator instance = null;
-    private static boolean kEnableMotorTuning = true;
+    private static boolean kEnableMotorTuning = false;
 
     private static boolean kEnablePositionTuning = true;
 
     public static final double kRatio = (46d / 12d) / 6d;
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("elevator/min-rotation", 0 * kRatio);
-    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 62 * kRatio);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("elevator/max-rotation", 39.8);
 
     // private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l1", 0).withTuningEnabled(kEnablePositionTuning);
     // private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2", 1.5).withTuningEnabled(kEnablePositionTuning);
@@ -49,17 +49,19 @@ public class Elevator extends SubsystemBase {
     // private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3-algae", 17.5).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l1", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2", 1.5 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3", 21 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 61 * kRatio).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2", 0).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3", 14).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 39.7).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-source", 50 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 22.23 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-algae-ground", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 20.735).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-algae-ground", 12.76).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-processor", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-stow", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-barge", 60 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2-algae", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3-algae", 17.5 * kRatio).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-barge", 39).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2-algae", 7.45).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3-algae", 21.45).withTuningEnabled(kEnablePositionTuning);
+
+    private SmartDashboardNumber preGroundIntakePosition = new SmartDashboardNumber("elevator/elevator-positions/pre-ground", 45 * kRatio);
 
     private SmartDashboardNumber l1StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l1", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l2", 1.5 * kRatio).withTuningEnabled(kEnablePositionTuning);
@@ -82,17 +84,18 @@ public class Elevator extends SubsystemBase {
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("elevator/elevator-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("elevator/elevator-tuning/target", 0);
-    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 1.5);
+    private SmartDashboardNumber tolerance = new SmartDashboardNumber("elevator/tolerance", 2.5);
     private SmartDashboardNumber normalizationSpeed = new SmartDashboardNumber("elevator/normalization-speed", -0.1);
     
     @AutoLogOutput 
     private Position targetPosition = Position.STOW;
+    private double targetRotation = 0;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40 * kRatio);
 
-    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 8 * kRatio);
+    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 38 * kRatio);
     private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 30 * kRatio);
     private SmartDashboardNumber intakeSourceArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/source-threshold", 20 * kRatio);
-                                                                                                             
+    private SmartDashboardNumber bargeThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/barge-threshold", 20);                                                                                                           
 
     private Elevator() {
         super("Elevator");
@@ -111,13 +114,13 @@ public class Elevator extends SubsystemBase {
             .withKV(0)
             .withKP(5.5)
             .withKI(0)
-            .withKD(0)
+            .withKD(0.1)
             .withKG(2)
             .withGravityType(GravityTypeValue.Elevator_Static);
 
         MotionMagicConfigs elevatorMotionConfigs = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(100)
-            .withMotionMagicAcceleration(475)
+            .withMotionMagicCruiseVelocity(85)
+            .withMotionMagicAcceleration(420)
             .withMotionMagicJerk(1000000);
 
         CurrentLimitsConfigs elevatorCurrentLimitsConfigs = new CurrentLimitsConfigs()
@@ -144,10 +147,10 @@ public class Elevator extends SubsystemBase {
         .withSpikeThreshold(currentThreshold)
         .withTuningEnabled(kEnableMotorTuning);
 
-        this.m_elevatorRight.motor.setControl(new Follower(m_elevatorLeft.motor.getDeviceID(), true)); // update
-
         this.m_elevatorLeft.motor.setPosition(0);
         this.m_elevatorRight.motor.setPosition(0);
+        this.m_elevatorRight.motor.setControl(new Follower(m_elevatorLeft.motor.getDeviceID(), true)); // update
+
     }
 
     /**
@@ -217,12 +220,19 @@ public class Elevator extends SubsystemBase {
     
     public void setPosition(Position pos) {
         this.targetPosition = pos;
+        this.targetRotation = this.convertPosition(pos);
         System.out.println("GOTO: " + this.convertPosition(pos));
         this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(this.convertPosition(pos), minRotation.getNumber(), maxRotation.getNumber()));
     }
 
     public void setPosition(double pos) {
+        this.targetRotation = pos;
         this.m_elevatorLeft.setMotionMagicPosition(MathUtil.clamp(pos, minRotation.getNumber(), maxRotation.getNumber()));
+    }
+
+    public void setPreGroundIntakePosition() {
+        this.setPosition(this.preGroundIntakePosition.getNumber());
+        System.out.println("asdf");
     }
 
     @Override
@@ -238,6 +248,7 @@ public class Elevator extends SubsystemBase {
         SmartDashboard.putNumber("elevator/error", Math.abs(this.convertPosition(this.targetPosition) - this.getPosition()));
         SmartDashboard.putNumber("elevator/pos", this.getPosition());
         SmartDashboard.putNumber("elevator/target", this.convertPosition(this.targetPosition));
+        SmartDashboard.putNumber("elevator/target-rotation", this.targetRotation);
         SmartDashboard.putString("elevator/tpos", this.targetPosition.name());
         SmartDashboard.putBoolean("elevator/above ground intake threshold", this.aboveGroundIntakeThreshold());
         SmartDashboard.putBoolean("elevator/elevator-at-target", this.atTarget());
@@ -268,6 +279,7 @@ public class Elevator extends SubsystemBase {
         this.m_elevatorLeft.motor.setPosition(0);
         this.m_elevatorRight.motor.setPosition(0);
         this.m_elevatorLeft.motor.setControl(new DutyCycleOut(0));
+        this.m_elevatorRight.motor.setControl(new Follower(this.m_elevatorLeft.motor.getDeviceID(), true));
     }
 
     public void setNormalizeSpeed()
@@ -302,7 +314,7 @@ public class Elevator extends SubsystemBase {
     public boolean atTarget(){
         return //Math.abs(this.m_elevatorLeft.motor.getClosedLoopError().getValueAsDouble()) < tolerance.getNumber() ||
         //this.m_elevatorRight.motor.getClosedLoopError().getValueAsDouble() < tolerance.getNumber() || 
-         Math.abs(this.convertPosition(this.targetPosition) - this.getPosition()) < tolerance.getNumber();
+        Math.abs(this.targetRotation - this.getPosition()) < tolerance.getNumber();
     }
 
     /**
@@ -324,6 +336,10 @@ public class Elevator extends SubsystemBase {
 
     public boolean aboveSourceIntakeThreshold() {
         return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() > this.intakeSourceArmThreshold.getNumber();
+    }
+
+    public boolean aboveBargeThreshold() {
+        return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() > this.bargeThreshold.getNumber();
     }
     
     /**

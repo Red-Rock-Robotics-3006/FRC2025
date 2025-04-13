@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.NeutralOut;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.controls.TorqueCurrentFOC;
 import com.ctre.phoenix6.hardware.CANrange;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -31,52 +32,61 @@ import frc.robot.Superstructure.Position;
 
 
 public class EndEffector extends SubsystemBase {
-    public static final double kCoralOuttakeWaitTime = 0.0;
-    public static final double kAlgaeOuttakeWaitTime = 0.2;
+    public static final double kCoralOuttakeWaitTime = 2;
+    public static final double kAlgaeOuttakeWaitTime = 2;
     public static final double kCoralGroundIntakeTime = 0.25;
     public static final double kAlgaeGroundIntakeTime = 0.25;
     public static final double kAlgaeRemoveTime = 0.25;
 
     public static boolean kEnableMotorTuning = false;
 
-    private final RedRockTalon coralDriveMotor = new RedRockTalon(51,"endeffector-drive","*");
-    // private final RedRockTalon algaeDriveMotor = new RedRockTalon(52,"endeffector-drive","*"); // TODO uncomment on rebuild
-    private final RedRockTalon wristMotor = new RedRockTalon(52,"endeffector-wrist","*"); // TODO re-id on rebuild 53
-    private final CANrange coralTOF = new CANrange(53, "*"); // TODO re-id on rebuild 54
-    // private final CANrange algaeTOF = new CANrange(55, "*"); TODO uncomment on rebuild
+    private final RedRockTalon coralDriveMotor = new RedRockTalon(51,"endeffector-coral-drive","*");
+    private final RedRockTalon algaeDriveMotor = new RedRockTalon(52,"endeffector-algae-drive","*");
+    private final RedRockTalon wristMotor = new RedRockTalon(53,"endeffector-wrist","*");
+    private final CANrange coralTOF = new CANrange(54, "*");
+    private final CANrange algaeTOF = new CANrange(55, "*"); //TODO uncomment on rebuild
 
     private SmartDashboardNumber minRotation = new SmartDashboardNumber("endeffector/min-rotation", 0);
-    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 40);
+    private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 22);
 
-    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed-ef", -0.45);
-    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", 0.2);
+    private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed-ef", 0.5);
+    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", -1);
     private SmartDashboardNumber coralTOFThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.09);
-    private SmartDashboardNumber algaeTOFThreshold = new SmartDashboardNumber("endeffector/algae-threshold", 0.09);
-    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.1);
-    private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", -0.35);
-    private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", 0.45);
+    private SmartDashboardNumber algaeTOFThreshold = new SmartDashboardNumber("endeffector/algae-threshold", 0.2);
+    private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.05);
+    private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", 0.45);
+    private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", -1);
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 1.3);
+    private SmartDashboardNumber holdSpeed = new SmartDashboardNumber("endeffector/hold-speed", 20);
+    private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold", 35);
     
     private Position targetPosition = Position.STOW;
 
     private static EndEffector instance = null;
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 28.5);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 30);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 17);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 29);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 39.34);
-    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.1);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 2.5);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 2.5);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 0);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 10);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 10.89);
+    private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.31);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
-    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 0);
-    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 0);
-    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 35.5);
-    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 35.5);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 5);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 22);
+    private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 10.91);
+    private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 10.91);
+
+    private SmartDashboardNumber algaeStowPosition = new SmartDashboardNumber("endeffector/position/algae-stow", 8);
+    private SmartDashboardNumber algaeInBetween = new SmartDashboardNumber("endeffector/position/barge-inbetween", 10);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("endeffector/ef-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("endeffector/ef-tuning/target", 0);
+
+    private SmartDashboardNumber lowPassConstant = new SmartDashboardNumber("endeffector/ef-low-pass-constant", 0.2);
+
+    private double lowPassCanrangeVal = 0;
 
     private EndEffector(){
         
@@ -103,33 +113,33 @@ public class EndEffector extends SubsystemBase {
             new CurrentLimitsConfigs()
             .withSupplyCurrentLimit(25)
             .withSupplyCurrentLimitEnable(true)
+            .withStatorCurrentLimit(40)
+            .withStatorCurrentLimitEnable(true)
+        ).withTuningEnabled(false);
+        
+        this.algaeDriveMotor.withMotorOutputConfigs(
+            new MotorOutputConfigs()
+            .withInverted(InvertedValue.CounterClockwise_Positive)
+            .withPeakForwardDutyCycle(1d)
+            .withPeakReverseDutyCycle(-1d)
+            .withNeutralMode(NeutralModeValue.Brake)
+        )
+        .withSlot0Configs(
+            new Slot0Configs()
+            .withKA(0)
+            .withKS(0.008) // TODO tune
+            .withKV(0)
+            .withKP(3)
+            .withKI(0)
+            .withKD(0)
+        )
+        .withCurrentLimitConfigs(
+            new CurrentLimitsConfigs()
+            .withSupplyCurrentLimit(25)
+            .withSupplyCurrentLimitEnable(true)
             .withStatorCurrentLimit(60)
             .withStatorCurrentLimitEnable(true)
-        );
-        
-        // this.algaeDriveMotor.withMotorOutputConfigs( // TODO uncomment on rebuild
-        //     new MotorOutputConfigs()
-        //     .withInverted(InvertedValue.CounterClockwise_Positive)
-        //     .withPeakForwardDutyCycle(1d)
-        //     .withPeakReverseDutyCycle(-1d)
-        //     .withNeutralMode(NeutralModeValue.Brake)
-        // )
-        // .withSlot0Configs(
-        //     new Slot0Configs()
-        //     .withKA(0)
-        //     .withKS(0.008) // TODO tune
-        //     .withKV(0)
-        //     .withKP(3)
-        //     .withKI(0)
-        //     .withKD(0)
-        // )
-        // .withCurrentLimitConfigs(
-        //     new CurrentLimitsConfigs()
-        //     .withSupplyCurrentLimit(25)
-        //     .withSupplyCurrentLimitEnable(true)
-        //     .withStatorCurrentLimit(60)
-        //     .withStatorCurrentLimitEnable(true)
-        // );
+        ).withTuningEnabled(false);
                 
         this.wristMotor.withMotorOutputConfigs(
             new MotorOutputConfigs()
@@ -143,22 +153,22 @@ public class EndEffector extends SubsystemBase {
             .withKA(0)
             .withKS(0)
             .withKV(0)
-            .withKP(6)
+            .withKP(5)
             .withKI(0)
-            .withKD(0)
+            .withKD(0.1)
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
-            .withMotionMagicAcceleration(1000)
-            .withMotionMagicCruiseVelocity(200)
+            .withMotionMagicAcceleration(400)
+            .withMotionMagicCruiseVelocity(75)
             .withMotionMagicJerk(10000000)
         )
-        .withSpikeThreshold(30)
+        .withSpikeThreshold(25)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(45)
+            .withSupplyCurrentLimit(30)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimit(45)
             .withStatorCurrentLimitEnable(true)
         )
         .withTuningEnabled(kEnableMotorTuning);
@@ -185,6 +195,24 @@ public class EndEffector extends SubsystemBase {
     public void setPosition(Position pos) {
         this.targetPosition = pos;
         this.wristMotor.setMotionMagicPosition(convertPosition(pos));
+    }
+
+    public void setAlgaeStowPosition() {
+        this.setPosition(this.algaeStowPosition.getNumber());
+    }   
+
+    public void setBargeInbetweenPosition() {
+        this.setPosition(this.algaeInBetween.getNumber());
+    }
+
+    public void setWristToCurrentPositionForTunning() {
+        double pos = this.wristMotor.motor.getPosition().getValueAsDouble();
+        this.wristMotor.motor.setControl(
+            new PositionVoltage(pos)
+            .withSlot(0)
+            .withEnableFOC(true)
+            .withOverrideBrakeDurNeutral(true)
+        );
     }
 
     /**
@@ -235,9 +263,9 @@ public class EndEffector extends SubsystemBase {
 
 
     private void setAlgaeSpeed(double speed){
-        // this.algaeDriveMotor.motor.setControl( TODO uncomment on rebuild
-        //     new DutyCycleOut(speed)
-        // );
+        this.algaeDriveMotor.motor.setControl(
+            new DutyCycleOut(speed)
+        );
     }
 
     public void setCoralIntakeSpeed() {
@@ -264,19 +292,31 @@ public class EndEffector extends SubsystemBase {
         this.wristMotor.motor.setControl(new DutyCycleOut(this.normalizeSpeed.getNumber()));
     }
 
+    public void stopCoral() {
+        this.coralDriveMotor.motor.setControl(new NeutralOut());
+    }
+
+    public void setHoldSpeed() {
+        this.coralDriveMotor.motor.setControl(new TorqueCurrentFOC(holdSpeed.getNumber()));
+    }
+
+    public void setAlgaeHoldSpeed() {
+        this.algaeDriveMotor.motor.setControl(new TorqueCurrentFOC(algaeHoldSpeed.getNumber()));
+    }
+
     public void stop() {
+        // this.coralDriveMotor.motor.setControl(new TorqueCurrentFOC(holdSpeed.getNumber()));
         this.coralDriveMotor.motor.setControl(new NeutralOut());
         
         double coralPos = this.coralDriveMotor.motor.getPosition().getValueAsDouble();
         
-        this.coralDriveMotor.motor.setControl(
-            new PositionVoltage(coralPos)
-            .withEnableFOC(true)
-            .withSlot(0)
-            .withOverrideBrakeDurNeutral(true)
-        );
+        // this.coralDriveMotor.motor.setControl(
+        //     new PositionVoltage(coralPos + 0.1)
+        //     .withEnableFOC(true)
+        //     .withSlot(0)
+        //     .withOverrideBrakeDurNeutral(true)
+        // );
 
-        // TODO uncomment on rebuild
         // this.algaeDriveMotor.motor.setControl(new NeutralOut());
             
         // double algaePos = this.algaeDriveMotor.motor.getPosition().getValueAsDouble();
@@ -287,6 +327,8 @@ public class EndEffector extends SubsystemBase {
         //     .withSlot(0)
         //     .withOverrideBrakeDurNeutral(true)
         // );
+        // this.algaeDriveMotor.motor.setControl(new TorqueCurrentFOC(this.algaeHoldSpeed.getNumber()));
+        this.algaeDriveMotor.motor.setControl(new NeutralOut());
     }
 
     public void resetWrist() {
@@ -309,13 +351,16 @@ public class EndEffector extends SubsystemBase {
     @Override
     public void periodic() {
         this.coralDriveMotor.update();
-        // this.algaeDriveMotor.update(); TODO uncomment on rebuild
+        this.algaeDriveMotor.update();
         this.wristMotor.update();
         SmartDashboard.putNumber("endeffector/coral-canrange-val", this.coralTOF.getDistance().getValueAsDouble());
-        // SmartDashboard.putNumber("endeffector/algae-canrange-val", this.algaeTOF.getDistance().getValueAsDouble()); TODO uncomment on rebuild
+        SmartDashboard.putNumber("endeffector/algae-canrange-val", this.algaeTOF.getDistance().getValueAsDouble()); //TODO uncomment on rebuild
         SmartDashboard.putBoolean("endeffector/coral-detected", this.coralDetected());
         SmartDashboard.putBoolean("endeffector/algae-detected", this.algaeDetected());
         SmartDashboard.putBoolean("endeffector/ef-at-target", this.atTarget());
+        double constant = lowPassConstant.getNumber();
+        lowPassCanrangeVal = constant * this.algaeTOF.getDistance().getValueAsDouble() + (1 - constant) * lowPassCanrangeVal;
+        SmartDashboard.putNumber("endeffector/low-pass-algae-canrange", lowPassCanrangeVal);
         Logger.recordOutput("endeffector/wrist-error", Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()));
     }
 
@@ -343,8 +388,8 @@ public class EndEffector extends SubsystemBase {
      * @return true if algae is present
      */
     public boolean algaeDetected(){ 
-        // return this.algaeTOF.getDistance().getValueAsDouble() < this.algaeTOFThreshold.getNumber(); TODO uncomment on rebuild
-        return false;
+        return this.lowPassCanrangeVal < this.algaeTOFThreshold.getNumber(); //TODO uncomment on rebuild
+        // return false;
     }
 
     public Command setAlgaeRemovalSpeedCommand() {
@@ -360,7 +405,7 @@ public class EndEffector extends SubsystemBase {
             Commands.runOnce(() -> this.setCoralIntakeSpeed(), this),
             Commands.waitUntil(() -> this.coralDetected()),
             Commands.waitSeconds(kCoralGroundIntakeTime),
-            Commands.runOnce(() -> this.stop(), this)
+            Commands.runOnce(() -> this.setHoldSpeed(), this)
         );
     }
 
@@ -370,10 +415,11 @@ public class EndEffector extends SubsystemBase {
      */
     public Command intakeGroundAlgae(){
         return Commands.sequence(
-            Commands.runOnce(() -> this.setAlgaeIntakeSpeed(), this),
-            Commands.waitUntil(() -> this.algaeDetected()),
-            Commands.waitSeconds(kAlgaeGroundIntakeTime),
-            Commands.runOnce(() -> this.stop(), this)
+            // Commands.runOnce(() -> this.setAlgaeIntakeSpeed(), this),
+            // Commands.waitUntil(() -> this.algaeDetected()),
+            // Commands.waitSeconds(kAlgaeGroundIntakeTime),
+            // Commands.runOnce(() -> this.setAlgaeHoldSpeed(), this)
+            this.runOnce(() -> this.setAlgaeHoldSpeed())
         );
     }
 
@@ -397,7 +443,7 @@ public class EndEffector extends SubsystemBase {
     public Command outtakeCoral(){
         return new SequentialCommandGroup(
             new InstantCommand(this::setCoralOuttakeSpeed, this),
-            new WaitUntilCommand(() -> !this.coralDetected()),
+            // new WaitUntilCommand(() -> !this.coralDetected()),
             new WaitCommand(kCoralOuttakeWaitTime),
             this.stopCommand()
         );
@@ -409,15 +455,22 @@ public class EndEffector extends SubsystemBase {
      */
     public Command outtakeAlgae(){
         return Commands.sequence(
-            new InstantCommand(this::setAlgaeIntakeSpeed, this),
-            new WaitUntilCommand(() -> !this.algaeDetected()),
+            new InstantCommand(this::setAlgaeOuttakeSpeed, this),
+            // new WaitUntilCommand(() -> !this.algaeDetected()),
             new WaitCommand(kAlgaeOuttakeWaitTime),
             this.stopCommand()
         );
     }
 
     public Command stopCommand(){
-        return this.runOnce(() -> this.stop());
+        return Commands.either(
+            this.runOnce(() -> this.setHoldSpeed()),
+            // this.runOnce(() -> this.stop()), 
+            Commands.either(
+                this.runOnce(() -> this.setAlgaeHoldSpeed()), 
+                this.runOnce(() -> this.stop()), 
+                () -> this.algaeDetected()),
+            () -> this.coralDetected());
     }
 
     /**

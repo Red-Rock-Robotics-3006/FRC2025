@@ -69,6 +69,7 @@ public class LED extends SubsystemBase{
         REEF_HOMING,
         REEF_READY,
         HAS_CORAL,
+        HAS_ALGAE,
         IDLE
     }
 
@@ -174,6 +175,7 @@ public class LED extends SubsystemBase{
 
         if (swerve.getTargetingReef() && swerve.isTargetingPosition()) state = LEDState.REEF_HOMING;
         else if (EndEffector.getInstance().coralDetected()) state = LEDState.HAS_CORAL;
+        else if (EndEffector.getInstance().algaeDetected()) state = LEDState.HAS_ALGAE;
         else state = LEDState.IDLE;
 
         if (state != oldState) blinkControl = 0;
@@ -196,6 +198,9 @@ public class LED extends SubsystemBase{
             case HAS_CORAL:
                 // blink(NOTE_ORANGE, 14);
                 blinkSetLights(NOTE_ORANGE, 8);
+                break;
+            case HAS_ALGAE:
+                blinkSetLights(BLUE, 8);
                 break;
             case IDLE:
                 rainbow();

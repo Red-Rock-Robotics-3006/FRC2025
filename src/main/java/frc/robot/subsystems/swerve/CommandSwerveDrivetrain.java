@@ -198,6 +198,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.025, Rotation2d.kZero);
     private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.025, Rotation2d.kZero);
 
+    private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 12);
+    private SmartDashboardNumber blueBargeX = new SmartDashboardNumber("dt/pos/blue-barge-x", 8);
+
     private int reefClockSide = 0;
     
     ScorePose scorePose = ScorePose.A;
@@ -821,6 +824,25 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.setTargetHeadingDegrees(this.getClosestSourcePose(this.getPose()).getRotation().getDegrees());
     }
 
+    public void setNearestBargePoseXTarget() {
+        if (this.alliance == Alliance.Blue)
+            this.setTargetPose(
+                new Pose2d(
+                    blueBargeX.getNumber(),
+                    5,
+                    Rotation2d.kZero
+                )
+            );
+        else
+            this.setTargetPose(
+                new Pose2d(
+                    redBargeX.getNumber(),
+                    3,
+                    Rotation2d.k180deg
+                )
+            );
+    }
+
     public double getRotationRateDegrees() {
         return this.getPigeon2().getRate();
     }
@@ -935,6 +957,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.pidToPoseContinuousCommand());
     }
 
+    
+
     public double getPIDScale() {
         return pidScaleVelo.getNumber();
     }
@@ -962,6 +986,17 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             () -> angleRequest.withVelocityX(MathUtil.clamp(this.getPositionPIDValueX() * this.getPIDScale(), -this.getMaxPIDVelocity(), this.getMaxPIDVelocity()))
                                             .withVelocityY(MathUtil.clamp(this.getPositionPIDValueY() * this.getPIDScale(), -this.getMaxPIDVelocity(), this.getMaxPIDVelocity()))
                                             .withTargetDirection(Rotation2d.fromDegrees(this.getTargetHeadingDegrees()))
+        );
+    }
+
+    public Command pidToPoseXOnlyContinous() {
+        return this.applyRequest(
+            () -> {
+                double[] drivestickValues = RobotContainer.rotateBy(-controller.getLeftY(), -controller.getLeftX(), this.getFieldCentricOffset());
+                return angleRequest.withVelocityX(MathUtil.clamp(this.getPositionPIDValueX() * this.getPIDScale(), -this.getMaxPIDVelocity(), this.getMaxPIDVelocity()))
+                                            .withVelocityY(RobotContainer.progressiveInput(drivestickValues[1],RobotContainer.progressiveDriveExponent, true) * this.getMaxDriveSpeed())
+                                            .withTargetDirection(Rotation2d.fromDegrees(this.getTargetHeadingDegrees()));
+            }
         );
     }
 

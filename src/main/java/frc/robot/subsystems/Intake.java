@@ -138,7 +138,7 @@ public class Intake extends SubsystemBase{
             .withSupplyCurrentLimitEnable(true)
             .withStatorCurrentLimit(80)
             .withStatorCurrentLimitEnable(true)
-        );
+        ).withTuningEnabled(false);
 
         this.pivotMotor.motor.setPosition(0);
     }
@@ -277,6 +277,7 @@ public class Intake extends SubsystemBase{
         this.pivotMotor.update();
         SmartDashboard.putNumber("intake/intake-slew-tq-current", this.getTorqueCurrent());
         SmartDashboard.putNumber("intake/intake-velo-target", this.veloictyTarget);
+        SmartDashboard.putBoolean("intake/past-intake-threshold", this.pastIntakeDeployThreshold());
     }
 
     public Command resetIntakePivot() {

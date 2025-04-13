@@ -58,7 +58,8 @@ public class Superstructure {
     public Command normalizeCommand() {
         return new ParallelCommandGroup(
             this.endEffector.normalizeEndEffectorCommand(),
-            this.arm.goToPosition(Position.STOW),
+            // this.arm.goToPosition(Position.STOW),
+            Commands.runOnce(() -> this.arm.setNormalizePosition(), this.arm),
             this.elevator.normalizeElevatorCommand(),
             this.intake.resetIntakePivot()
         );
@@ -137,65 +138,193 @@ public class Superstructure {
             this.arm.goToPosition(pos),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && !this.arm.inSafeZone())),
-            Commands.waitUntil(() -> this.arm.inSafeZone()), // TODO Why does this no longer consider elevator position?
+            Commands.waitUntil(() -> !this.elevator.posBelowThreshold(pos) || this.arm.inSafeZone()),
             // this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos),
             this.endEffector.goToPosition(pos)
         );
     }
 
+    public Command goToGroundIntakePosition() {
+        // return Commands.sequence(
+            // this.intake.deployIntakeCommand(),
+            // Commands.runOnce(() -> this.endEffector.setPreGroundIntakePosition(), this.endeffector),
+            // Commands.waitUntil(() -> this.atTargets()),
+            // Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
+            // Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
+            // this.endEffector.goToPosition(Position.CORAL_GROUND),
+            // this.arm.goToPosition(Position.CORAL_GROUND),
+            // Commands.waitUntil(() -> this.atTargets()),
+            // this.elevator.goToPosition(Position.CORAL_GROUND)
+        // );
+        return Commands.sequence(
+            this.intake.deployIntakeCommand(),
+            Commands.either(
+                Commands.runOnce(() -> {}), 
+                Commands.runOnce(() -> this.elevator.setPreGroundIntakePosition(), this.elevator),
+                () -> this.arm.belowFloorThreshold()),
+            Commands.runOnce(() -> this.elevator.setPreGroundIntakePosition(), this.elevator),
+            // Commands.waitUntil(() -> elevator.atTarget()),
+            Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
+            Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
+            this.endEffector.goToPosition(Position.CORAL_GROUND),
+            this.arm.goToPosition(Position.CORAL_GROUND),
+            Commands.waitUntil(() -> this.atTargets()),
+            this.elevator.goToPosition(Position.CORAL_GROUND)
+        );
+    }
+
+    public Command goToGroundIntakePositionAuto() {
+        return Commands.sequence(
+            this.intake.deployIntakeCommand(),
+            this.arm.goToPosition(Position.CORAL_GROUND),
+            Commands.waitUntil(() -> arm.inSafeZone()),
+            Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
+            // Commands.waitUntil(() -> elevator.atTarget()),
+            Commands.waitUntil(() -> elevator.aboveGroundIntakeThreshold()),
+            Commands.waitUntil(() -> intake.pastIntakeDeployThreshold()),
+            this.endEffector.goToPosition(Position.CORAL_GROUND),
+            Commands.waitUntil(() -> this.atTargets()),
+            this.elevator.goToPosition(Position.CORAL_GROUND)
+        );
+    }
+
+    public Command goToBargePosition() {
+        return Commands.sequence(
+            this.elevator.goToPosition(Position.BARGE),
+            Commands.waitUntil(() -> elevator.aboveBargeThreshold()),
+            Commands.runOnce(() -> endEffector.setBargeInbetweenPosition(), endEffector),
+            this.arm.goToPosition(Position.BARGE),
+            Commands.waitUntil(() -> elevator.atTarget()),
+            this.endEffector.goToPosition(Position.BARGE),
+            this.intake.stowIntakeCommand()
+        );
+    }
+
     public Command goToAlgaeGroundCommand() {
-        return this.goToPosition(Position.ALGAE_GROUND);
+        return Commands.sequence(
+            Commands.either(
+                Commands.sequence(
+                    Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
+                    Commands.waitUntil(() -> elevator.aboveGroundIntakeThreshold())
+                    // Commands.waitUntil(() -> elevator.atTarget())
+                ),
+                Commands.runOnce(() -> {}), 
+                () -> this.arm.belowFloorThreshold()),
+            arm.goToPosition(Position.ALGAE_GROUND),
+            endEffector.goToPosition(Position.ALGAE_GROUND),
+            Commands.waitUntil(() -> this.arm.pastVerticalThreshold()),
+            this.elevator.goToPosition(Position.ALGAE_GROUND)
+        );
+    }
+
+    public Command goToProccessorPosition() {
+        return Commands.sequence(
+            Commands.either(
+                Commands.sequence(
+                    Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
+                    Commands.waitUntil(() -> elevator.aboveGroundIntakeThreshold())
+                    // Commands.waitUntil(() -> elevator.atTarget())
+                ),
+                Commands.runOnce(() -> {}), 
+                () -> this.arm.belowFloorThreshold()),
+            arm.goToPosition(Position.PROCESSOR),
+            endEffector.goToPosition(Position.PROCESSOR),
+            Commands.waitUntil(() -> this.arm.pastVerticalThreshold()),
+            this.elevator.goToPosition(Position.PROCESSOR)
+        );
     }
 
     public Command intakeAlgaeGroundCommand() {
-        return Commands.runOnce(() -> this.endEffector.intakeGroundAlgae(), this.endEffector);
+        // return Commands.runOnce(() -> this.endEffector.intakeGroundAlgae(), this.endEffector);
+        return Commands.sequence(
+            this.goToAlgaeGroundCommand(),
+            endEffector.intakeGroundAlgae()
+        );
     }
 
     public Command removeAlgaeCommand() {
         return Commands.runOnce(() -> this.endEffector.removeAlgae(), this.endEffector);
     }
 
+    @Deprecated
     public Command goToIntakePosition() {
-        return Commands.sequence(
-            this.elevator.goToPosition(Position.CORAL_GROUND),
-            this.intake.deployIntakeCommand(),
-            this.endEffector.goToPosition(Position.CORAL_GROUND),
-            Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
-            Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
-            this.arm.goToPosition(Position.CORAL_GROUND)
-        );
+        // return Commands.sequence(
+        //     this.elevator.goToPosition(Position.CORAL_GROUND),
+        //     this.intake.deployIntakeCommand(),
+        //     this.endEffector.goToPosition(Position.CORAL_GROUND),
+        //     Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
+        //     Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
+        //     this.arm.goToPosition(Position.CORAL_GROUND)
+        // );
+        return this.goToGroundIntakePosition();
     }
 
+    @Deprecated
     public Command goToIntakePositionAuto() {
-        return Commands.sequence(
-            this.arm.goToPosition(Position.CORAL_GROUND),
-            this.intake.deployIntakeCommand(),
-            this.endEffector.goToPosition(Position.CORAL_GROUND),
-            Commands.waitUntil(() -> arm.inSafeZone()),
-            Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
-            this.elevator.goToPosition(Position.CORAL_GROUND)
-        );
+        // return Commands.sequence(
+        //     this.arm.goToPosition(Position.CORAL_GROUND),
+        //     this.intake.deployIntakeCommand(),
+        //     this.endEffector.goToPosition(Position.CORAL_GROUND),
+        //     Commands.waitUntil(() -> arm.inSafeZone()),
+        //     Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
+        //     this.elevator.goToPosition(Position.CORAL_GROUND)
+        // );
+        return this.goToGroundIntakePositionAuto();
     }
 
     public Command stowCommand() {
-        return new SequentialCommandGroup(
-            this.arm.goToPosition(Position.STOW),
+        return Commands.either(
+            stowAlgaeCommand(), 
+            stowCoralCommand(), 
+            () -> this.hasAlgae());
+    }
+
+    public Command stowCoralCommand() {
+        return Commands.sequence(
             this.intake.stopIntakeCommand(),
+            this.endEffector.stopCommand(),
+            Commands.either(
+                Commands.sequence(
+                    Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
+                    Commands.waitUntil(() -> elevator.aboveGroundIntakeThreshold())
+                    // Commands.waitUntil(() -> elevator.atTarget())
+                ),
+                Commands.runOnce(() -> {}), 
+                () -> this.arm.belowFloorThreshold()),
+            this.arm.goToPosition(Position.STOW),
+            this.endEffector.goToPosition(Position.STOW),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
-            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
+            // new WaitUntilCommand(() -> !this.elevator.posBelowThreshold(Position.STOW) || this.arm.inSafeZone()),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
             this.elevator.goToPosition(Position.STOW),
-            this.endEffector.goToPosition(Position.STOW),
-            this.endEffector.stopCommand(),
             this.intake.stowIntakeCommand()
+        );
+    }
+
+    public Command stowAlgaeCommand() {
+        return Commands.sequence(
+            // this.endEffector.goToPosition(Position.STOW),
+            Commands.runOnce(() -> arm.setAlgaeStowPosition(), arm),
+            Commands.waitUntil(() -> arm.atTarget()),
+            Commands.runOnce(() -> endEffector.setAlgaeStowPosition()),
+            this.elevator.goToPosition(Position.STOW)
         );
     }
 
     public Command stowReefCommand() {
         return new SequentialCommandGroup(
-            this.arm.goToPosition(Position.STOW),
+            this.endEffector.stopCommand(),
             this.intake.stopIntakeCommand(),
+            Commands.either(
+                Commands.sequence(
+                    Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
+                    Commands.waitUntil(() -> elevator.aboveGroundIntakeThreshold())
+                    // Commands.waitUntil(() -> elevator.atTarget())
+                ),
+                Commands.runOnce(() -> {}), 
+                () -> this.arm.belowFloorThreshold()),
+            this.arm.goToPosition(Position.STOW),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
@@ -217,16 +346,15 @@ public class Superstructure {
                     Map.entry(Position.L4, this.endEffector.goToPosition(Position.L4)),
                     Map.entry(Position.STOW, this.endEffector.goToPosition(Position.STOW))
                 ), 
-                () -> this.getRequestedScoringPosition()),
+                () -> this.getRequestedScoringPosition())
             // this.endEffector.goToPosition(Position.STOW),
-            this.endEffector.stopCommand()
         );
     }
 
     public Command stowReefAutoCommand() {
         return new SequentialCommandGroup(
-            this.arm.goToPosition(Position.STOW),
             this.intake.stopIntakeCommand(),
+            this.arm.goToPosition(Position.STOW),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
@@ -355,6 +483,10 @@ public class Superstructure {
      */
     public boolean atTargets() {
         return this.elevator.atTarget() && this.arm.atTarget() && this.endEffector.atTarget();
+    }
+
+    public boolean hasAlgae() {
+        return endEffector.algaeDetected();
     }
 
     public void update() {
