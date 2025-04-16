@@ -20,7 +20,7 @@ public class SmartDashboardNumber {
         this.lastValue = defaultValue;
         this.withTuningEnabled(tunable);
 
-        SmartDashboard.putNumber(this.key, this.defaultValue);
+        if (this.tuningEnabled) SmartDashboard.putNumber(this.key, this.defaultValue);
     }
 
     public SmartDashboardNumber withTuningEnabled(boolean enabled) {

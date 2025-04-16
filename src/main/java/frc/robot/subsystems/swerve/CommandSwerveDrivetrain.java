@@ -62,7 +62,7 @@ import redrocklib.logging.SmartDashboardBoolean;
  * Class that extends the Phoenix 6 SwerveDrivetrain class and implements
  * Subsystem so it can easily be used in command-based projects.
  */
-@Logged
+// @Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 4);
     private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 0.5); // 1.2
@@ -73,14 +73,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber rotationOmegaSignificance = new SmartDashboardNumber("dt/dt-rotation-rate-limit", 1).withTuningEnabled(false);
     private SmartDashboardNumber driveMaxSpeed = new SmartDashboardNumber("dt/dt-max-drive-speed", 6);
     private SmartDashboardNumber turnMaxSpeed = new SmartDashboardNumber("dt/dt-max-turn-speed", 1.5);
-    private SmartDashboardNumber driveDeadBand = new SmartDashboardNumber("dt/dt-drive-deadband", 0.05);
-    private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.05);
+    private SmartDashboardNumber driveDeadBand = new SmartDashboardNumber("dt/dt-drive-deadband", 0.05, false);
+    private SmartDashboardNumber turnDeadBand = new SmartDashboardNumber("dt/dt-turn-deadband", 0.05, false);
     private SmartDashboardNumber headingPIDTolerance = new SmartDashboardNumber("dt/dt-heading-pid-tolerance", 1.5).withTuningEnabled(false);
 
     private boolean enableHeadingPID = true;
     private boolean inPositionTargeting = false;
     private boolean isTargetingReef = true; //true is reef, false is source
     private boolean positionTargetOverride = false;
+    private boolean isTargetingAlgaeRemoval = true;
 
     private boolean usingSingleAxisDrive = false;
 
@@ -153,18 +154,19 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private SmartDashboardNumber autoThetaKi = new SmartDashboardNumber("dt/dt-auto-theta-ki", 0);
     private SmartDashboardNumber autoThetaKd = new SmartDashboardNumber("dt/dt-auto-theta-kd", 0);
 
-    private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0);
-    private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0);
-    private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3);
+    private SmartDashboardNumber xVelocity = new SmartDashboardNumber("dt/dt-x-velocity", 0, false);
+    private SmartDashboardNumber yVelocity = new SmartDashboardNumber("dt/dt-y-velocity", 0, false);
+    private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("dt/dt-velocity-tolerance", 0.3, false);
 
-    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.8);
-    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.83);
-    private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0);
+    private SmartDashboardNumber targetPoseX = new SmartDashboardNumber("target/target-x", 5.8, false);
+    private SmartDashboardNumber targetPoseY = new SmartDashboardNumber("target/target-y", 3.83, false);
+    private SmartDashboardNumber targetPoseTheta = new SmartDashboardNumber("target/target-theta", 0, false);
 
 
     private Field2d field2d = new Field2d();
     
-    private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02);
+    private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02, false);
+    private SmartDashboardNumber algaeRemovalPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/algae", 0.05);
 
     private final PIDController m_pathXController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
     private final PIDController m_pathYController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
@@ -180,6 +182,10 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d[][] scorePosesBlue = new Pose2d[6][2], scorePosesRed = new Pose2d[6][2];
 
+    private Pose2d[][] algaeRemovalPoseBlue = new Pose2d[6][2], algaeRemovalPoseRed = new Pose2d[6][2];
+
+    private Pose2d algaeRemovalPoseOffset = new Pose2d(5.79 - 4.489323, 0, Rotation2d.kZero);
+    private Pose2d preAlgaeRemovalOffset = new Pose2d(5.79 - 4.489323 + 0.25, 0, Rotation2d.kZero);
 
     private Pose2d blueCenter = new Pose2d(4.489323, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.066, 4.0259, new Rotation2d());
@@ -198,7 +204,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.025, Rotation2d.kZero);
     private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.025, Rotation2d.kZero);
 
-    private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 12);
+    private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 9.4);
     private SmartDashboardNumber blueBargeX = new SmartDashboardNumber("dt/pos/blue-barge-x", 8);
 
     private int reefClockSide = 0;
@@ -375,7 +381,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         m_pathThetaController.setTolerance(0.1);
 
         initializeReefPoses();
-        
+        initializeAlgaeRemovalPoses();
     }
 
     private void initializeReefPoses() {
@@ -386,6 +392,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
         System.out.println(blueSeedCCW);
         System.out.println(redSeedCCW);
+
         for (int i = 0; i < 6; i++) {
             scorePosesBlue[i][0] = rotatePose(blueSeedCW, Rotation2d.fromDegrees(i * 60), blueCenter);
             scorePosesBlue[i][1] = rotatePose(blueSeedCCW, Rotation2d.fromDegrees(i * 60), blueCenter);
@@ -413,6 +420,39 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         sourcePoses.add(blueSourceRight);
         sourcePoses.add(redSourceLeft);
         sourcePoses.add(redSourceRight);
+    }
+
+    private void initializeAlgaeRemovalPoses() {
+        Pose2d blueAlgaeRemoval = add(this.blueCenter, this.algaeRemovalPoseOffset);
+        Pose2d bluePreAlgae = add(this.blueCenter, this.preAlgaeRemovalOffset);
+        Pose2d redAlgaeRemoval = add(this.redCenter, this.algaeRemovalPoseOffset);
+        Pose2d redPreAlgae = add(this.redCenter, this.preAlgaeRemovalOffset);
+
+        System.out.println(blueAlgaeRemoval);
+        System.out.println(redAlgaeRemoval);
+
+        for (int i = 0; i < 6; i++) {
+            algaeRemovalPoseBlue[i][0] = rotatePose(bluePreAlgae, Rotation2d.fromDegrees(i * 60), blueCenter);
+            algaeRemovalPoseBlue[i][1] = rotatePose(blueAlgaeRemoval, Rotation2d.fromDegrees(i * 60), blueCenter);
+            algaeRemovalPoseRed[i][0] = rotatePose(redPreAlgae, Rotation2d.fromDegrees(i * 60), redCenter);
+            algaeRemovalPoseRed[i][1] = rotatePose(redAlgaeRemoval, Rotation2d.fromDegrees(i * 60), redCenter);
+        }
+
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(algaeRemovalPoseBlue[i][j]);
+            }
+            System.out.println();
+        }
+
+        for (int i = 0; i < 6; i++) {
+            System.out.println(i);
+            for (int j = 0; j < 2; j++) {
+                System.out.println(algaeRemovalPoseRed[i][j]);
+            }
+            System.out.println();
+        }
     }
 
     public static Pose2d add(Pose2d a, Pose2d b) {
@@ -825,7 +865,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void setNearestBargePoseXTarget() {
-        if (this.alliance == Alliance.Blue)
+        if (this.getPose().getX() < this.fieldCenter.getX())
             this.setTargetPose(
                 new Pose2d(
                     blueBargeX.getNumber(),
@@ -880,6 +920,15 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             // && Math.abs(this.getHeadingDegrees() - this.getTargetHeadingDegrees()) < headingPIDTolerance.getNumber();
     }
 
+    public boolean atAlgaeRemovalTargetPose() {
+        return Math.abs(this.targetPose2d.getX() - this.getPose().getX()) < algaeRemovalPositionTolerance.getNumber()
+            && Math.abs(this.targetPose2d.getY() - this.getPose().getY()) < algaeRemovalPositionTolerance.getNumber();
+    }
+
+    public boolean atTargetPoseX() {
+        return Math.abs(this.targetPose2d.getX() - this.getPose().getX()) < positionTolerance.getNumber();
+    }
+
     public boolean atTargetVelocity() {
         // SmartDashboard.putNumber("dt/velo-x-method", this.positionControllerX.getErrorDerivative());
         // SmartDashboard.putNumber("dt/velo-y-method", this.positionControllerY.getErrorDerivative());
@@ -895,9 +944,22 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.inPositionTargeting = !positionTargetOverride;
     }
 
+    public void enableAlgaeRemovalTargeting() {
+        this.isTargetingAlgaeRemoval = true;
+    }
+
+    public void disableAlgaeRemovalTargeting() {
+        this.isTargetingAlgaeRemoval = false;
+    }
+
+    public boolean isTargetingAlgaeRemoval() {
+        return this.isTargetingAlgaeRemoval;
+    }
+
     public void disablePositionTargeting() {
         this.inPositionTargeting = false;
         this.isTargetingReef = false;
+        this.isTargetingAlgaeRemoval = false;
     }
 
     public Command disablePositionTargetingCommand() {
@@ -927,6 +989,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
      */
     public void setReefSide(int reefSide) {
         this.reefClockSide = MathUtil.clamp(reefSide, 0, 1);
+        this.isTargetingAlgaeRemoval = false;
     }
 
     public void setNearestRequestedReefPoseTarget() {
@@ -939,6 +1002,25 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             this.setTargetPose(scorePosesRed[i][this.reefClockSide]);
         }
         this.isTargetingReef = true;
+    }
+
+    public void setNearestAlgaeRemoval(int i) {
+        Pose2d currentPose = this.getPose();
+        if (currentPose.getX() < this.fieldCenter.getX()) {
+            int side = getClosestReefSide(blueCenter, currentPose);
+            this.setTargetPose(algaeRemovalPoseBlue[side][i]);
+        } else {
+            int side = getClosestReefSide(redCenter, currentPose);
+            this.setTargetPose(algaeRemovalPoseRed[side][i]);
+        }
+    }
+
+    public void setNearestPreAlgaeTargetPose() {
+        this.setNearestAlgaeRemoval(0);
+    }
+
+    public void setNearestAlgaeRemovalTargetPose() {
+        this.setNearestAlgaeRemoval(1);
     }
 
     public boolean getTargetingReef() {
@@ -957,7 +1039,21 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.pidToPoseContinuousCommand());
     }
 
-    
+    public Command algaeRemovalPIDCommand() {
+        return Commands.sequence(
+            this.runOnce(() -> {this.enablePositionTargeting();}),
+            this.runOnce(() -> this.setNearestPreAlgaeTargetPose()),
+            Commands.deadline(
+                Commands.waitUntil(() -> this.atAlgaeRemovalTargetPose()), 
+                this.pidToPoseContinuousCommand()
+            ),
+            this.runOnce(() -> this.setNearestAlgaeRemovalTargetPose()),
+            Commands.deadline(
+                Commands.waitUntil(() -> this.atTargetPose()), 
+                this.pidToPoseContinuousCommand()
+            )
+        );
+    }
 
     public double getPIDScale() {
         return pidScaleVelo.getNumber();

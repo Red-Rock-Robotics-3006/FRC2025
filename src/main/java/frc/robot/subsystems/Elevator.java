@@ -95,7 +95,8 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 38 * kRatio);
     private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 30 * kRatio);
     private SmartDashboardNumber intakeSourceArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/source-threshold", 20 * kRatio);
-    private SmartDashboardNumber bargeThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/barge-threshold", 20);                                                                                                           
+    private SmartDashboardNumber bargeThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/barge-threshold", 20);      
+    private SmartDashboardNumber intakeStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-stow-threshold", 24);                                                                                               
 
     private Elevator() {
         super("Elevator");
@@ -340,6 +341,10 @@ public class Elevator extends SubsystemBase {
 
     public boolean aboveBargeThreshold() {
         return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() > this.bargeThreshold.getNumber();
+    }
+
+    public boolean aboveGroundIntakeStowThreshold() {
+        return this.m_elevatorLeft.motor.getPosition().getValueAsDouble() > this.intakeStowThreshold.getNumber();
     }
     
     /**

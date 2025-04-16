@@ -68,7 +68,7 @@ public class Arm extends SubsystemBase {
 
     private SmartDashboardNumber normalizePosition = new SmartDashboardNumber("arm/position/arm-normalize", 115);
 
-    private SmartDashboardNumber climbPosition = new SmartDashboardNumber("arm/position/arm-climb", 105);
+    private SmartDashboardNumber climbPosition = new SmartDashboardNumber("arm/position/arm-climb", 115);
     private SmartDashboardNumber algaeOuttakePosition = new SmartDashboardNumber("arm/position/arm-algae-outtake", 155);
 
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);

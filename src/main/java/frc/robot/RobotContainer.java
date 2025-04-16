@@ -41,6 +41,9 @@ public class RobotContainer {
     public static double progressiveDriveExponent = 1.4;
     public static double progressiveTurnExponent = 1.7;
 
+    private static double kDoubleRumbleWaitTime = 0.1;
+    private static double kDoubleRumbleTime = 0.1;
+
     /* Setting up bindings for necessary control of the swerve drive platform */
     private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
             .withDeadband(MaxSpeed * 0.1).withRotationalDeadband(MaxAngularRate * 0.1) // Add a 10% deadband
@@ -222,14 +225,33 @@ public class RobotContainer {
             Commands.either(
                 Commands.sequence(
                     Commands.runOnce(() -> {drivetrain.setNearestBargePoseXTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    drivetrain.pidToPoseContinuousCommand()
+                    Commands.parallel(
+                        drivetrain.pidToPoseXOnlyContinous(),
+                        Commands.sequence(
+                            Commands.waitUntil(() -> drivetrain.atTargetPoseX()),
+                            this.rumbleControllerCommand(1, kDoubleRumbleTime),
+                            Commands.waitSeconds(kDoubleRumbleWaitTime),
+                            this.rumbleControllerCommand(1, kDoubleRumbleTime)
+                        )
+                    )
                 ),
-                Commands.sequence(
-                    Commands.runOnce(() -> {drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    drivetrain.setNearestRequestedReefPoseTargetCommand(),
-                    this.rumbleControllerCommand(1, 0.15)
+                Commands.either(
+                    Commands.sequence(
+                        drivetrain.algaeRemovalPIDCommand(),
+                        this.rumbleControllerCommand(1, kDoubleRumbleTime),
+                        Commands.waitSeconds(kDoubleRumbleWaitTime),
+                        this.rumbleControllerCommand(1, kDoubleRumbleTime)
+                    ),
+                    Commands.sequence(
+                        Commands.runOnce(() -> {drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                        drivetrain.setNearestRequestedReefPoseTargetCommand(),
+                        this.rumbleControllerCommand(1, kDoubleRumbleTime),
+                        Commands.waitSeconds(kDoubleRumbleWaitTime),
+                        this.rumbleControllerCommand(1, kDoubleRumbleTime)
+                    ),
+                    () -> drivetrain.isTargetingAlgaeRemoval()
                 ),
-                () -> superstructure.hasAlgae()
+                () -> superstructure.hasAlgae() || superstructure.getRequestedScoringPosition() == Position.BARGE
             )
         ).onFalse(
             Commands.sequence(
@@ -291,13 +313,15 @@ public class RobotContainer {
 
         drivestick.x().and(new Trigger(() -> drivestick.getHID().getRightTriggerAxis() < 0.25)).onTrue(
             // superstructure.outtakeCoral()
-            Commands.either(
-                superstructure.outtakeAlgae(),
-                superstructure.outtakeCoral(), 
-                () -> superstructure.hasAlgae())
-        ).onFalse(
-            superstructure.stowCommand()
+            Commands.sequence(
+                Commands.either(
+                    superstructure.outtakeAlgae(),
+                    superstructure.outtakeCoral(), 
+                    () -> superstructure.hasAlgae()),
+                superstructure.stowCommand()               
+            )
         );
+
 
         drivestick.y().onTrue(
             Commands.select(
@@ -343,8 +367,11 @@ public class RobotContainer {
 
         mechstick.povDown().onTrue(
             Commands.sequence(
+                Commands.runOnce(() -> drivetrain.enableAlgaeRemovalTargeting(), drivetrain),
                 superstructure.goToL2RemoveCommand(),
-                superstructure.intakeGroundAlgaeEndeffector()
+                superstructure.intakeGroundAlgaeEndeffector(),
+                Commands.runOnce(() -> drivetrain.disableAlgaeRemovalTargeting(), drivetrain),
+                rumbleBothControllersCommand(1, 0.3)
             )
         // ).onFalse(
         //     superstructure.stowCommand()
@@ -352,10 +379,13 @@ public class RobotContainer {
 
         mechstick.povUp().onTrue(
             Commands.sequence(
+                Commands.runOnce(() -> drivetrain.enableAlgaeRemovalTargeting(), drivetrain),
                 // superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
                 // superstructure.goToL3RemoveCommand()
                 superstructure.goToL3RemoveCommand(),
-                superstructure.intakeGroundAlgaeEndeffector()
+                superstructure.intakeGroundAlgaeEndeffector(),
+                Commands.runOnce(() -> drivetrain.disableAlgaeRemovalTargeting(), drivetrain),
+                rumbleBothControllersCommand(1, 0.3)
             )
         // ).onFalse(
         //     superstructure.stowCommand()
@@ -379,7 +409,10 @@ public class RobotContainer {
 
         mechstick.leftTrigger(0.25).onTrue(
             // intake.intakeAlgaeAndHoldCommand()
-            superstructure.intakeAlgaeGroundCommand()
+            Commands.sequence(
+                superstructure.intakeAlgaeGroundCommand(),
+                rumbleBothControllersCommand(1, 0.5)
+            )
         ).onFalse(
             superstructure.stowCommand()
         );
@@ -621,10 +654,32 @@ public class RobotContainer {
 
     public Command rumbleControllerCommand(double strength, double timeout) {
         // return Commands.print("rumble");
+        // return Commands.startEnd(
+        //     () -> this.drivestick.getHID().setRumble(RumbleType.kBothRumble, strength), 
+        //     () -> this.drivestick.getHID().setRumble(RumbleType.kBothRumble, 0)
+        // ).withTimeout(timeout);
+        return rumbleControllerCommand(strength, timeout, false);
+    }
+
+    public Command rumbleControllerCommand(double strength, double timeout, boolean isMechController) {
+        // return Commands.print("rumble");
+        if (isMechController) {
+            return Commands.startEnd(
+                () -> this.mechstick.getHID().setRumble(RumbleType.kBothRumble, strength), 
+                () -> this.mechstick.getHID().setRumble(RumbleType.kBothRumble, 0)
+            ).withTimeout(timeout);
+        }
         return Commands.startEnd(
             () -> this.drivestick.getHID().setRumble(RumbleType.kBothRumble, strength), 
             () -> this.drivestick.getHID().setRumble(RumbleType.kBothRumble, 0)
         ).withTimeout(timeout);
+    }
+
+    public Command rumbleBothControllersCommand(double strength, double timeout) {
+        return Commands.parallel(
+            rumbleControllerCommand(strength, timeout, false),
+            rumbleControllerCommand(strength, timeout, true)
+        );
     }
 
     /* Puts a progressive response curve on a normalized analog input

@@ -32,8 +32,8 @@ import frc.robot.Superstructure.Position;
 
 
 public class EndEffector extends SubsystemBase {
-    public static final double kCoralOuttakeWaitTime = 2;
-    public static final double kAlgaeOuttakeWaitTime = 2;
+    public static final double kCoralOuttakeWaitTime = 0.8;
+    public static final double kAlgaeOuttakeWaitTime = 0.8;
     public static final double kCoralGroundIntakeTime = 0.25;
     public static final double kAlgaeGroundIntakeTime = 0.25;
     public static final double kAlgaeRemoveTime = 0.25;
@@ -62,6 +62,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold", 35);
     
     private Position targetPosition = Position.STOW;
+    private double targetRotation = 0;
 
     private static EndEffector instance = null;
 
@@ -189,6 +190,7 @@ public class EndEffector extends SubsystemBase {
     }
 
     public void setPosition(double rotation) {
+        this.targetRotation = rotation;
         this.wristMotor.setMotionMagicPosition(MathUtil.clamp(rotation, minRotation.getNumber(), maxRotation.getNumber()));
     }
 
@@ -345,7 +347,8 @@ public class EndEffector extends SubsystemBase {
         //     - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
         return // Math.abs(this.wristMotor.motor.getClosedLoopError().getValueAsDouble()) < this.wristTolerance.getNumber() ||
             // Math.abs(this.convertPosition(this.targetPosition) - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
-            true;
+            // true;
+            Math.abs(this.targetRotation - this.wristMotor.motor.getPosition().getValueAsDouble()) < this.wristTolerance.getNumber();
     }
 
     @Override
@@ -419,7 +422,8 @@ public class EndEffector extends SubsystemBase {
             // Commands.waitUntil(() -> this.algaeDetected()),
             // Commands.waitSeconds(kAlgaeGroundIntakeTime),
             // Commands.runOnce(() -> this.setAlgaeHoldSpeed(), this)
-            this.runOnce(() -> this.setAlgaeHoldSpeed())
+            this.runOnce(() -> this.setAlgaeHoldSpeed()),
+            Commands.waitUntil(() -> this.algaeDetected())
         );
     }
 
@@ -443,7 +447,7 @@ public class EndEffector extends SubsystemBase {
     public Command outtakeCoral(){
         return new SequentialCommandGroup(
             new InstantCommand(this::setCoralOuttakeSpeed, this),
-            // new WaitUntilCommand(() -> !this.coralDetected()),
+            new WaitUntilCommand(() -> !this.coralDetected()),
             new WaitCommand(kCoralOuttakeWaitTime),
             this.stopCommand()
         );

@@ -5,6 +5,8 @@ import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.AutoLogOutputManager;
 
+import com.ctre.phoenix6.Utils;
+
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -18,6 +20,7 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Elevator;
 import frc.robot.subsystems.EndEffector;
 import frc.robot.subsystems.Intake;
+import redrocklib.logging.SmartDashboardBoolean;
 
 
 public class Superstructure {
@@ -30,6 +33,8 @@ public class Superstructure {
     private static Superstructure instance = null;
 
     private Position requestedScoringPosition = Position.STOW;
+
+    private SmartDashboardBoolean simAlgaeTrue = new SmartDashboardBoolean("sim/algae-detect-want", true);
 
     public static enum Position {
         L1,
@@ -196,6 +201,7 @@ public class Superstructure {
             Commands.runOnce(() -> endEffector.setBargeInbetweenPosition(), endEffector),
             this.arm.goToPosition(Position.BARGE),
             Commands.waitUntil(() -> elevator.atTarget()),
+            Commands.waitUntil(() -> endEffector.atTarget()),
             this.endEffector.goToPosition(Position.BARGE),
             this.intake.stowIntakeCommand()
         );
@@ -287,7 +293,7 @@ public class Superstructure {
             Commands.either(
                 Commands.sequence(
                     Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
-                    Commands.waitUntil(() -> elevator.aboveGroundIntakeThreshold())
+                    Commands.waitUntil(() -> elevator.aboveGroundIntakeStowThreshold())
                     // Commands.waitUntil(() -> elevator.atTarget())
                 ),
                 Commands.runOnce(() -> {}), 
@@ -319,7 +325,7 @@ public class Superstructure {
             Commands.either(
                 Commands.sequence(
                     Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
-                    Commands.waitUntil(() -> elevator.aboveGroundIntakeThreshold())
+                    Commands.waitUntil(() -> elevator.aboveGroundIntakeStowThreshold())
                     // Commands.waitUntil(() -> elevator.atTarget())
                 ),
                 Commands.runOnce(() -> {}), 
@@ -354,6 +360,14 @@ public class Superstructure {
     public Command stowReefAutoCommand() {
         return new SequentialCommandGroup(
             this.intake.stopIntakeCommand(),
+            Commands.either(
+                Commands.sequence(
+                    Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
+                    Commands.waitUntil(() -> elevator.aboveGroundIntakeStowThreshold())
+                    // Commands.waitUntil(() -> elevator.atTarget())
+                ),
+                Commands.runOnce(() -> {}), 
+                () -> this.arm.belowFloorThreshold()),
             this.arm.goToPosition(Position.STOW),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
@@ -486,6 +500,7 @@ public class Superstructure {
     }
 
     public boolean hasAlgae() {
+        if (Utils.isSimulation()) return simAlgaeTrue.getValue();
         return endEffector.algaeDetected();
     }
 
