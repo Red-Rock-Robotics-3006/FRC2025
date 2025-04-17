@@ -5,6 +5,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Superstructure.Position;
@@ -183,7 +184,7 @@ public class Autos {
                 // superstructure.goToReefPositionAuto(() -> Position.L4),
                 followFirstTrajectoryWithVisionCommand("RR3GL", 0)
             ),
-            superstructure.goToReefPositionAuto(() -> Position.L4),
+            // superstructure.stowReefAutoCommand(),
             scoreAutoCommand(0),
 
             Commands.deadline(
@@ -208,7 +209,7 @@ public class Autos {
                     Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
                     followTrajectoryWithVisionCommand("RR3GL", 2)
                 ),
-                groundIntakeCommand()
+                groundIntakeCommandL2()
             ),
             scoreAutoL2Command(0),
             superstructure.stowCommand(),
@@ -223,7 +224,7 @@ public class Autos {
 
             Commands.deadline(
                 followFirstTrajectoryWithVisionCommand("L3S", 0),
-                superstructure.goToReefPositionAuto(() -> Position.L4)
+                superstructure.stowReefAutoCommand()
             ),
             scoreAutoCommand(1),
 
@@ -234,7 +235,7 @@ public class Autos {
             sourceIntakeCommand(),
             Commands.deadline(
                 followTrajectoryWithVisionCommand("L3S", 2),
-                superstructure.goToReefPositionAuto(() -> Position.L4)
+                superstructure.stowReefAutoCommand()
             ),
             scoreAutoCommand(0),
 
@@ -245,7 +246,7 @@ public class Autos {
             sourceIntakeCommand(),
             Commands.deadline(
                 followTrajectoryWithVisionCommand("L3S", 4),
-                superstructure.goToReefPositionAuto(() -> Position.L4)
+                superstructure.stowReefAutoCommand()
             ),
             scoreAutoCommand(1)
         );
@@ -257,7 +258,7 @@ public class Autos {
 
             Commands.deadline(
                 followFirstTrajectoryWithVisionCommand("R3S", 0),
-                superstructure.goToReefPositionAuto(() -> Position.L4)
+                superstructure.stowReefAutoCommand()
             ),
             scoreAutoCommand(0),
 
@@ -268,7 +269,7 @@ public class Autos {
             sourceIntakeCommand(),
             Commands.deadline(
                 followTrajectoryWithVisionCommand("R3S", 2),
-                superstructure.goToReefPositionAuto(() -> Position.L4)
+                superstructure.stowReefAutoCommand()
             ),
             scoreAutoCommand(1),
 
@@ -279,7 +280,7 @@ public class Autos {
             sourceIntakeCommand(),
             Commands.deadline(
                 followTrajectoryWithVisionCommand("R3S", 4),
-                superstructure.goToReefPositionAuto(() -> Position.L4)
+                superstructure.stowReefAutoCommand()
             ),
             scoreAutoCommand(0)
         );
@@ -290,7 +291,7 @@ public class Autos {
             initializeAutoCommand(),
 
             Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(7.17, 4, new Rotation2d(0)))),
-            scoreAutoCommand(1),
+            slowScoreAutoCommand(1),
 
             Commands.runOnce(() -> {drivetrain.setNearestPreAlgaeTargetPose(); drivetrain.enablePositionTargeting(); drivetrain.enableVision();}, drivetrain),
             Commands.deadline(
@@ -355,15 +356,18 @@ public class Autos {
     public Command scoreAutoCommand(int reefSide) {
         return Commands.sequence(
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            Commands.deadline(
+            Commands.parallel(
                 Commands.sequence(
                     superstructure.goToReefPositionAuto(() -> Position.L4),
                     Commands.waitUntil(() -> superstructure.atTargets()),
                     Commands.waitSeconds(0.35)
                 ),
-                Commands.sequence(
-                    Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    drivetrain.pidToPoseContinuousCommand()
+                Commands.deadline(
+                    Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
+                    Commands.sequence(
+                        Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                        drivetrain.pidToPoseContinuousCommand()
+                    )
                 )
             ),
             drivetrain.disablePositionTargetingCommand(),
@@ -386,6 +390,7 @@ public class Autos {
                     drivetrain.pidToPoseContinuousCommand()
                 )
             ),
+            Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
             drivetrain.disablePositionTargetingCommand(),
             superstructure.outtakeCoral(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
@@ -406,7 +411,8 @@ public class Autos {
                     drivetrain.pidToPoseContinuousCommand()
                 )
             ),
-            Commands.waitSeconds(0.6),
+            Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
+            // Commands.waitSeconds(2),
             drivetrain.disablePositionTargetingCommand(),
             superstructure.outtakeCoral(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
@@ -422,14 +428,23 @@ public class Autos {
         );
     }
 
+    public Command groundIntakeCommandL2() {
+        return Commands.sequence(
+            superstructure.goToGroundIntakePositionAuto(),
+            intake.startIntakeCommand(),
+            superstructure.intakeCoral(),
+            superstructure.goToReefPositionAuto(() -> Position.L2)
+        );
+    }
+
     public Command sourceIntakeCommand() {
         return Commands.sequence(
             Commands.runOnce(() -> {drivetrain.enableVision(); drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
             Commands.deadline(
-                // Commands.sequence(
-                    // superstructure.goToSourceIntakePosition(),
-                superstructure.intakeCoral(),
-                // ), 
+                Commands.sequence(
+                    superstructure.goToSourceIntakePosition(),
+                    superstructure.intakeCoral()
+                ), 
                 drivetrain.pidToPoseContinuousCommand()
             ),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),

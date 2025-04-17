@@ -51,9 +51,9 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l1", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2", 2).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3", 14.5).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 38.3).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4Position = new SmartDashboardNumber("elevator/elevator-positions/elevator-l4", 37.9).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-source", 0).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 20.735).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-coral-ground", 20.929199).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-algae-ground", 12.76).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-processor", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-stow", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
@@ -61,12 +61,13 @@ public class Elevator extends SubsystemBase {
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l2-algae", 7.45).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("elevator/elevator-positions/elevator-l3-algae", 21.45).withTuningEnabled(kEnablePositionTuning);
 
-    private SmartDashboardNumber preGroundIntakePosition = new SmartDashboardNumber("elevator/elevator-positions/pre-ground", 45 * kRatio);
+    private SmartDashboardNumber preGroundIntakePosition = new SmartDashboardNumber("elevator/elevator-positions/pre-ground", 25.1);
 
     private SmartDashboardNumber l1StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l1", 0 * kRatio).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l2StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l2", 1.5 * kRatio).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l3StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-stow-l3", 12.5 * kRatio).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l4StowPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator--stow-l4", 12.5 * kRatio).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l4StowAutoPosition = new SmartDashboardNumber("elevator/elevator-stows/elevator-auto-stow-l4", 22.1 * kRatio).withTuningEnabled(kEnablePositionTuning);
 
     private SmartDashboardNumber l1min = new SmartDashboardNumber("elevator/reef-safe-zones/l1-min", 0);
     private SmartDashboardNumber l1max = new SmartDashboardNumber("elevator/reef-safe-zones/l1-max", 0);
@@ -92,8 +93,8 @@ public class Elevator extends SubsystemBase {
     private double targetRotation = 0;
     private SmartDashboardNumber armThreshold = new SmartDashboardNumber("elevator/elevator-arm-threshold", 40 * kRatio);
 
-    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 38 * kRatio);
-    private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 30 * kRatio);
+    private SmartDashboardNumber intakeArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-threshold", 17);
+    private SmartDashboardNumber autoStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/auto-stow-threshold", 30);
     private SmartDashboardNumber intakeSourceArmThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/source-threshold", -0.1);
     private SmartDashboardNumber bargeThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/barge-threshold", 10);      
     private SmartDashboardNumber intakeStowThreshold = new SmartDashboardNumber("elevator/elevator-thresholds/intake-stow-threshold", 24);                                                                                               
@@ -258,6 +259,10 @@ public class Elevator extends SubsystemBase {
         this.m_elevatorRight.update();
     }
 
+    public Position getTargetPosition() {
+        return this.targetPosition;
+    }
+
     public void increaseTarget() {
         target.putNumber(target.getNumber() + delta.getNumber());
       }
@@ -302,7 +307,11 @@ public class Elevator extends SubsystemBase {
     }
 
     public void setL4Stow() {
-        this.setPosition(this.getStowPosition(Position.L4));
+        this.setPosition(0);
+    }
+
+    public void setL4StowAuto() {
+        this.setPosition(l4StowAutoPosition.getNumber());
     }
 
     public void setL1Stow() {

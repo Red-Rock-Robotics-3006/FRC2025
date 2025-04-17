@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.Utils;
 
@@ -98,6 +99,7 @@ public class Superstructure {
 
     public Command goToReefPosition(Supplier<Position> pos) {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", pos.get())),
             Commands.print(pos.get().toString()),
             this.arm.goToPosition(Position.STOW),
             // this.endEffector.goToPosition(Position.STOW),
@@ -113,6 +115,7 @@ public class Superstructure {
 
     public Command goToReefPositionAuto(Supplier<Position> pos) {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", pos.get())),
             Commands.print(pos.get().toString()),
             this.arm.goToPosition(Position.STOW),
             // this.endEffector.goToPosition(Position.STOW),
@@ -140,6 +143,7 @@ public class Superstructure {
      */
     public Command goToPosition(Position pos) {
         return new SequentialCommandGroup(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", pos)),
             this.arm.goToPosition(pos),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(pos) && !this.arm.inSafeZone())),
@@ -163,6 +167,7 @@ public class Superstructure {
             // this.elevator.goToPosition(Position.CORAL_GROUND)
         // );
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.CORAL_GROUND)),
             this.intake.deployIntakeCommand(),
             Commands.either(
                 Commands.runOnce(() -> {}), 
@@ -183,6 +188,7 @@ public class Superstructure {
 
     public Command goToGroundIntakePositionAuto() {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.CORAL_GROUND)),
             this.intake.deployIntakeCommand(),
             this.arm.goToPosition(Position.CORAL_GROUND),
             Commands.waitUntil(() -> arm.inSafeZone()),
@@ -198,6 +204,7 @@ public class Superstructure {
 
     public Command goToBargePosition() {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.BARGE)),
             this.elevator.goToPosition(Position.BARGE),
             Commands.waitUntil(() -> elevator.aboveBargeThreshold()),
             Commands.runOnce(() -> endEffector.setBargeInbetweenPosition(), endEffector),
@@ -211,6 +218,7 @@ public class Superstructure {
 
     public Command goToAlgaeGroundCommand() {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.ALGAE_GROUND)),
             Commands.either(
                 Commands.sequence(
                     Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
@@ -228,6 +236,7 @@ public class Superstructure {
 
     public Command goToProccessorPosition() {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.PROCESSOR)),
             Commands.either(
                 Commands.sequence(
                     Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
@@ -255,41 +264,16 @@ public class Superstructure {
         return Commands.runOnce(() -> this.endEffector.removeAlgae(), this.endEffector);
     }
 
-    @Deprecated
-    public Command goToIntakePosition() {
-        // return Commands.sequence(
-        //     this.elevator.goToPosition(Position.CORAL_GROUND),
-        //     this.intake.deployIntakeCommand(),
-        //     this.endEffector.goToPosition(Position.CORAL_GROUND),
-        //     Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
-        //     Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
-        //     this.arm.goToPosition(Position.CORAL_GROUND)
-        // );
-        return this.goToGroundIntakePosition();
-    }
-
-    @Deprecated
-    public Command goToIntakePositionAuto() {
-        // return Commands.sequence(
-        //     this.arm.goToPosition(Position.CORAL_GROUND),
-        //     this.intake.deployIntakeCommand(),
-        //     this.endEffector.goToPosition(Position.CORAL_GROUND),
-        //     Commands.waitUntil(() -> arm.inSafeZone()),
-        //     Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
-        //     this.elevator.goToPosition(Position.CORAL_GROUND)
-        // );
-        return this.goToGroundIntakePositionAuto();
-    }
-
     public Command stowCommand() {
         return Commands.either(
-            stowAlgaeCommand(), 
             stowCoralCommand(), 
-            () -> this.hasAlgae());
+            stowAlgaeCommand(), 
+            () -> arm.belowFloorThreshold() || (elevator.getTargetPosition() == Position.CORAL_GROUND) || endEffector.coralDetected() || (!endEffector.coralDetected() && !endEffector.algaeDetected()));
     }
 
     public Command stowCoralCommand() {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.STOW)),
             this.intake.stopIntakeCommand(),
             this.endEffector.stopCommand(),
             Commands.either(
@@ -312,6 +296,7 @@ public class Superstructure {
 
     public Command stowAlgaeCommand() {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.STOW)), // TODO add new Position
             // this.endEffector.goToPosition(Position.STOW),
             Commands.runOnce(() -> arm.setAlgaeStowPosition(), arm),
             Commands.waitUntil(() -> arm.atTarget()),
@@ -322,6 +307,7 @@ public class Superstructure {
 
     public Command stowReefCommand() {
         return new SequentialCommandGroup(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.STOW)),
             this.endEffector.stopCommand(),
             this.intake.stopIntakeCommand(),
             Commands.either(
@@ -361,6 +347,7 @@ public class Superstructure {
 
     public Command stowReefAutoCommand() {
         return new SequentialCommandGroup(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.STOW)),
             this.intake.stopIntakeCommand(),
             Commands.either(
                 Commands.sequence(
@@ -374,15 +361,16 @@ public class Superstructure {
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && this.arm.belowFloorThreshold())),
             // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.STOW) && !this.arm.inSafeZone())),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
-            Commands.select(
-                Map.ofEntries(
-                    Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL1Stow(), elevator)),
-                    Map.entry(Position.L2, Commands.runOnce(() -> this.elevator.setL2Stow(), elevator)),
-                    Map.entry(Position.L3, Commands.runOnce(() -> this.elevator.setL3Stow(), elevator)),
-                    Map.entry(Position.L4, Commands.runOnce(() -> this.elevator.setL4Stow(), elevator)),
-                    Map.entry(Position.STOW, this.elevator.goToPosition(Position.STOW))
-                ), 
-                () -> this.getRequestedScoringPosition()),
+            // Commands.select(
+            //     Map.ofEntries(
+            //         Map.entry(Position.L1, Commands.runOnce(() -> this.elevator.setL1Stow(), elevator)),
+            //         Map.entry(Position.L2, Commands.runOnce(() -> this.elevator.setL2Stow(), elevator)),
+            //         Map.entry(Position.L3, Commands.runOnce(() -> this.elevator.setL3Stow(), elevator)),
+            //         Map.entry(Position.L4, Commands.runOnce(() -> this.elevator.setL4Stow(), elevator)),
+            //         Map.entry(Position.STOW, this.elevator.goToPosition(Position.STOW))
+            //     ), 
+            //     () -> this.getRequestedScoringPosition()),
+            Commands.runOnce(() -> this.elevator.setL4StowAuto()),
             Commands.select(
                 Map.ofEntries(
                     Map.entry(Position.L1, this.endEffector.goToPosition(Position.L1)),
@@ -416,6 +404,7 @@ public class Superstructure {
     public Command goToSourceIntakePosition() {
         // return this.goToPosition(Position.SOURCE);
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.SOURCE)),
             this.elevator.goToPosition(Position.SOURCE),
             this.endEffector.goToPosition(Position.SOURCE),
             Commands.waitUntil(() -> this.elevator.aboveSourceIntakeThreshold()),
@@ -429,6 +418,7 @@ public class Superstructure {
     public Command goToSourceIntakePositionAuto() {
         // return this.goToPosition(Position.SOURCE);
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.SOURCE)),
             this.intake.stowIntakeCommand(),
             this.arm.goToPosition(Position.SOURCE),
             Commands.waitUntil(() -> this.arm.inSafeZone()),
@@ -508,6 +498,7 @@ public class Superstructure {
 
     public Command goToIntakeL1Position() {
         return Commands.sequence(
+            Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.L1)), // TODO add new Position
             Commands.runOnce(() -> intake.setIntakeDeploy(), intake)
             // Commands.waitUntil(() -> intake.atPositionTarget())
         );

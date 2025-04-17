@@ -328,7 +328,10 @@ public class RobotContainer {
         );
 
         drivestick.b().onTrue(
-            superstructure.stowCommand()
+            Commands.sequence(
+                Commands.runOnce(() -> drivetrain.disablePositionTargeting()),
+                superstructure.stowCommand()
+            )
         );
 
         mechstick.x().onTrue(
@@ -357,10 +360,10 @@ public class RobotContainer {
 
         mechstick.povDown().onTrue(
             Commands.sequence(
-                Commands.runOnce(() -> drivetrain.enableAlgaeRemovalTargeting(), drivetrain),
+                Commands.runOnce(() -> drivetrain.enableAlgaeRemovalTargeting()),
                 superstructure.goToL2RemoveCommand(),
                 superstructure.intakeGroundAlgaeEndeffector(),
-                Commands.runOnce(() -> drivetrain.disableAlgaeRemovalTargeting(), drivetrain),
+                Commands.runOnce(() -> drivetrain.disableAlgaeRemovalTargeting()),
                 rumbleBothControllersCommand(1, 0.3)
             )
         // ).onFalse(
@@ -369,12 +372,12 @@ public class RobotContainer {
 
         mechstick.povUp().onTrue(
             Commands.sequence(
-                Commands.runOnce(() -> drivetrain.enableAlgaeRemovalTargeting(), drivetrain),
+                Commands.runOnce(() -> drivetrain.enableAlgaeRemovalTargeting()),
                 // superstructure.setEndEffectorAlgaeRemovalSpeedCommand(),
                 // superstructure.goToL3RemoveCommand()
                 superstructure.goToL3RemoveCommand(),
                 superstructure.intakeGroundAlgaeEndeffector(),
-                Commands.runOnce(() -> drivetrain.disableAlgaeRemovalTargeting(), drivetrain),
+                Commands.runOnce(() -> drivetrain.disableAlgaeRemovalTargeting()),
                 rumbleBothControllersCommand(1, 0.3)
             )
         // ).onFalse(
@@ -435,11 +438,11 @@ public class RobotContainer {
         //     EndEffector.getInstance().stopCommand()
         // );
 
-        // mechstick.start().onTrue(
-        //     Commands.runOnce(() -> EndEffector.getInstance().setCoralIntakeSpeed(), EndEffector.getInstance())
-        // ).onFalse(
-
-        // )
+        mechstick.start().onTrue(
+            Commands.runOnce(() -> EndEffector.getInstance().setCoralIntakeSpeed(), EndEffector.getInstance())
+        ).onFalse(
+            EndEffector.getInstance().stopCommand()
+        );
     }
 
     private void configureTestBindings() {

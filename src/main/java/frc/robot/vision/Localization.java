@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.subsystems.swerve.CommandSwerveDrivetrain;
 import frc.robot.vision.LimelightHelpers.PoseEstimate;
+import frc.robot.vision.LimelightHelpers.RawFiducial;
 import redrocklib.logging.SmartDashboardNumber;
 
 public class Localization {
@@ -25,7 +26,6 @@ public class Localization {
         {0.9, 0.9, 9999},
         {1.2, 1.2, 9999}
     };
-    private static Pose2d[][] limeLightPoses = {{new Pose2d(), new Pose2d()}, {new Pose2d(), new Pose2d()}}; // First is MT1, second is MT2
 
     // public static final double timeOf/fset = Utils.getCurrentTimeSeconds();
     private static SmartDashboardNumber timeOffset = new SmartDashboardNumber("localization/timeoffset", Utils.getCurrentTimeSeconds());
@@ -38,8 +38,8 @@ public class Localization {
     public static void initialize() {
         if(wrappers != null)
             return;
-        wrappers = new LimeLightPoseEstimateWrapper[limeLightNames.length];
-        for (int i = 0; i < limeLightNames.length; i++) {
+        wrappers = new LimeLightPoseEstimateWrapper[1]; // TODO revert on ll addition
+        for (int i = 0; i < 1; i++) { // TODO revert on ll addition
             wrappers[i] = new LimeLightPoseEstimateWrapper().withName(limeLightNames[i]);
             LimelightHelpers.SetFiducialIDFiltersOverride(limeLightNames[i], validIDs);
         }
@@ -55,14 +55,17 @@ public class Localization {
             SmartDashboard.putNumber("localization/"+name+"/heading", headingDegrees);
             LimelightHelpers.SetRobotOrientation(name, headingDegrees, CommandSwerveDrivetrain.getInstance().getRotationRateDegrees(), 0, 0, 0, 0);
             PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
-            if (estimate != null)
-                wrappers[i].withPoseEstimate(estimate).withTagInVision(LimelightHelpers.getTV(name));
+            if (estimate != null && i == 0){ // TODO revert on ll addition
+                Logger.recordOutput("limelight/" + limeLightNames[i] + "/avgTagDist", estimate.avgTagDist);
+                double ambiguitySum = 0;
+                for (RawFiducial fiducial : estimate.rawFiducials)
+                    ambiguitySum += fiducial.ambiguity;
+                wrappers[i].withPoseEstimate(estimate).withTagInVision(LimelightHelpers.getTV(name)).withAmbiguity(ambiguitySum/estimate.rawFiducials.length);
+            }
 
-            
             Pose2d mt1Pose = LimelightHelpers.getBotPose2d_wpiBlue(name);
-            limeLightPoses[i][0] =  mt1Pose==null?new Pose2d():mt1Pose;       // MT1
-            limeLightPoses[i][1] = estimate==null?new Pose2d():estimate.pose; // MT2
-            Logger.recordOutput("limelight/" + limeLightNames[i], limeLightPoses[i]);
+            Logger.recordOutput("limelight/" + limeLightNames[i] + "/MT1", mt1Pose==null?new Pose2d():mt1Pose);
+            Logger.recordOutput("limelight/" + limeLightNames[i] + "/MT2", estimate==null?new Pose2d():estimate.pose);
         }
 
         Pose2d pose = getPose2d();
@@ -112,6 +115,7 @@ public class Localization {
         public boolean tiv;
         private SmartDashboardNumber[] kStdvs = new SmartDashboardNumber[3];
         public Field2d field = new Field2d();
+        private double ambiguity;
 
         public Matrix<N3, N1> getStdvs(double distanceToTarget) {
             return VecBuilder.fill(
@@ -148,6 +152,12 @@ public class Localization {
         public LimeLightPoseEstimateWrapper withTagInVision(boolean b) {
             this.tiv = b;
             SmartDashboard.putBoolean(this.name + "/" + this.name + "-tag-in-vision", b);
+            return this;
+        }
+
+        public LimeLightPoseEstimateWrapper withAmbiguity(double ambiguity) {
+            this.ambiguity = ambiguity;
+            Logger.recordOutput("limelight/" + this.name + "/ambiguity", ambiguity);
             return this;
         }
 

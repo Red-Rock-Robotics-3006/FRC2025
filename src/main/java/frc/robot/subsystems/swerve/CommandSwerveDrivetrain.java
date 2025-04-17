@@ -105,7 +105,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Rotation2d fieldCentircOffset = Rotation2d.kZero;
 
     
-    private SmartDashboardNumber kRejectionDistance = new SmartDashboardNumber("localization/rejection-distance", 3);
+    private SmartDashboardNumber kRejectionDistance = new SmartDashboardNumber("localization/rejection-distance", 5);
     private SmartDashboardNumber kRejectionRotationRate = new SmartDashboardNumber("localization/rejection-rotation-rate", 400);
 
     private SmartDashboardBoolean visionEnabled = new SmartDashboardBoolean("localization/vision-enabled", true);
@@ -167,6 +167,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02, false);
     private SmartDashboardNumber algaeRemovalPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/algae", 0.03);
+    private SmartDashboardNumber autoPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/auto", 0.03);
 
     private final PIDController m_pathXController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
     private final PIDController m_pathYController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
@@ -727,6 +728,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     private boolean poseEstimateIsValid(LimelightHelpers.PoseEstimate e) {
+        if (Double.compare(e.pose.getX(), 0) == 0 || Double.compare(e.pose.getY(), 0) == 0) return false;
         return e.avgTagDist < kRejectionDistance.getNumber() && Math.abs(this.getRotationRateDegrees()) < kRejectionRotationRate.getNumber();
     }
 
@@ -926,6 +928,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     public boolean atTargetPose() {
         return Math.abs(this.targetPose2d.getX() - this.getPose().getX()) < positionTolerance.getNumber()
             && Math.abs(this.targetPose2d.getY() - this.getPose().getY()) < positionTolerance.getNumber();
+            // && Math.abs(this.getHeadingDegrees() - this.getTargetHeadingDegrees()) < headingPIDTolerance.getNumber();
+    }
+
+    public boolean atAutoTargetPose() {
+        return Math.abs(this.targetPose2d.getX() - this.getPose().getX()) < autoPositionTolerance.getNumber()
+            && Math.abs(this.targetPose2d.getY() - this.getPose().getY()) < autoPositionTolerance.getNumber();
             // && Math.abs(this.getHeadingDegrees() - this.getTargetHeadingDegrees()) < headingPIDTolerance.getNumber();
     }
 

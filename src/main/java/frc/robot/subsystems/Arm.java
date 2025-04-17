@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
@@ -56,7 +57,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 90).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 93).withTuningEnabled(kEnablePositionTuning); //112 @ utah
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 360 * 0.1977539).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -0.18383789 * 360).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -69.4336).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("arm/position/arm-algae-ground", 208.8).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("arm/position/arm-processor", 0).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("arm/position/arm-stow", 88).withTuningEnabled(kEnablePositionTuning);
@@ -148,7 +149,7 @@ public class Arm extends SubsystemBase {
         this.goToAngle(this.normalizePosition.getNumber());
     }
 
-    public void setAlgaeOuttakePosition() {
+    public void setAlgaeOuttakePosition() { // TODO Remove
         this.goToAngle(this.algaeOuttakePosition.getNumber());
     }
 
@@ -170,6 +171,7 @@ public class Arm extends SubsystemBase {
     }
 
     public void setAlgaeStowPosition() {
+        Logger.recordOutput("Intake/targetPosition", Position.STOW); // TODO add new Position
         this.goToAngle(algaeStow.getNumber());
     }
 
@@ -260,6 +262,7 @@ public class Arm extends SubsystemBase {
     }
 
     public void setPosition(Position pos) {
+        Logger.recordOutput("Intake/targetPosition", pos);
         this.targetPosition = pos;
         this.goToAngle(this.convertPosition(pos));
     }

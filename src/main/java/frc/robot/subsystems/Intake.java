@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Superstructure.Position;
 import redrocklib.logging.SmartDashboardBoolean;
 import redrocklib.logging.SmartDashboardNumber;
 import redrocklib.wrappers.RedRockTalon;
@@ -41,7 +43,7 @@ public class Intake extends SubsystemBase{
     private SmartDashboardNumber intakeDeployPosition = new SmartDashboardNumber("intake/intake-deploy-position", 22.3);
     private SmartDashboardNumber intakeStowPosition = new SmartDashboardNumber("intake/intake-stow-position", 0.2);
 
-    private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 2.8);
+    private SmartDashboardNumber intakel1position = new SmartDashboardNumber("intake/intake-l1-position", 4);
     private SmartDashboardNumber intakeClimbPosition = new SmartDashboardNumber("intake/climb-pos", 5);
 
     private SmartDashboardNumber intakeAlgaeStowPosition = new SmartDashboardNumber("intake/intake-algae/stow", 3);
@@ -53,7 +55,7 @@ public class Intake extends SubsystemBase{
     
     private SmartDashboardNumber intakeSpeed = new SmartDashboardNumber("intake/intake-speed", 5000);
     private SmartDashboardNumber tqIntakeSpeed = new SmartDashboardNumber("intake/tq-intake-speed", 3000);
-    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1700);
+    private SmartDashboardNumber outtakeSpeed = new SmartDashboardNumber("intake/outtake-speed", -1000);
     private SmartDashboardNumber resetSpeed = new SmartDashboardNumber("intake/reset-speed", -0.05);
     private SmartDashboardNumber currentStallOuttakeSpeed = new SmartDashboardNumber("intake/tq-current-outtake-speed", -900);
     private SmartDashboardNumber velocityTolerance = new SmartDashboardNumber("intake/intake-velocity-tolerance", 60);
@@ -165,6 +167,7 @@ public class Intake extends SubsystemBase{
     }
 
     public void setAlgaeStow() {
+        Logger.recordOutput("Intake/targetPosition", Position.STOW);
         this.setPosition(intakeAlgaeStowPosition.getNumber());
     }
 
@@ -196,6 +199,7 @@ public class Intake extends SubsystemBase{
     }
 
     public void setAlgaeOuttakePosition() {
+        Logger.recordOutput("Intake/targetPosition", Position.PROCESSOR);
         this.setPosition(algaeOuttakePosition.getNumber());
     }
 
@@ -208,14 +212,17 @@ public class Intake extends SubsystemBase{
     }
 
     public void setIntakeDeploy() {
+        Logger.recordOutput("Intake/targetPosition", Position.CORAL_GROUND);
         this.setPosition(intakeDeployPosition.getNumber());
     }
 
     public void setIntakeClimb() {
+        Logger.recordOutput("Intake/targetPosition", Position.BARGE);
         this.setPosition(intakeClimbPosition.getNumber());
     }
 
     public void setIntakeStow() {
+        Logger.recordOutput("Intake/targetPosition", Position.STOW);
         this.setPosition(intakeStowPosition.getNumber());
     }
 
@@ -224,6 +231,7 @@ public class Intake extends SubsystemBase{
     }
 
     public void setIntakeL1() {
+        Logger.recordOutput("Intake/targetPosition", Position.L1);
         this.setPosition(intakel1position.getNumber());
     }
 
@@ -232,6 +240,7 @@ public class Intake extends SubsystemBase{
     }
 
     public void setAlgaeIntakePosition() {
+        Logger.recordOutput("Intake/targetPosition", Position.ALGAE_GROUND);
         this.setPosition(intakeAlgaePosition.getNumber());
     }
 

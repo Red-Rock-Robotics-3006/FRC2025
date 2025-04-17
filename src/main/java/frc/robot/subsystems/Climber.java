@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import org.littletonrobotics.junction.AutoLogOutputManager;
+import org.littletonrobotics.junction.Logger;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
@@ -39,8 +40,7 @@ public class Climber extends SubsystemBase{
             .withPeakForwardDutyCycle(1)
             .withPeakReverseDutyCycle(-1)
             .withNeutralMode(NeutralModeValue.Brake)
-        )
-        .withSlot0Configs(
+        ).withSlot0Configs(
             new Slot0Configs()
             .withKG(0)
             .withKA(0)
@@ -64,20 +64,18 @@ public class Climber extends SubsystemBase{
         .withTuningEnabled(false);
     }
 
-    public void resetClimb() {
-        this.climbMotor.motor.setControl(new NeutralOut());
-        this.climbMotor.motor.setPosition(0);
-    }
-
     public void setStowSpeed() {
+        Logger.recordOutput("Climber/status", "Stow");
         this.climbMotor.motor.setControl(new DutyCycleOut(deploySpeed.getNumber()));
     }
-
+    
     public void setDeploySpeed() {
+        Logger.recordOutput("Climber/status", "Deploy");
         this.climbMotor.motor.setControl(new DutyCycleOut(climbSpeed.getNumber()));
     }
-
+    
     public void stopClimb() {
+        Logger.recordOutput("Climber/status", "Stop");
         this.climbMotor.motor.setControl(new DutyCycleOut(0));
     }
 
