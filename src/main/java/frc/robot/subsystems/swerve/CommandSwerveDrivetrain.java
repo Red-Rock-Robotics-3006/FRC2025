@@ -166,7 +166,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Field2d field2d = new Field2d();
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02, false);
-    private SmartDashboardNumber algaeRemovalPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/algae", 0.05);
+    private SmartDashboardNumber algaeRemovalPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/algae", 0.03);
 
     private final PIDController m_pathXController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
     private final PIDController m_pathYController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
@@ -184,8 +184,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d[][] algaeRemovalPoseBlue = new Pose2d[6][2], algaeRemovalPoseRed = new Pose2d[6][2];
 
-    private Pose2d algaeRemovalPoseOffset = new Pose2d(5.79 - 4.489323, -0.05, Rotation2d.kZero);
-    private Pose2d preAlgaeRemovalOffset = new Pose2d(5.79 - 4.489323 + 0.25, -0.05, Rotation2d.kZero);
+    private Pose2d algaeRemovalPoseOffset = new Pose2d(5.79 - 4.489323, -0.08, Rotation2d.kZero);
+    private Pose2d preAlgaeRemovalOffset = new Pose2d(5.79 - 4.489323 + 0.25, -0.08, Rotation2d.kZero);
 
     private Pose2d blueCenter = new Pose2d(4.489323, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.066, 4.0259, new Rotation2d());
@@ -204,8 +204,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.025, Rotation2d.kZero);
     private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.025, Rotation2d.kZero);
 
-    private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 9.4);
-    private SmartDashboardNumber blueBargeX = new SmartDashboardNumber("dt/pos/blue-barge-x", 8);
+    private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 9.53);
+    private SmartDashboardNumber blueBargeX = new SmartDashboardNumber("dt/pos/blue-barge-x", 7.9833);
 
     private int reefClockSide = 0;
     
@@ -453,6 +453,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
             System.out.println();
         }
+
+
     }
 
     public static Pose2d add(Pose2d a, Pose2d b) {

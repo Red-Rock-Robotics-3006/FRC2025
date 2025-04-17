@@ -166,11 +166,13 @@ public class Superstructure {
             this.intake.deployIntakeCommand(),
             Commands.either(
                 Commands.runOnce(() -> {}), 
-                Commands.runOnce(() -> this.elevator.setPreGroundIntakePosition(), this.elevator),
+                Commands.sequence(
+                    Commands.runOnce(() -> this.elevator.setPreGroundIntakePosition(), this.elevator),
+                    Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold())
+                ),
                 () -> this.arm.belowFloorThreshold()),
-            Commands.runOnce(() -> this.elevator.setPreGroundIntakePosition(), this.elevator),
+            // Commands.runOnce(() -> this.elevator.setPreGroundIntakePosition(), this.elevator),
             // Commands.waitUntil(() -> elevator.atTarget()),
-            Commands.waitUntil(() -> this.elevator.aboveGroundIntakeThreshold()),
             Commands.waitUntil(() -> this.intake.pastIntakeDeployThreshold()),
             this.endEffector.goToPosition(Position.CORAL_GROUND),
             this.arm.goToPosition(Position.CORAL_GROUND),
