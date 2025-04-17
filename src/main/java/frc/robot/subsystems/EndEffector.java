@@ -34,7 +34,7 @@ import frc.robot.Superstructure.Position;
 public class EndEffector extends SubsystemBase {
     public static final double kCoralOuttakeWaitTime = 0.1;
     public static final double kAlgaeOuttakeWaitTime = 0.8;
-    public static final double kCoralGroundIntakeTime = 0.07;
+    public static final double kCoralGroundIntakeTime = 0.2;
     public static final double kAlgaeGroundIntakeTime = 0.25;
     public static final double kAlgaeRemoveTime = 0.25;
 
@@ -59,7 +59,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", -0.4);
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 1.3);
-    private SmartDashboardNumber holdSpeed = new SmartDashboardNumber("endeffector/hold-speed", 20);
+    private SmartDashboardNumber holdSpeed = new SmartDashboardNumber("endeffector/hold-speed", 25);
     private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold", 40);
     
     private Position targetPosition = Position.STOW;
@@ -68,10 +68,10 @@ public class EndEffector extends SubsystemBase {
     private static EndEffector instance = null;
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 2.5);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 2.5);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 2);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 2);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 0);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 17.2);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 19);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 10.89);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.31);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);

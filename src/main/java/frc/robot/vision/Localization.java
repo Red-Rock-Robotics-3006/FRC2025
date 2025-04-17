@@ -100,7 +100,7 @@ public class Localization {
         //     SmartDashboard.putBoolean("locaization/mt1-tiv", true);
         // if (isSim) return 0;
         // return 0;
-        return LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-" + limeLightNames[1]).pose.getRotation().getDegrees();
+        return LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight-" + limeLightNames[0]).pose.getRotation().getDegrees();
         // }
         // SmartDashboard.putBoolean("locaization/mt1-tiv", false);
         // return new Pose2d();

@@ -201,11 +201,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d fieldCenter = new Pose2d(8.75665, 4.0259, Rotation2d.kZero);
 
-    private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.025, Rotation2d.kZero);
-    private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.025, Rotation2d.kZero);
+    private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.035, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.035, Rotation2d.kZero);
 
-    private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 9.53);
-    private SmartDashboardNumber blueBargeX = new SmartDashboardNumber("dt/pos/blue-barge-x", 7.9833);
+    private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 9.53 - 0.08);
+    private SmartDashboardNumber blueBargeX = new SmartDashboardNumber("dt/pos/blue-barge-x", 7.9833 + 0.08);
 
     private int reefClockSide = 0;
     
@@ -569,7 +569,13 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     }
 
     public void setHeadingFromMegatag1() {
-        double deg = Localization.getMegatag1Pose2dFromClimb();
+        double deg = 0;
+        try {
+            deg = Localization.getMegatag1Pose2dFromClimb();
+        } catch (Exception e) {
+            Logger.recordOutput("exception", e.getMessage());
+            deg = 0;
+        }
         this.targetHeadingDegrees = deg;
         this.resetPose(
             new Pose2d(
@@ -686,6 +692,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         for (int i = 0; i < wrappers.length; i++) {
             // if (i == 0 && (isTargetingReef || !isTargetingPosition())) continue;
             // else if (i == 1 && !isTargetingReef && isTargetingPosition()) continue;
+            if (i == 1) continue;
             Localization.LimeLightPoseEstimateWrapper estimateWrapper = wrappers[i];
             if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {
                 this.addVisionMeasurement(estimateWrapper.poseEstimate.pose,
