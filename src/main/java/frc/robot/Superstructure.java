@@ -487,7 +487,11 @@ public class Superstructure {
      * @return a Command to do so
      */
     public Command outtakeAlgae() {
-        return this.endEffector.outtakeAlgae();
+        // return this.endEffector.outtakeAlgae();
+        return Commands.either(
+            this.endEffector.outtakeAlgae(), 
+            this.endEffector.outtakeProcessorAlgae(), 
+            () -> this.elevator.aboveProcessorThreshold());
     }
 
     /**

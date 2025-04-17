@@ -89,28 +89,16 @@ public class RobotContainer {
     public void configureSelector(){
         m_chooser.setDefaultOption("no auto", Commands.print("good luck drivers!"));
 
-        // m_chooser.addOption("TESTPATH1", autos.TESTPATH1());
-        // m_chooser.addOption("TESTPATH2", autos.TESTPATH2());
+        m_chooser.addOption("left444GroundLollipop", autos.left444GroundLollipop());
+        m_chooser.addOption("right444GroundLollipop", autos.right444GroundLollipop());
 
-        m_chooser.addOption("Left 3 L4 Ground Source", autos.left3L4GroundSource());
-        m_chooser.addOption("Right 3 L4 Ground Source", autos.right3L4GroundSource());
+        m_chooser.addOption("left442SixOClock", autos.left442SixOClock());
+        m_chooser.addOption("right442SixOClock", autos.right442SixOClock());
 
-        m_chooser.addOption("Left 3 L4 Ground Lollipop", autos.left3L4GroundLollipop());
-        m_chooser.addOption("Right 3 L4 Ground Lollipop", autos.right3L4GroundLollipop());
+        m_chooser.addOption("left444Source", autos.left444Source());
+        m_chooser.addOption("right444Source", autos.right444Source());
 
-        m_chooser.addOption("Left 2 L4 Six Ground Lollipop", autos.left3SixOClock());
-
-        m_chooser.addOption("Left 3 L4 Source", autos.left3L4Source());
-        m_chooser.addOption("Right 3 L4 Source", autos.right3L4Source());
-
-        m_chooser.addOption("Left 3 L4 Source Slow", autos.slowLeft3L4Source());
-        m_chooser.addOption("Right 3 L4 Source Slow", autos.slowRight3L4Source());
-
-        m_chooser.addOption("left3L4GroundLollipopPaths", autos.left3L4GroundLollipopPaths());
-        m_chooser.addOption("right3L4GroundLollipopPaths", autos.right3L4GroundLollipopPaths());
-
-        // m_chooser.addOption("Left 3 L4 Paths", autos.left3L4Paths());
-        // m_chooser.addOption("Right 3 L4 Paths", autos.right3L4Paths());
+        m_chooser.addOption("middle4BB", autos.middle4BB());
             
         SmartDashboard.putData("AUTO CHOOSER", m_chooser);
     }

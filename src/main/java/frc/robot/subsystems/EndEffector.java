@@ -32,9 +32,9 @@ import frc.robot.Superstructure.Position;
 
 
 public class EndEffector extends SubsystemBase {
-    public static final double kCoralOuttakeWaitTime = 0.8;
+    public static final double kCoralOuttakeWaitTime = 0.1;
     public static final double kAlgaeOuttakeWaitTime = 0.8;
-    public static final double kCoralGroundIntakeTime = 0.25;
+    public static final double kCoralGroundIntakeTime = 0.07;
     public static final double kAlgaeGroundIntakeTime = 0.25;
     public static final double kAlgaeRemoveTime = 0.25;
 
@@ -50,12 +50,13 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 22);
 
     private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed-ef", 0.5);
-    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", -0.4);
+    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", -1);
+    private SmartDashboardNumber algaeProcOuttakeSpeed = new SmartDashboardNumber("endeffector/processor-outtake-speed", -0.05);
     private SmartDashboardNumber coralTOFThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.09);
     private SmartDashboardNumber algaeTOFThreshold = new SmartDashboardNumber("endeffector/algae-threshold", 0.2);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.05);
     private SmartDashboardNumber algaeIntakeSpeed = new SmartDashboardNumber("endeffector/algae-intake-speed", 0.45);
-    private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", -1);
+    private SmartDashboardNumber algaeOuttakeSpeed = new SmartDashboardNumber("endeffector/algae-outtake-speed", -0.4);
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 1.3);
     private SmartDashboardNumber holdSpeed = new SmartDashboardNumber("endeffector/hold-speed", 20);
@@ -286,6 +287,10 @@ public class EndEffector extends SubsystemBase {
         this.setAlgaeSpeed(this.algaeOuttakeSpeed.getNumber());
     }
 
+    public void setAlgaeProcessorOuttakeSpeed() {
+        this.setAlgaeSpeed(this.algaeProcOuttakeSpeed.getNumber());
+    }
+
     public void setAlgaeRemoveSpeed() {
         this.setAlgaeSpeed(this.algaeRemovalSpeed.getNumber());
     }
@@ -462,6 +467,15 @@ public class EndEffector extends SubsystemBase {
             new InstantCommand(this::setAlgaeOuttakeSpeed, this),
             new WaitUntilCommand(() -> !this.algaeDetected()),
             new WaitCommand(kAlgaeOuttakeWaitTime),
+            this.stopCommand()
+        );
+    }
+
+    public Command outtakeProcessorAlgae() {
+        return Commands.sequence(
+            Commands.runOnce(() -> this.setAlgaeProcessorOuttakeSpeed(), this),
+            Commands.waitUntil(() -> !this.algaeDetected()),
+            Commands.waitSeconds(kAlgaeOuttakeWaitTime),
             this.stopCommand()
         );
     }
