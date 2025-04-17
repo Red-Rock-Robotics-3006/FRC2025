@@ -238,6 +238,48 @@ public class Autos {
         );
     }
 
+    public Command left3SixOClock() {
+        return Commands.sequence(
+            initializeAutoCommand(),
+            // intake.deployIntakeCommand(),
+            
+            Commands.parallel(
+                // superstructure.goToReefPositionAuto(() -> Position.L4),
+                followFirstTrajectoryCommand("LL3GL", 0)
+            ),
+            superstructure.goToReefPositionAuto(() -> Position.L4),
+            scoreAutoCommand(1),
+
+            Commands.deadline(
+                Commands.sequence(
+                    // Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
+                    followFirstTrajectoryCommand("LL3GL", 1)
+                ),
+                groundIntakeCommand()
+            ),  
+            Commands.either(
+                scoreAutoCommand(0),
+                // Commands.print("SECOND CORAL MISSED"), 
+                updatePoseVisionCommand(),
+                () -> endeffector.coralDetected()
+            ),
+
+            Commands.parallel(
+                Commands.sequence(
+                    // Commands.waitUntil(() -> superstructure.atTargets()),
+                    Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
+                    followFirstTrajectoryCommand("LL3GL", 2)
+                ),
+                groundIntakeCommand()
+            ),
+            // scoreAutoCommand(1),
+            superstructure.stowCommand(),
+
+            endAutoCommand()
+        );
+    }
+
     public Command right3L4GroundLollipopPaths() {
         return Commands.sequence(
             followFirstTrajectoryCommand("R3GL", 1),
@@ -248,108 +290,88 @@ public class Autos {
 
     public Command left3L4Source() {
         return Commands.sequence(
-            endeffector.stopCommand(),
+            initializeAutoCommand(),
 
-            superstructure.setRequestedScoringPositionCommand(Position.L4),
-            Commands.parallel(
+            Commands.deadline(
                 followFirstTrajectoryCommand("L3S", 0),
-                superstructure.stowReefCommand()
+                superstructure.goToReefPositionAuto(() -> Position.L4)
             ),
             scoreAutoCommand(1),
-            superstructure.outtakeCoral(),
 
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             Commands.parallel(
-                superstructure.goToSourceIntakePosition(),
+                Commands.sequence(
+                    Commands.waitSeconds(1),
+                    superstructure.goToSourceIntakePosition()
+                ),
                 followTrajectoryCommand("L3S", 1)
             ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             sourceIntakeCommand(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             Commands.deadline(
                 followTrajectoryCommand("L3S", 2),
-                Commands.sequence(
-                    Commands.waitSeconds(0.8),
-                    superstructure.goToL4Command()
-                )
+                superstructure.goToReefPositionAuto(() -> Position.L4)
             ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            scoreAutoCommand(0), 
-            superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
+            scoreAutoCommand(0),
 
             Commands.parallel(
-                superstructure.goToSourceIntakePosition(),
+                Commands.sequence(
+                    Commands.waitSeconds(1),
+                    superstructure.goToSourceIntakePosition()
+                ),
                 followTrajectoryCommand("L3S", 3)
             ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             sourceIntakeCommand(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             Commands.deadline(
                 followTrajectoryCommand("L3S", 4),
-                Commands.sequence(
-                    Commands.waitSeconds(0.8),
-                    superstructure.goToL4Command()
-                )
+                superstructure.goToReefPositionAuto(() -> Position.L4)
             ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            scoreAutoCommand(1), 
-            superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
+            scoreAutoCommand(1)
         );
     }
 
     public Command right3L4Source() {
         return Commands.sequence(
-            endeffector.stopCommand(),
+            initializeAutoCommand(),
 
-            superstructure.setRequestedScoringPositionCommand(Position.L4),
-            
-            Commands.parallel(
-                followFirstTrajectoryCommand("R3S", 0),
-                superstructure.stowReefCommand()
+            Commands.deadline(
+                followFirstTrajectoryCommand("R3S", 0)
+                // superstructure.goToReefPositionAuto(() -> Position.L4)
             ),
             scoreAutoCommand(0),
-            superstructure.outtakeCoral(),
-
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            Commands.parallel(
-                superstructure.goToSourceIntakePosition(),
-                followTrajectoryCommand("R3S", 1)
-            ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            sourceIntakeCommand(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            Commands.deadline(
-                followTrajectoryCommand("R3S", 2),
-                Commands.sequence(
-                    Commands.waitSeconds(0.8),
-                    superstructure.goToL4Command()
-                )
-            ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            scoreAutoCommand(1), 
-            superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
 
             Commands.parallel(
-                superstructure.goToSourceIntakePosition(),
-                followTrajectoryCommand("R3S",  3)
-            ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            sourceIntakeCommand(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
-            Commands.deadline(
-                followTrajectoryCommand("R3S", 4),
                 Commands.sequence(
-                    Commands.waitSeconds(0.8),
-                    superstructure.goToL4Command()
+                    superstructure.goToSourceIntakePositionAuto()
+                ),
+                Commands.sequence(
+                        
+                    Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
+                    followTrajectoryCommand("R3S", 1)
                 )
             ),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            scoreAutoCommand(0), 
-            superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
+            sourceIntakeCommand(),
+            Commands.sequence(
+                followTrajectoryCommand("R3S", 2)
+                // superstructure.goToReefPositionAuto(() -> Position.L4)
+            ),
+            scoreAutoCommand(1),
+
+            Commands.parallel(
+                // superstructure.goToSourceIntakePositionAuto(),
+                Commands.sequence(
+                    superstructure.goToSourceIntakePositionAuto()
+                    ),
+                Commands.sequence(
+                        
+                    Commands.waitUntil(() -> elevator.belowAutoStowGroundThreshold()),
+                    followTrajectoryCommand("R3S", 3)
+                )
+            ),
+            sourceIntakeCommand(),
+            Commands.deadline(
+                followTrajectoryCommand("R3S", 4)
+                // superstructure.goToReefPositionAuto(() -> Position.L4)
+            ),
+            scoreAutoCommand(0)
         );
     }
 
@@ -437,7 +459,7 @@ public class Autos {
                 Commands.sequence(
                     superstructure.goToReefPositionAuto(() -> Position.L4),
                     Commands.waitUntil(() -> superstructure.atTargets()),
-                    Commands.waitSeconds(0.35)
+                    Commands.waitSeconds(0.7)
                 ),
                 Commands.sequence(
                     Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
@@ -445,8 +467,8 @@ public class Autos {
                 )
             ),
             drivetrain.disablePositionTargetingCommand(),
-            superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
+            superstructure.outtakeCoral() 
+            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
         );
     }
 
@@ -478,7 +500,7 @@ public class Autos {
 
     public Command sourceIntakeCommand() {
         return Commands.sequence(
-            Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
+            Commands.runOnce(() -> {drivetrain.enableVision(); drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
             Commands.deadline(
                 // Commands.sequence(
                     // superstructure.goToSourceIntakePosition(),
@@ -487,6 +509,7 @@ public class Autos {
                 drivetrain.pidToPoseContinuousCommand()
             ),
             Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
             // Commands.waitSeconds()
             // superstructure.stowReefCommand()
         );
@@ -494,10 +517,10 @@ public class Autos {
 
     public Command followTrajectoryCommand(String trajectoryName, int index) {
         return Commands.sequence(
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
+            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain),
             // factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
+            factory.trajectoryCmd(trajectoryName, index)
+            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
         );
     }
 
@@ -565,15 +588,16 @@ public class Autos {
             Commands.runOnce(() -> {
                 drivetrain.disableVision();
                 factory.resetOdometry(trajectoryName, index);
+                // drivetrain.resetKalaman();
                 drivetrain.resetPose(
                     factory.cache().loadTrajectory(trajectoryName, index).get().getInitialPose(DriverStation.getAlliance().get().equals(Alliance.Red)).get()
                     ); 
             },
             drivetrain),
-            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
+            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             // factory.resetOdometry(trajectoryName, index),
-            factory.trajectoryCmd(trajectoryName, index),
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
+            factory.trajectoryCmd(trajectoryName, index)
+            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain)
         );
     }
     

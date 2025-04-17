@@ -50,7 +50,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber maxRotation = new SmartDashboardNumber("endeffector/max-rotation", 22);
 
     private SmartDashboardNumber coralIntakeSpeed = new SmartDashboardNumber("endeffector/coral-intake-speed-ef", 0.5);
-    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", -1);
+    private SmartDashboardNumber coralOuttakeSpeed = new SmartDashboardNumber("endeffector/coral-outtake-speed", -0.4);
     private SmartDashboardNumber coralTOFThreshold = new SmartDashboardNumber("endeffector/coral-threshold", 0.09);
     private SmartDashboardNumber algaeTOFThreshold = new SmartDashboardNumber("endeffector/algae-threshold", 0.2);
     private SmartDashboardNumber normalizeSpeed = new SmartDashboardNumber("endeffector/normalize-speed", -0.05);
@@ -59,7 +59,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber algaeRemovalSpeed = new SmartDashboardNumber("endeffector/algae-removal-speed", 0.6);
     private SmartDashboardNumber wristTolerance = new SmartDashboardNumber("endeffector/wrist-tolerance", 1.3);
     private SmartDashboardNumber holdSpeed = new SmartDashboardNumber("endeffector/hold-speed", 20);
-    private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold", 35);
+    private SmartDashboardNumber algaeHoldSpeed = new SmartDashboardNumber("endeffector/algae-hold", 40);
     
     private Position targetPosition = Position.STOW;
     private double targetRotation = 0;
@@ -70,12 +70,12 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 2.5);
     private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 2.5);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 0);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 10);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 17.2);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 10.89);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.31);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 5);
-    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 22);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 21.3);
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 10.91);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 10.91);
 
@@ -460,7 +460,7 @@ public class EndEffector extends SubsystemBase {
     public Command outtakeAlgae(){
         return Commands.sequence(
             new InstantCommand(this::setAlgaeOuttakeSpeed, this),
-            // new WaitUntilCommand(() -> !this.algaeDetected()),
+            new WaitUntilCommand(() -> !this.algaeDetected()),
             new WaitCommand(kAlgaeOuttakeWaitTime),
             this.stopCommand()
         );

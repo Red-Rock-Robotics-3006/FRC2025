@@ -424,6 +424,22 @@ public class Superstructure {
         );
     }
 
+    public Command goToSourceIntakePositionAuto() {
+        // return this.goToPosition(Position.SOURCE);
+        return Commands.sequence(
+            this.intake.stowIntakeCommand(),
+            this.arm.goToPosition(Position.SOURCE),
+            Commands.waitUntil(() -> this.arm.inSafeZone()),
+            this.elevator.goToPosition(Position.SOURCE),
+            this.endEffector.goToPosition(Position.SOURCE)
+            // Commands.waitUntil(() -> this.elevator.aboveSourceIntakeThreshold()),
+            // this.arm.goToPosition(Position.SOURCE)
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.SOURCE) && this.arm.belowFloorThreshold())),
+            // new WaitUntilCommand(() -> !(this.elevator.posBelowThreshold(Position.SOURCE) && !this.arm.inSafeZone())),
+            // this.intake.stowIntakeCommand(),
+        );
+    }
+
     public Command goToL2RemoveCommand() {
         return this.goToReefPosition(Position.L2_ALGAE);
     }
@@ -500,7 +516,7 @@ public class Superstructure {
     }
 
     public boolean hasAlgae() {
-        if (Utils.isSimulation()) return simAlgaeTrue.getValue();
+        // if (Utils.isSimulation()) return simAlgaeTrue.getValue();
         return endEffector.algaeDetected();
     }
 

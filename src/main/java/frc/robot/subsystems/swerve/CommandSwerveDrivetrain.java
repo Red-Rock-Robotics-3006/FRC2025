@@ -184,16 +184,16 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d[][] algaeRemovalPoseBlue = new Pose2d[6][2], algaeRemovalPoseRed = new Pose2d[6][2];
 
-    private Pose2d algaeRemovalPoseOffset = new Pose2d(5.79 - 4.489323, 0, Rotation2d.kZero);
-    private Pose2d preAlgaeRemovalOffset = new Pose2d(5.79 - 4.489323 + 0.25, 0, Rotation2d.kZero);
+    private Pose2d algaeRemovalPoseOffset = new Pose2d(5.79 - 4.489323, -0.05, Rotation2d.kZero);
+    private Pose2d preAlgaeRemovalOffset = new Pose2d(5.79 - 4.489323 + 0.25, -0.05, Rotation2d.kZero);
 
     private Pose2d blueCenter = new Pose2d(4.489323, 4.0259, new Rotation2d());
     private Pose2d redCenter = new Pose2d(13.066, 4.0259, new Rotation2d());
 
-    private Pose2d blueSourceLeft = new Pose2d(1.133, 7.158, Rotation2d.fromDegrees(126));
-    private Pose2d blueSourceRight = new Pose2d(1.133, 1.01, Rotation2d.fromDegrees(-126));
-    private Pose2d redSourceLeft = new Pose2d(16.3493, 0.8938, Rotation2d.fromDegrees(-54));
-    private Pose2d redSourceRight = new Pose2d(16.3493, 7.158, Rotation2d.fromDegrees(54));
+    private Pose2d blueSourceLeft = new Pose2d(1.2, 7.11, Rotation2d.fromDegrees(126));
+    private Pose2d blueSourceRight = new Pose2d(1.07, 1.03, Rotation2d.fromDegrees(-126));
+    private Pose2d redSourceLeft = new Pose2d(16.34, 0.92, Rotation2d.fromDegrees(-54));
+    private Pose2d redSourceRight = new Pose2d(16.46, 7.02, Rotation2d.fromDegrees(54));
 
     private ArrayList<Pose2d> sourcePoses = new ArrayList<>();
 

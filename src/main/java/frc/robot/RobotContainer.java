@@ -98,6 +98,8 @@ public class RobotContainer {
         m_chooser.addOption("Left 3 L4 Ground Lollipop", autos.left3L4GroundLollipop());
         m_chooser.addOption("Right 3 L4 Ground Lollipop", autos.right3L4GroundLollipop());
 
+        m_chooser.addOption("Left 2 L4 Six Ground Lollipop", autos.left3SixOClock());
+
         m_chooser.addOption("Left 3 L4 Source", autos.left3L4Source());
         m_chooser.addOption("Right 3 L4 Source", autos.right3L4Source());
 
