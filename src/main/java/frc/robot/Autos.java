@@ -290,8 +290,11 @@ public class Autos {
         return Commands.sequence(
             initializeAutoCommand(),
 
-            Commands.runOnce(() -> drivetrain.resetPose(new Pose2d(7.17, 4, new Rotation2d(0)))),
-            slowScoreAutoCommand(1),
+            Commands.deadline(
+                followFirstTrajectoryWithVisionCommand("M3B", 0),
+                superstructure.goToReefPositionAuto(() -> Position.L4)
+            ),
+            scoreAutoCommand(1),
 
             Commands.runOnce(() -> {drivetrain.setNearestPreAlgaeTargetPose(); drivetrain.enablePositionTargeting(); drivetrain.enableVision();}, drivetrain),
             Commands.deadline(
@@ -379,18 +382,20 @@ public class Autos {
     public Command scoreAutoL2Command(int reefSide) {
         return Commands.sequence(
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            Commands.deadline(
+            Commands.parallel(
                 Commands.sequence(
                     superstructure.goToReefPositionAuto(() -> Position.L2),
                     Commands.waitUntil(() -> superstructure.atTargets()),
                     Commands.waitSeconds(0.35)
                 ),
-                Commands.sequence(
-                    Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    drivetrain.pidToPoseContinuousCommand()
+                Commands.deadline(
+                    Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
+                    Commands.sequence(
+                        Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                        drivetrain.pidToPoseContinuousCommand()
+                    )
                 )
             ),
-            Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
             drivetrain.disablePositionTargetingCommand(),
             superstructure.outtakeCoral(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)

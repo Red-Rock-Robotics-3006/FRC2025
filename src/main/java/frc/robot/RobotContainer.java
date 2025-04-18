@@ -241,7 +241,7 @@ public class RobotContainer {
                     ),
                     () -> drivetrain.isTargetingAlgaeRemoval()
                 ),
-                () -> superstructure.hasAlgae() || superstructure.getRequestedScoringPosition() == Position.BARGE
+                () -> superstructure.hasAlgae() || !drivetrain.isTargetingAlgaeRemoval() && superstructure.getRequestedScoringPosition() == Position.BARGE
             )
         ).onFalse(
             Commands.sequence(
@@ -250,7 +250,7 @@ public class RobotContainer {
             )
         );
 
-        drivestick.leftBumper().onTrue( // TODO What does this do?
+        drivestick.leftBumper().onTrue(
             Commands.either(
                 Commands.runOnce(() -> {}),
                 Commands.parallel(
@@ -271,18 +271,14 @@ public class RobotContainer {
                     ),
                     Commands.sequence(
                         superstructure.goToSourceIntakePosition(), //TODO add swerve thing
-                        superstructure.intakeCoral(), // TODO Are we intaking ground coral or source coral?
+                        superstructure.intakeCoral(),
                         this.rumbleControllerCommand(1, 0.6)
                     )
                 ),
                 () -> superstructure.hasAlgae()
             )
         ).onFalse(
-            Commands.either(
-                superstructure.stowCommand(),
-                superstructure.stowReefCommand(), 
-                () -> superstructure.hasAlgae()
-            )
+            superstructure.stowCommand()
         );
 
         drivestick.rightTrigger(0.25).onTrue(
@@ -407,7 +403,7 @@ public class RobotContainer {
                 rumbleBothControllersCommand(1, 0.5)
             )
         ).onFalse(
-            superstructure.stowCommand()
+            superstructure.stowAlgaeCommand()
         );
 
         // mechstick.back().onTrue(
@@ -439,9 +435,9 @@ public class RobotContainer {
         // );
 
         mechstick.start().onTrue(
-            Commands.runOnce(() -> EndEffector.getInstance().setCoralIntakeSpeed(), EndEffector.getInstance())
+            this.superstructure.setEECoralIntakeSpeedCommand()
         ).onFalse(
-            EndEffector.getInstance().stopCommand()
+            this.superstructure.stopEndEffector()
         );
     }
 

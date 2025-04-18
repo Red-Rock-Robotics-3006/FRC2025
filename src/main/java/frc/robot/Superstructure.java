@@ -75,6 +75,10 @@ public class Superstructure {
         return this.endEffector.normalizeEndEffectorCommand();
     }
 
+    public Command setEECoralIntakeSpeedCommand() {
+        return Commands.runOnce(() -> this.endEffector.setCoralIntakeSpeed(), this.endEffector);
+    }
+
     public void setRequestedScoringPosition(Position pos) {
         this.requestedScoringPosition = pos;
     }
@@ -275,7 +279,7 @@ public class Superstructure {
         return Commands.sequence(
             Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.STOW)),
             this.intake.stopIntakeCommand(),
-            this.endEffector.stopCommand(),
+            // this.endEffector.stopCommand(),
             Commands.either(
                 Commands.sequence(
                     Commands.runOnce(() -> elevator.setPreGroundIntakePosition(), elevator),
@@ -299,7 +303,7 @@ public class Superstructure {
             Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.STOW)), // TODO add new Position
             // this.endEffector.goToPosition(Position.STOW),
             Commands.runOnce(() -> arm.setAlgaeStowPosition(), arm),
-            Commands.waitUntil(() -> arm.atTarget()),
+            Commands.waitUntil(() -> !arm.belowAlgaeFloorThreshold()),
             Commands.runOnce(() -> endEffector.setAlgaeStowPosition()),
             this.elevator.goToPosition(Position.STOW)
         );
@@ -308,7 +312,7 @@ public class Superstructure {
     public Command stowReefCommand() {
         return new SequentialCommandGroup(
             Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.STOW)),
-            this.endEffector.stopCommand(),
+            // this.endEffector.stopCommand(),
             this.intake.stopIntakeCommand(),
             Commands.either(
                 Commands.sequence(
@@ -379,9 +383,9 @@ public class Superstructure {
                     Map.entry(Position.L4, this.endEffector.goToPosition(Position.L4)),
                     Map.entry(Position.STOW, this.endEffector.goToPosition(Position.STOW))
                 ), 
-                () -> this.getRequestedScoringPosition()),
+                () -> this.getRequestedScoringPosition())
             // this.endEffector.goToPosition(Position.STOW),
-            this.endEffector.stopCommand()
+            // this.endEffector.stopCommand()
         );
     }
 
@@ -404,6 +408,10 @@ public class Superstructure {
     public Command goToSourceIntakePosition() {
         // return this.goToPosition(Position.SOURCE);
         return Commands.sequence(
+            Commands.either(
+                this.stowCommand(), 
+                Commands.runOnce(() -> {}), 
+                () -> arm.belowFloorThreshold() || this.elevator.getTargetPosition() == Position.CORAL_GROUND),
             Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", Position.SOURCE)),
             this.elevator.goToPosition(Position.SOURCE),
             this.endEffector.goToPosition(Position.SOURCE),

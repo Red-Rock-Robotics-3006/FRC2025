@@ -76,7 +76,7 @@ public class EndEffector extends SubsystemBase {
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.31);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
     private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 5);
-    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 21.3);
+    private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 22);
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 10.91);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 10.91);
 
@@ -113,9 +113,9 @@ public class EndEffector extends SubsystemBase {
         .withSpikeThreshold(40)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(25)
+            .withSupplyCurrentLimit(40)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(40)
+            .withStatorCurrentLimit(45)
             .withStatorCurrentLimitEnable(true)
         ).withTuningEnabled(false);
         
@@ -137,9 +137,9 @@ public class EndEffector extends SubsystemBase {
         )
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
-            .withSupplyCurrentLimit(25)
+            .withSupplyCurrentLimit(40)
             .withSupplyCurrentLimitEnable(true)
-            .withStatorCurrentLimit(60)
+            .withStatorCurrentLimit(45)
             .withStatorCurrentLimitEnable(true)
         ).withTuningEnabled(false);
                 
@@ -161,8 +161,8 @@ public class EndEffector extends SubsystemBase {
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
-            .withMotionMagicAcceleration(400)
-            .withMotionMagicCruiseVelocity(75)
+            .withMotionMagicAcceleration(300)
+            .withMotionMagicCruiseVelocity(70)
             .withMotionMagicJerk(10000000)
         )
         .withSpikeThreshold(25)

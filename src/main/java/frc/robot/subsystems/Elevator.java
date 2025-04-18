@@ -121,8 +121,8 @@ public class Elevator extends SubsystemBase {
             .withGravityType(GravityTypeValue.Elevator_Static);
 
         MotionMagicConfigs elevatorMotionConfigs = new MotionMagicConfigs()
-            .withMotionMagicCruiseVelocity(85)
-            .withMotionMagicAcceleration(420)
+            .withMotionMagicCruiseVelocity(75)
+            .withMotionMagicAcceleration(375)
             .withMotionMagicJerk(1000000);
 
         CurrentLimitsConfigs elevatorCurrentLimitsConfigs = new CurrentLimitsConfigs()

@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.AutoLogOutputManager;
 import org.littletonrobotics.junction.Logger;
 
@@ -46,6 +47,7 @@ public class Arm extends SubsystemBase {
 
     private SmartDashboardNumber floorThreshold = new SmartDashboardNumber("arm/arm-threshold-floor", -0.03);
     private SmartDashboardNumber verticalThreshold = new SmartDashboardNumber("arm/arm-threshold-vertical", 0.255);
+    private SmartDashboardNumber algaeFloorThreshold = new SmartDashboardNumber("arm/algae-floor-threshold", 0.535);
     private Position targetPosition = Position.STOW;
 
     private static Arm instance = null;
@@ -75,6 +77,7 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber delta = new SmartDashboardNumber("arm/arm-tuning/delta", 5);
     private SmartDashboardNumber target = new SmartDashboardNumber("arm/arm-tuning/target", 0);
 
+    @AutoLogOutput
     private double targetRotation = 0.25;
     
 
@@ -283,6 +286,10 @@ public class Arm extends SubsystemBase {
 
     public boolean pastVerticalThreshold() {
         return this.armMotor.motor.getPosition().getValueAsDouble() > this.verticalThreshold.getNumber();
+    }
+
+    public boolean belowAlgaeFloorThreshold() {
+        return this.armMotor.motor.getPosition().getValueAsDouble() > this.algaeFloorThreshold.getNumber();
     }
 
     /**
