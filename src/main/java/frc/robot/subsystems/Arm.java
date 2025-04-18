@@ -28,7 +28,7 @@ import frc.robot.Superstructure.Position;
 
 
 public class Arm extends SubsystemBase {
-    public static final double kCANCoderOffset = -0.389892578125;
+    public static final double kCANCoderOffset = -0.38623046875;
     public static final double kDiscontinuityPoint = 0.875;
     public static final double kRotorToSensorRatio = 55 / 10 * 60 / 24 * 66 / 9;//68 / 10 * 68 / 16 * 48 / 9;
     public static final double kSensorToMechRatio = 1;
@@ -55,8 +55,8 @@ public class Arm extends SubsystemBase {
     private SmartDashboardNumber armTolerance = new SmartDashboardNumber("arm/arm-tolerance", 0.025);
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("arm/position/arm-l1", 118.8).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 90).withTuningEnabled(kEnablePositionTuning);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 90).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("arm/position/arm-l2", 92).withTuningEnabled(kEnablePositionTuning);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("arm/position/arm-l3", 92).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("arm/position/arm-l4", 93).withTuningEnabled(kEnablePositionTuning); //112 @ utah
     private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("arm/position/arm-source", 360 * 0.1977539).withTuningEnabled(kEnablePositionTuning);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("arm/position/arm-coral-ground", -69.4336).withTuningEnabled(kEnablePositionTuning);
@@ -112,8 +112,8 @@ public class Arm extends SubsystemBase {
         )
         .withMotionMagicConfigs(
             new MotionMagicConfigs()
-            .withMotionMagicAcceleration(3)
-            .withMotionMagicCruiseVelocity(1.1)
+            .withMotionMagicAcceleration(2.8)
+            .withMotionMagicCruiseVelocity(1)
             .withMotionMagicJerk(20000000)
         // ).withFeedbackConfigs(
         //     new FeedbackConfigs()
@@ -236,6 +236,7 @@ public class Arm extends SubsystemBase {
      */
     private void goToAngle(double angle)
     {
+        Logger.recordOutput("Arm/targetAngle", angle);
         this.setPosition(angleToRotations(angle));
     }
 
@@ -251,6 +252,8 @@ public class Arm extends SubsystemBase {
         SmartDashboard.putBoolean("arm/arm-at-target", this.atTarget());
         // SmartDashboard.putNumber("arm/arm-cancoder-position", this.cancoder.getAbsolutePosition().getValueAsDouble());
         SmartDashboard.putNumber("arm/arm-error", Math.abs(this.angleToRotations(this.convertPosition(this.targetPosition)) - this.armMotor.motor.getPosition().getValueAsDouble()));
+
+        Logger.recordOutput("Arm/currentAngle", this.armMotor.motor.getPosition().getValueAsDouble()*360);
     }
 
     /**

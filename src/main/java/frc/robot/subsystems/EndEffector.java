@@ -68,14 +68,14 @@ public class EndEffector extends SubsystemBase {
     private static EndEffector instance = null;
 
     private SmartDashboardNumber l1Position = new SmartDashboardNumber("endeffector/position/endeffector-l1", 0);
-    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 2);
-    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 2);
+    private SmartDashboardNumber l2Position = new SmartDashboardNumber("endeffector/position/endeffector-l2", 1.2);
+    private SmartDashboardNumber l3Position = new SmartDashboardNumber("endeffector/position/endeffector-l3", 1.2);
     private SmartDashboardNumber l4Position = new SmartDashboardNumber("endeffector/position/endeffector-l4", 0);
-    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 19);
+    private SmartDashboardNumber sourcePosition = new SmartDashboardNumber("endeffector/position/endeffector-source", 18.2);
     private SmartDashboardNumber coralGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-coral-ground", 10.89);
     private SmartDashboardNumber algaeGroundPosition = new SmartDashboardNumber("endeffector/position/endeffector-algae-ground", 17.31);
     private SmartDashboardNumber processorPosition = new SmartDashboardNumber("endeffector/position/endeffector-processor", 0);
-    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 5);
+    private SmartDashboardNumber stowPosition = new SmartDashboardNumber("endeffector/position/endeffector-stow", 4.2);
     private SmartDashboardNumber bargePosition = new SmartDashboardNumber("endeffector/position/endeffector-barge", 22);
     private SmartDashboardNumber l2AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l2-algae", 10.91);
     private SmartDashboardNumber l3AlgaePosition = new SmartDashboardNumber("endeffector/position/endeffector-l3-algae", 10.91);

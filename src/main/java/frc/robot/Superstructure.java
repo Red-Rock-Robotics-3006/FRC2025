@@ -106,14 +106,14 @@ public class Superstructure {
             Commands.runOnce(() -> Logger.recordOutput("Superstructure/targetPosition", pos.get())),
             Commands.print(pos.get().toString()),
             this.arm.goToPosition(Position.STOW),
-            // this.endEffector.goToPosition(Position.STOW),
-            this.endEffector.goToPosition(pos.get()),
-            Commands.waitUntil(() -> this.arm.atTarget()),
+            this.endEffector.goToPosition(Position.STOW),
+            // this.endEffector.goToPosition(pos.get()),
+            Commands.waitUntil(() -> this.atTargets()),
             this.intake.stowIntakeCommand(),
             this.elevator.goToPosition(pos.get()),
             Commands.waitUntil(() -> this.elevator.atTarget()),
+            this.endEffector.goToPosition(pos.get()),
             this.arm.goToPosition(pos.get())
-            // this.endEffector.goToPosition(pos.get())
         );
     }
 
@@ -336,16 +336,16 @@ public class Superstructure {
                     Map.entry(Position.STOW, this.elevator.goToPosition(Position.STOW))
                 ), 
                 () -> this.getRequestedScoringPosition()),
-            Commands.select(
-                Map.ofEntries(
-                    Map.entry(Position.L1, this.endEffector.goToPosition(Position.L1)),
-                    Map.entry(Position.L2, this.endEffector.goToPosition(Position.L2)),
-                    Map.entry(Position.L3, this.endEffector.goToPosition(Position.L3)),
-                    Map.entry(Position.L4, this.endEffector.goToPosition(Position.L4)),
-                    Map.entry(Position.STOW, this.endEffector.goToPosition(Position.STOW))
-                ), 
-                () -> this.getRequestedScoringPosition())
-            // this.endEffector.goToPosition(Position.STOW),
+            // Commands.select(
+            //     Map.ofEntries(
+            //         Map.entry(Position.L1, this.endEffector.goToPosition(Position.L1)),
+            //         Map.entry(Position.L2, this.endEffector.goToPosition(Position.L2)),
+            //         Map.entry(Position.L3, this.endEffector.goToPosition(Position.L3)),
+            //         Map.entry(Position.L4, this.endEffector.goToPosition(Position.L4)),
+            //         Map.entry(Position.STOW, this.endEffector.goToPosition(Position.STOW))
+            //     ), 
+            //     () -> this.getRequestedScoringPosition())
+            this.endEffector.goToPosition(Position.STOW)
         );
     }
 

@@ -65,7 +65,7 @@ import redrocklib.logging.SmartDashboardBoolean;
 // @Logged
 public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Subsystem {
     private SmartDashboardNumber rotateP = new SmartDashboardNumber("dt/dt-rotate-kp", 4);
-    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 0.5); // 1.2
+    private SmartDashboardNumber rotateI = new SmartDashboardNumber("dt/dt-rotate-ki", 0.3); // 1.2
     private SmartDashboardNumber rotateD = new SmartDashboardNumber("dt/dt-rotate-d", 0);
     private SmartDashboardNumber rotateIRange = new SmartDashboardNumber("dt/dt-rotate-Irange", 0.2);
     private SmartDashboardNumber rotateTolerance = new SmartDashboardNumber("dt/dt-rotate-tolerance", 0.015);
@@ -167,7 +167,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     
     private SmartDashboardNumber positionTolerance = new SmartDashboardNumber("dt/dt-position-tolerance", 0.02, false);
     private SmartDashboardNumber algaeRemovalPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/algae", 0.03);
-    private SmartDashboardNumber autoPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/auto", 0.03);
+    private SmartDashboardNumber autoPositionTolerance = new SmartDashboardNumber("dt/dt-tolerance/auto", 0.045);
 
     private final PIDController m_pathXController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
     private final PIDController m_pathYController = new PIDController(autoPositionKp.getNumber(), autoPositionKi.getNumber(), autoPositionKd.getNumber());
@@ -202,8 +202,8 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
 
     private Pose2d fieldCenter = new Pose2d(8.75665, 4.0259, Rotation2d.kZero);
 
-    private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.035, Rotation2d.kZero);
-    private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.035, Rotation2d.kZero);
+    private Pose2d seedOffsetCW = new Pose2d(5.79 - 4.489323, -4.0259 + 3.86 -0.03, Rotation2d.kZero);
+    private Pose2d seedOffsetCCW = new Pose2d(5.79 - 4.489323, 4.0259 - 3.86 - 0.03, Rotation2d.kZero);
 
     private SmartDashboardNumber redBargeX = new SmartDashboardNumber("dt/pos/red-barge-x", 9.53 - 0.08);
     private SmartDashboardNumber blueBargeX = new SmartDashboardNumber("dt/pos/blue-barge-x", 7.9833 + 0.08);
@@ -693,9 +693,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         for (int i = 0; i < wrappers.length; i++) {
             // if (i == 0 && (isTargetingReef || !isTargetingPosition())) continue;
             // else if (i == 1 && !isTargetingReef && isTargetingPosition()) continue;
-            if (i == 1) continue;
+            // if (i == 1) continue;
             Localization.LimeLightPoseEstimateWrapper estimateWrapper = wrappers[i];
-            if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate)) {
+            if (estimateWrapper.tiv && poseEstimateIsValid(estimateWrapper.poseEstimate, i)) {
                 this.addVisionMeasurement(estimateWrapper.poseEstimate.pose,
                                         // estimateWrapper.poseEstimate.timestampSeconds+SmartDashboard.getNumber("localization/timeoffset", Utils.getCurrentTimeSeconds()), 
                                         Utils.getCurrentTimeSeconds() - estimateWrapper.poseEstimate.latency * 0.001,
@@ -703,11 +703,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
                 estimateWrapper.field.setRobotPose(
                     estimateWrapper.poseEstimate.pose
                 );
-                SmartDashboard.putBoolean("localization/vision-accepted", true);
+                SmartDashboard.putBoolean("localization/" + estimateWrapper.name + "-vision-accepted", true);
                 SmartDashboard.putNumber(estimateWrapper.name + "/" + estimateWrapper.name + "-latency", estimateWrapper.poseEstimate.latency * 0.001);
             }
             else
-                SmartDashboard.putBoolean("localization/vision-accepted", false);
+                SmartDashboard.putBoolean("localization/" + estimateWrapper.name + "-vision-accepted", false);
         }
     }
 
@@ -727,9 +727,9 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         this.alliance = alliance;
     }
 
-    private boolean poseEstimateIsValid(LimelightHelpers.PoseEstimate e) {
+    private boolean poseEstimateIsValid(LimelightHelpers.PoseEstimate e, int index) {
         if (Double.compare(e.pose.getX(), 0) == 0 || Double.compare(e.pose.getY(), 0) == 0) return false;
-        return e.avgTagDist < kRejectionDistance.getNumber() && Math.abs(this.getRotationRateDegrees()) < kRejectionRotationRate.getNumber();
+        return e.avgTagDist < (index==0?kRejectionDistance.getNumber():0.35) && Math.abs(this.getRotationRateDegrees()) < kRejectionRotationRate.getNumber();
     }
 
     private void startSimThread() {

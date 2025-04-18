@@ -185,7 +185,7 @@ public class Autos {
                 followFirstTrajectoryWithVisionCommand("RR3GL", 0)
             ),
             // superstructure.stowReefAutoCommand(),
-            scoreAutoCommand(0),
+            slowScoreAutoCommand(0),
 
             Commands.deadline(
                 Commands.sequence(
@@ -405,19 +405,20 @@ public class Autos {
     public Command slowScoreAutoCommand(int reefSide) {
         return Commands.sequence(
             Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
-            Commands.deadline(
+            Commands.parallel(
                 Commands.sequence(
                     superstructure.goToReefPositionAuto(() -> Position.L4),
                     Commands.waitUntil(() -> superstructure.atTargets()),
-                    Commands.waitSeconds(0.7)
+                    Commands.waitSeconds(0.8)
                 ),
-                Commands.sequence(
-                    Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
-                    drivetrain.pidToPoseContinuousCommand()
+                Commands.deadline(
+                    Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
+                    Commands.sequence(
+                        Commands.runOnce(() -> {drivetrain.setReefSide(reefSide); drivetrain.setNearestRequestedReefPoseTarget(); drivetrain.enablePositionTargeting();}, drivetrain),
+                        drivetrain.pidToPoseContinuousCommand()
+                    )
                 )
             ),
-            Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
-            // Commands.waitSeconds(2),
             drivetrain.disablePositionTargetingCommand(),
             superstructure.outtakeCoral(),
             Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)

@@ -19,7 +19,7 @@ import redrocklib.logging.SmartDashboardNumber;
 public class Localization {
     private static boolean isSim = false;
 
-    private static int[] validIDs = {1, 2, 6, 7, 8, 9, 10, 11, 12, 13, 17, 18, 19, 20, 21, 22};
+    private static int[] validIDs = {6, 7, 8, 9, 10, 11, 17, 18, 19, 20, 21, 22};
     private static String[] limeLightNames = {"climb", "front"};//, "right", "back"};
     private static double[][] limeLightStdvs = {
         // {0.8, 0.8, 9999},
@@ -38,8 +38,8 @@ public class Localization {
     public static void initialize() {
         if(wrappers != null)
             return;
-        wrappers = new LimeLightPoseEstimateWrapper[1]; // TODO revert on ll addition
-        for (int i = 0; i < 1; i++) { // TODO revert on ll addition
+        wrappers = new LimeLightPoseEstimateWrapper[limeLightNames.length]; // TODO revert on ll addition
+        for (int i = 0; i < limeLightNames.length; i++) { // TODO revert on ll addition
             wrappers[i] = new LimeLightPoseEstimateWrapper().withName(limeLightNames[i]);
             LimelightHelpers.SetFiducialIDFiltersOverride(limeLightNames[i], validIDs);
         }
@@ -55,7 +55,7 @@ public class Localization {
             SmartDashboard.putNumber("localization/"+name+"/heading", headingDegrees);
             LimelightHelpers.SetRobotOrientation(name, headingDegrees, CommandSwerveDrivetrain.getInstance().getRotationRateDegrees(), 0, 0, 0, 0);
             PoseEstimate estimate = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(name);
-            if (estimate != null && i == 0){ // TODO revert on ll addition
+            if (estimate != null){ // TODO revert on ll addition
                 Logger.recordOutput("limelight/" + limeLightNames[i] + "/avgTagDist", estimate.avgTagDist);
                 double ambiguitySum = 0;
                 for (RawFiducial fiducial : estimate.rawFiducials)
