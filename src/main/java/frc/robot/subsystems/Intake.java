@@ -32,6 +32,7 @@ public class Intake extends SubsystemBase{
     
     public static final double kStallForwardTime = 0.45;
     public static final double kStallReverseTime = 0.16;
+    public static final double kL1IntakeWaitTime = 0.2;
 
     private SmartDashboardNumber minPivotRotation = new SmartDashboardNumber("intake/intake-min-rotation", 0.2);
     private SmartDashboardNumber maxPivotRotation = new SmartDashboardNumber("intake/intake-max-rotation", 25);
@@ -133,7 +134,7 @@ public class Intake extends SubsystemBase{
             .withMotionMagicAcceleration(1300)
             .withMotionMagicCruiseVelocity(100)
         )
-        .withSpikeThreshold(39)
+        .withSpikeThreshold(28)
         .withCurrentLimitConfigs(
             new CurrentLimitsConfigs()
             .withSupplyCurrentLimit(45)
@@ -324,6 +325,7 @@ public class Intake extends SubsystemBase{
     public Command intakel1andHoldCommand() {
         return Commands.sequence(
             this.startIntakeCommand(),
+            Commands.waitSeconds(kL1IntakeWaitTime),
             Commands.waitUntil(() -> this.atSlewSpikeThreshold()),
             this.stopIntakeCommand()
         );

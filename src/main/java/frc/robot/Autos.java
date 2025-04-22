@@ -358,12 +358,12 @@ public class Autos {
 
     public Command scoreAutoCommand(int reefSide) {
         return Commands.sequence(
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
+            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             Commands.parallel(
                 Commands.sequence(
                     superstructure.goToReefPositionAuto(() -> Position.L4),
                     Commands.waitUntil(() -> superstructure.atTargets()),
-                    Commands.waitSeconds(0.35)
+                    Commands.waitSeconds(0.7)
                 ),
                 Commands.deadline(
                     Commands.waitUntil(() -> drivetrain.atAutoTargetPose()),
@@ -374,8 +374,8 @@ public class Autos {
                 )
             ),
             drivetrain.disablePositionTargetingCommand(),
-            superstructure.outtakeCoral(),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
+            superstructure.outtakeCoral()
+            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
         );
     }
 
@@ -445,16 +445,17 @@ public class Autos {
 
     public Command sourceIntakeCommand() {
         return Commands.sequence(
-            Commands.runOnce(() -> {drivetrain.enableVision(); drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
+            Commands.runOnce(() -> {drivetrain.setNearestSourcePose(); drivetrain.enablePositionTargeting();}, drivetrain),
             Commands.deadline(
-                Commands.sequence(
-                    superstructure.goToSourceIntakePosition(),
-                    superstructure.intakeCoral()
-                ), 
-                drivetrain.pidToPoseContinuousCommand()
+                Commands.waitUntil(() -> endeffector.coralDetected()),
+                Commands.parallel(
+                    superstructure.intakeCoral(),
+                    drivetrain.pidToPoseContinuousCommand()
+                )
             ),
-            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain),
-            Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
+            Commands.runOnce(() -> endeffector.setHoldSpeed(), endeffector),
+            Commands.runOnce(() -> drivetrain.disablePositionTargeting(), drivetrain)
+            // Commands.runOnce(() -> drivetrain.disableVision(), drivetrain)
             // Commands.waitSeconds()
             // superstructure.stowReefCommand()
         );
@@ -470,7 +471,7 @@ public class Autos {
 
     public Command followTrajectoryWithVisionCommand(String trajectoryName, int index) {
         return Commands.sequence(
-            Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
+            // Commands.runOnce(() -> drivetrain.enableVision(), drivetrain),
             factory.trajectoryCmd(trajectoryName, index)
         );
     }
